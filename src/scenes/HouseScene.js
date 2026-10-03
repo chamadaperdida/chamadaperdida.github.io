@@ -120,7 +120,7 @@ export class HouseScene extends Phaser.Scene {
     cam.setBackgroundColor('#050506');
 
     this.hud = this.scene.get('Hud');
-    this.hud.dialogue.clear();
+    this.hud.dialogue?.clear();
     this.hud.clearFade(0);
     this.scene.setVisible(true, 'Hud');
 
@@ -525,6 +525,7 @@ export class HouseScene extends Phaser.Scene {
   // ---- Quadro a quadro ----------------------------------------------------
 
   update(time, deltaMs) {
+    if (!this.hud.ready) return; // o HUD ainda está subindo
     const dt = deltaMs / 1000;
     const nightDt = this.clock.update(dt);
     const cam = this.cameras.main;

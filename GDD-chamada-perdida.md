@@ -301,7 +301,7 @@ Inevitáveis, sempre aumentam o medo, mais frequentes no começo da noite e dimi
 |---|---|---|
 | **Balão vermelho** | Aparece na tela e fica parado ali. Enquanto estiver na tela, o medo sobe aos poucos. | Ir até ele e estourar: voz diz "ops" e o medo para de subir. |
 | **Poça de sangue** | Aparece num lugar do mapa **sempre fora do campo de visão** do jogador. Perto: som de goteira e gota caindo do teto. Quando ela entra no campo de visão (na tela e iluminada), o medo sobe **inversamente proporcional à distância** (quanto mais perto, mais rápido), até o valor "errado" da tabela 9.3. | Ficar longe por tempo suficiente: ela some. |
-| **Vulto** | Sombra **preta** com a forma do Invasor. Acontece quando Artur está a uma certa distância (2,5 a 7 m) de uma **porta aberta**: a sombra passa **do outro lado da porta, de um lado ao outro**, rápida (um pouco mais que Artur correndo), e some. Só é vista pelo vão da porta (contra a luz que vaza por ela). | Fugir para o lado oposto: medo sobe menos. Correr atrás dele: sobe mais. |
+| **Vulto** | Sombra **preta** com a forma do Invasor. Acontece quando Artur está a uma certa distância (2,5 a 7 m) de uma **porta aberta**: a sombra passa **correndo do outro lado da porta, de um lado ao outro**, bem rápida (2× Artur correndo), com animação de corrida, e some. Só é vista pelo vão da porta (contra a luz que vaza por ela). | Fugir para o lado oposto: medo sobe menos. Correr atrás dele: sobe mais. |
 | **Luz piscando (comum)** | A luz do cômodo pisca. | Ficar parado: para de piscar mais rápido. |
 | **Luz piscando com Helena (rara)** | Pisca → silhueta de Helena → pisca → some. Sons de susto + coração. | Nenhuma (duração fixa). |
 | **Passos falsos** | Passos pesados correndo (confunde com o Artur distorcido). **Também acontece no escuro.** | Nenhuma. |
@@ -407,7 +407,7 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Artur andando | 2,5 m/s (era 3,5; reduzido no protótipo) |
 | Artur correndo | 4,0 m/s (1,6× andar) |
 | Estamina | 6 s de corrida; recarrega em 10 s (só sem correr) |
-| Vulto | 1,1× Artur correndo |
+| Vulto | 2,0× Artur correndo (era 1,1×; aumentado no protótipo) |
 | Invasor (perseguição normal) | 0,92× Artur correndo |
 | Invasor (medo 100%) | 0,98× Artur correndo |
 | Artur distorcido | 1,08× Artur correndo |

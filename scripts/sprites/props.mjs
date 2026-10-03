@@ -434,17 +434,53 @@ function drip(c, x, y) {
   c.px(x, y + 1, '#5c0a0e');
 }
 
-function shadowFigure(c, x, y) {
-  // Vulto: sombra PRETA com a forma do Invasor (capa de chuva com capuz), 16×32
-  const body = '#030304';
-  c.rect(x + 5, y + 2, 6, 2, body); // capuz
-  c.rect(x + 4, y + 4, 8, 7, body);
-  c.rect(x + 3, y + 11, 10, 14, body); // capa
-  c.rect(x + 2, y + 16, 12, 9, body);
-  c.rect(x + 4, y + 25, 3, 6, body); // pernas rígidas
-  c.rect(x + 9, y + 25, 3, 6, body);
-  c.rect(x + 1, y + 20, 1, 4, body); // borda da capa esvoaçando
-  c.rect(x + 14, y + 18, 1, 5, body);
+/**
+ * Vulto correndo, de perfil (virado para a direita), 20×32. 4 quadros de corrida:
+ * corpo inclinado para a frente, capa esvoaçando para trás, pernas e braços em passada.
+ */
+function shadowRun(frame) {
+  // [perna da frente: x do pé, perna de trás: x do pé, pé de trás levantado?, braço da frente dx]
+  const poses = [
+    [15, 3, true, 3],
+    [12, 7, false, 1],
+    [15, 4, true, -2],
+    [11, 8, false, 0],
+  ];
+  const [front, back, backUp, arm] = poses[frame];
+  return (c, x, y) => {
+    const B = '#030304';
+    const line = (x0, y0, x1, y1) => {
+      const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
+      for (let i = 0; i <= n; i++) {
+        const px = Math.round(x0 + ((x1 - x0) * i) / n);
+        const py = Math.round(y0 + ((y1 - y0) * i) / n);
+        c.rect(x + px, y + py, 2, 1, B);
+      }
+    };
+    // Capuz e cabeça (inclinados para a frente)
+    c.rect(x + 10, y + 2, 5, 2, B);
+    c.rect(x + 9, y + 4, 7, 6, B);
+    c.px(x + 16, y + 6, B);
+    // Tronco inclinado
+    for (let i = 0; i < 9; i++) c.rect(x + 8 - Math.floor(i / 3), y + 10 + i, 7, 1, B);
+    // Capa esvoaçando para trás (muda um pouco a cada quadro)
+    const flap = frame % 2;
+    c.rect(x + 2, y + 13 + flap, 4, 6, B);
+    c.rect(x, y + 15 + flap, 3, 3, B);
+    c.px(x, y + 19 + flap, B);
+    // Braço da frente
+    line(12, 12, 14 + arm, 18);
+    // Pernas: quadril em (8, 19)
+    line(8, 19, front, 29);
+    line(front, 29, front + 2, 30);
+    if (backUp) {
+      line(7, 19, back + 1, 25);
+      line(back + 1, 25, back - 1, 27);
+    } else {
+      line(7, 19, back, 29);
+      line(back, 29, back + 1, 30);
+    }
+  };
 }
 
 function tvStatic(seed) {
@@ -508,7 +544,10 @@ const PROPS = [
   ['balloon', 9, 22, balloon, true],
   ['blood-pool', 26, 10, bloodPool],
   ['drip', 1, 2, drip],
-  ['shadow-figure', 16, 32, shadowFigure],
+  ['shadow-run-0', 20, 32, shadowRun(0)],
+  ['shadow-run-1', 20, 32, shadowRun(1)],
+  ['shadow-run-2', 20, 32, shadowRun(2)],
+  ['shadow-run-3', 20, 32, shadowRun(3)],
   ['tv-static-0', 17, 13, tvStatic(0)],
   ['tv-static-1', 17, 13, tvStatic(1)],
   ['tv-static-2', 17, 13, tvStatic(2)],

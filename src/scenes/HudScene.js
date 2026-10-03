@@ -88,6 +88,11 @@ export class HudScene extends Phaser.Scene {
     this.updateFace(time, dt);
   }
 
+  /** O HUD já foi montado? (a casa espera por ele antes do primeiro quadro) */
+  get ready() {
+    return !!this.dialogue;
+  }
+
   // ---- Barras -------------------------------------------------------------
 
   setFear(value) {

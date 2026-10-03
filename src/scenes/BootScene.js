@@ -10,10 +10,12 @@ export class BootScene extends Phaser.Scene {
 
   preload() {
     const base = 'assets/sprites/';
-    this.load.spritesheet('artur', `${base}artur.png`, { frameWidth: 16, frameHeight: 32 });
-    this.load.image('tiles', `${base}tiles.png`);
-    this.load.spritesheet('face', `${base}face.png`, { frameWidth: 24, frameHeight: 24 });
-    this.load.atlas('props', `${base}props.png`, `${base}props.json`);
+    // ?v=… muda a cada publicação: o navegador sempre pega os sprites novos (sem cache antigo)
+    const v = `?v=${__BUILD_ID__}`;
+    this.load.spritesheet('artur', `${base}artur.png${v}`, { frameWidth: 16, frameHeight: 32 });
+    this.load.image('tiles', `${base}tiles.png${v}`);
+    this.load.spritesheet('face', `${base}face.png${v}`, { frameWidth: 24, frameHeight: 24 });
+    this.load.atlas('props', `${base}props.png${v}`, `${base}props.json${v}`);
   }
 
   create() {

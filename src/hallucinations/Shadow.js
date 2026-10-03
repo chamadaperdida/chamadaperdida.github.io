@@ -1,6 +1,6 @@
 // Vulto — GDD 5. Quando Artur está a uma certa distância de uma porta aberta, uma sombra
-// PRETA (forma do Invasor) passa do outro lado da porta, de um lado ao outro, rápido
-// (1,1× Artur correndo), e some. Só é vista pelo vão da porta.
+// PRETA (forma do Invasor) passa CORRENDO do outro lado da porta, de um lado ao outro,
+// bem rápida (2× Artur correndo), e some. Só é vista pelo vão da porta.
 // Reação: fugir para o lado oposto → medo sobe menos; ir atrás dele → sobe mais.
 // Medo: 5 certo / 12 errado (9.3).
 
@@ -40,7 +40,7 @@ export class ShadowHallucination extends Hallucination {
     const to = { x: center.x + side.x * HALF_PATH * dir, y: center.y + side.y * HALF_PATH * dir };
 
     this.sprite = ctx.scene.add
-      .image(from.x * PPM, from.y * PPM, 'props', 'shadow-figure')
+      .image(from.x * PPM, from.y * PPM, 'props', 'shadow-run-0')
       .setOrigin(0.5, 1)
       .setDepth(from.y * PPM);
     // Só aparece dentro do outro cômodo (não "vaza" por cima das paredes)
@@ -48,7 +48,10 @@ export class ShadowHallucination extends Hallucination {
     maskShape.fillStyle(0xffffff).fillRect(toRoom.x * PPM, toRoom.y * PPM, toRoom.w * PPM, toRoom.h * PPM);
     this.maskShape = maskShape;
     this.sprite.setMask(maskShape.createGeometryMask());
+    // Os quadros de corrida olham para a direita
     if (from.x > to.x) this.sprite.setFlipX(true);
+    this.frame = 0;
+    this.frameIn = 0;
 
     const duration = (Math.hypot(to.x - from.x, to.y - from.y) / speed) * 1000;
     this.tween = ctx.scene.tweens.add({
@@ -71,6 +74,13 @@ export class ShadowHallucination extends Hallucination {
   update(dt, { playerVelocity }) {
     super.update(dt);
     if (!this.sprite) return;
+    // Animação de corrida
+    this.frameIn -= dt;
+    if (this.frameIn <= 0) {
+      this.frameIn = 0.07;
+      this.frame = (this.frame + 1) % 4;
+      this.sprite.setFrame(`shadow-run-${this.frame}`);
+    }
     // Indo na direção da porta (atrás dele): medo extra
     const feet = this.ctx.feet();
     const toDoor = new Phaser.Math.Vector2(this.doorPos.x - feet.x, this.doorPos.y - feet.y).normalize();

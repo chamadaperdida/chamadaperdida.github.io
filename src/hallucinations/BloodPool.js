@@ -77,10 +77,11 @@ export class BloodPoolHallucination extends Hallucination {
       });
     }
 
-    // Some depois de um tempo longe (só conta depois de ter sido vista)
-    this.farTime = this.seen && d > FAR_DIST ? this.farTime + dt : 0;
+    // Some depois de um tempo longe — mas NUNCA enquanto está no campo de visão
+    // (o tempo longe só conta depois de ela ter sido vista e com ela fora da tela)
+    this.farTime = this.seen && !visible && d > FAR_DIST ? this.farTime + dt : 0;
     const gone = this.farTime > VANISH_AFTER_FAR || (!this.seen && this.elapsed > UNSEEN_LIFE);
-    if (gone || this.elapsed > MAX_LIFE) this.done = true;
+    if (!visible && (gone || this.elapsed > MAX_LIFE)) this.done = true;
   }
 
   end() {

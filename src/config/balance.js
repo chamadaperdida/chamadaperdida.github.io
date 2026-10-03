@@ -125,7 +125,7 @@ export const BALANCE = {
     staminaRecoverThreshold: 0.25,
 
     // Multiplicadores sobre a velocidade de Artur correndo
-    shadow: 1.10, // vulto
+    shadow: 2.0, // vulto (GDD começou com 1,1×; aumentado no protótipo)
     intruderChase: 0.92, // Invasor, perseguição normal
     intruderChaseMaxFear: 0.98, // Invasor com medo em 100%
     distortedArtur: 1.08, // Artur distorcido
