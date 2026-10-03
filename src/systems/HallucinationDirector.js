@@ -21,8 +21,10 @@ const WEIGHTS = {
   flicker: 1,
   flickerHelena: 0.25,
   fakeSteps: 0.8,
-  tv: 1.2,
-  landline: 1.2,
+  // TV e telefone só entram no sorteio com Artur perto deles; aí ganham peso alto,
+  // senão quase nunca aconteciam
+  tv: 3,
+  landline: 3,
 };
 
 export class HallucinationDirector {

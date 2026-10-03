@@ -18,6 +18,11 @@ export class LandlineHallucination extends Hallucination {
     this.pos = { x: (this.phone.x + this.phone.width / 2) / PPM, y: (this.phone.y + this.phone.height) / PPM };
     this.ring = ctx.sfx.phoneRing(0);
     this.answered = false;
+    // Marcas de "tocando" em volta do aparelho, para achar o telefone
+    this.marks = ctx.scene.add
+      .image(this.phone.x + this.phone.width / 2, this.phone.y + 4, 'props', 'ring-marks')
+      .setDepth(2_000_000)
+      .setVisible(false);
   }
 
   get name() {
@@ -51,6 +56,7 @@ export class LandlineHallucination extends Hallucination {
   stopRinging() {
     this.ring.stop();
     this.phone.x = this.baseX;
+    this.marks.destroy();
   }
 
   update(dt) {
@@ -61,6 +67,7 @@ export class LandlineHallucination extends Hallucination {
     // Treme junto com a campainha (1 s tocando, 2 s parado)
     const ringing = this.elapsed % 3 < 1;
     this.phone.x = this.baseX + (ringing ? (Math.floor(this.elapsed * 30) % 2 ? 1 : -1) : 0);
+    this.marks.setVisible(ringing && Math.floor(this.elapsed * 8) % 2 === 0);
     if (this.elapsed >= BALANCE.extra.landlineRingSeconds) this.done = true;
   }
 

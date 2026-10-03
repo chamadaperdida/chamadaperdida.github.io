@@ -136,6 +136,7 @@ export class HouseScene extends Phaser.Scene {
         return px > v.x - margin && px < v.right + margin && py > v.y - margin && py < v.bottom + margin;
       },
       findSpot: (min, max, opts) => this.findSpot(min, max, opts),
+      findShadowDoor: () => this.findShadowDoor(),
       // Ponto (m) está iluminado? = na zona de luz do Artur, com o gerador ligado
       isLit: (xm, ym) => {
         const r = roomAt(xm, ym);
@@ -370,7 +371,9 @@ export class HouseScene extends Phaser.Scene {
       sfx.lockClick(0.5);
       this.hud.talk(say(ev.line));
     } else {
-      this.director.start(this.frameCtx, ev.kind);
+      // Noite 2: o vulto passa do outro lado da porta do quarto
+      const opts = ev.kind === 'shadow' ? { door: this.findShadowDoor(this.bedroomDoor) } : {};
+      this.director.start(this.frameCtx, ev.kind, opts);
       this.time.delayedCall(ev.kind === 'shadow' ? 900 : 500, () => this.hud.talk(say(ev.line)));
     }
   }
@@ -382,7 +385,41 @@ export class HouseScene extends Phaser.Scene {
     if (!lightsOn) return kind === 'fakeSteps';
     if (kind === 'tv') return this.nearDevice('tv');
     if (kind === 'landline') return this.nearDevice('telefoneFixo');
+    if (kind === 'shadow') return !!this.findShadowDoor();
     return true;
+  }
+
+  /**
+   * Vulto (GDD 5): uma porta aberta, na tela, a uma certa distância do Artur, com outro
+   * cômodo do outro lado. Devolve { door, toRoom, normal } ou null. `forced`: usa esta porta.
+   */
+  findShadowDoor(forced = null) {
+    const feet = this.player.feetMeters;
+    const here = roomAt(feet.x, feet.y) ?? this.lighting.currentRoom;
+    if (!here) return null;
+    const zone = LIGHT_ZONE.get(here.id);
+    const { min, max } = BALANCE.extra.shadowDoorDistance;
+    let best = null;
+    let bestDist = Infinity;
+    for (const door of forced ? [forced] : this.doors) {
+      if (!door.isOpen) continue;
+      const d = Math.hypot(feet.x - door.center.x, feet.y - door.center.y);
+      if (!forced && (d < min || d > max)) continue;
+      if (!forced && !this.hallucinationCtx.onScreen(door.rect.centerX, door.rect.centerY)) continue;
+      const n = door.axis === 'h' ? { x: 0, y: 1 } : { x: 1, y: 0 };
+      const a = roomAt(door.center.x - n.x * 0.6, door.center.y - n.y * 0.6);
+      const b = roomAt(door.center.x + n.x * 0.6, door.center.y + n.y * 0.6);
+      let pass = null;
+      if (a && b && LIGHT_ZONE.get(a.id) === zone && LIGHT_ZONE.get(b.id) !== zone) pass = { door, toRoom: b, normal: n };
+      else if (a && b && LIGHT_ZONE.get(b.id) === zone && LIGHT_ZONE.get(a.id) !== zone) {
+        pass = { door, toRoom: a, normal: { x: -n.x, y: -n.y } };
+      }
+      if (pass && pass.toRoom.id !== 'quartoClara' && d < bestDist) {
+        best = pass;
+        bestDist = d;
+      }
+    }
+    return best;
   }
 
   /** Artur está perto (e na mesma zona de luz) da TV / telefone? */

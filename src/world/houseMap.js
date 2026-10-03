@@ -121,7 +121,6 @@ export const ITEM_SPOTS = [
   { on: 'criadoMudo', dx: 13, dy: 9 },
   { on: 'comoda', dx: 8, dy: 6 },
   { on: 'comoda', dx: 31, dy: 6 },
-  { on: 'telefoneFixo', dx: 14, dy: 9 },
   { on: 'aparador', dx: 9, dy: 7 },
   { on: 'aparador', dx: 38, dy: 7 },
   { on: 'mesinhaSala', dx: 8, dy: 7 },

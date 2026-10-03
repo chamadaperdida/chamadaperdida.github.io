@@ -180,7 +180,9 @@ export const BALANCE = {
     // Telefone fixo: quanto tempo toca se ninguém atender (s).
     landlineRingSeconds: 9,
     // TV e telefone só tocam/ligam com Artur a menos desta distância (m).
-    nearDeviceDistance: 6,
+    nearDeviceDistance: 7,
+    // Vulto: Artur a esta distância (m) de uma porta aberta para a sombra passar do outro lado.
+    shadowDoorDistance: { min: 2.5, max: 7 },
     // Evento garantido: dispara quando Artur chega a esta distância (m) da porta do quarto.
     bedroomApproachDistance: 3.5,
     // Sono: em que momento da sequência (s) o gerador pode cair.

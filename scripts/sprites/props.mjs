@@ -110,12 +110,42 @@ function tv(c, x, y) {
 }
 
 function phoneTable(c, x, y) {
-  c.rect(x + 1, y + 6, 14, 10, WOOD_DARK);
-  c.rect(x + 1, y + 6, 14, 3, WOOD);
-  c.rect(x + 3, y + 2, 10, 5, '#1e1e20'); // telefone fixo
-  c.rect(x + 3, y + 1, 10, 2, '#2c2c2f'); // fone
-  c.px(x + 7, y + 4, '#55555a');
-  c.px(x + 9, y + 4, '#55555a');
+  // Mesinha com telefone antigo de disco, bege (bem visível), 16×20
+  c.rect(x + 1, y + 10, 14, 10, WOOD_DARK);
+  c.rect(x + 1, y + 10, 14, 3, WOOD);
+  c.rect(x + 1, y + 10, 14, 1, WOOD_LIGHT);
+  // Base do telefone
+  c.rect(x + 2, y + 4, 12, 7, '#b8a888');
+  c.rect(x + 2, y + 4, 12, 1, '#d8ccb0');
+  c.rect(x + 2, y + 10, 12, 1, '#8a7c62');
+  // Disco
+  c.rect(x + 6, y + 6, 4, 4, '#e8e0cc');
+  c.px(x + 7, y + 7, '#5a5040');
+  c.px(x + 8, y + 8, '#5a5040');
+  // Fone no gancho
+  c.rect(x + 1, y + 1, 14, 2, '#a89878');
+  c.rect(x + 1, y + 1, 3, 4, '#a89878');
+  c.rect(x + 12, y + 1, 3, 4, '#a89878');
+  c.rect(x + 1, y + 1, 14, 1, '#d8ccb0');
+  // Fio
+  c.px(x + 14, y + 11, '#3a3228');
+  c.px(x + 15, y + 12, '#3a3228');
+}
+
+function ringMarks(c, x, y) {
+  // Marcas de "tocando" em volta do telefone, 28×10
+  const col = '#e8e2cf';
+  for (const [dx, dir] of [[0, 1], [27, -1]]) {
+    c.px(x + dx, y + 3, col);
+    c.px(x + dx, y + 4, col);
+    c.px(x + dx, y + 5, col);
+    c.px(x + dx + dir, y + 2, col);
+    c.px(x + dx + dir, y + 6, col);
+    c.px(x + dx + dir * 3, y + 4, col);
+    c.px(x + dx + dir * 3, y + 5, col);
+    c.px(x + dx + dir * 4, y + 3, col);
+    c.px(x + dx + dir * 4, y + 6, col);
+  }
 }
 
 function shelf(c, x, y) {
@@ -405,19 +435,16 @@ function drip(c, x, y) {
 }
 
 function shadowFigure(c, x, y) {
-  // Vulto: a forma do Invasor (capa de chuva com capuz) feita de luz fraca, 16×32
-  const body = '#5a6670';
-  const edge = '#7e8c96';
+  // Vulto: sombra PRETA com a forma do Invasor (capa de chuva com capuz), 16×32
+  const body = '#030304';
   c.rect(x + 5, y + 2, 6, 2, body); // capuz
   c.rect(x + 4, y + 4, 8, 7, body);
-  c.rect(x + 6, y + 6, 4, 4, '#2a3036'); // rosto no escuro total
   c.rect(x + 3, y + 11, 10, 14, body); // capa
   c.rect(x + 2, y + 16, 12, 9, body);
   c.rect(x + 4, y + 25, 3, 6, body); // pernas rígidas
   c.rect(x + 9, y + 25, 3, 6, body);
-  c.rect(x + 3, y + 11, 1, 14, edge);
-  c.rect(x + 12, y + 11, 1, 14, edge);
-  c.rect(x + 5, y + 2, 6, 1, edge);
+  c.rect(x + 1, y + 20, 1, 4, body); // borda da capa esvoaçando
+  c.rect(x + 14, y + 18, 1, 5, body);
 }
 
 function tvStatic(seed) {
@@ -457,7 +484,8 @@ const PROPS = [
   ['nightstand', 16, 16, nightstand, true],
   ['sofa', 64, 28, sofa, true],
   ['tv', 32, 28, tv, true],
-  ['phone-table', 16, 16, phoneTable, true],
+  ['phone-table', 16, 20, phoneTable, true],
+  ['ring-marks', 28, 10, ringMarks],
   ['shelf', 32, 24, shelf, true],
   ['fridge', 24, 36, fridge, true],
   ['kitchen-counter', 48, 28, kitchenCounter, true],
