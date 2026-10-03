@@ -24,7 +24,6 @@ import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
 import { HallucinationDirector } from '../systems/HallucinationDirector.js';
 import { FlickerHallucination } from '../hallucinations/Flicker.js';
-import { HelenaFlickerHallucination } from '../hallucinations/HelenaFlicker.js';
 import { daysLeftText } from './TransitionScene.js';
 import { calmWindow, fearDecayPerSecond, hallucinationRate } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
@@ -54,7 +53,7 @@ export class HouseScene extends Phaser.Scene {
     this.fear = new Fear(this.clock);
     this.generator = new Generator(this.clock, this.fear, GENERATOR_POINT);
     this.flashlight = new Flashlight();
-    this.director = new HallucinationDirector(this.clock, this.fear, (kind) => this.createHallucination(kind));
+    this.director = new HallucinationDirector(this.clock, this.fear, (kind, opts) => this.createHallucination(kind, opts));
     this.sleep = null; // sequência de sono em andamento
 
     this.buildMap();
@@ -238,16 +237,13 @@ export class HouseScene extends Phaser.Scene {
 
   // ---- Alucinações --------------------------------------------------------
 
-  createHallucination(kind) {
-    if (kind === 'helena-first') {
-      return new HelenaFlickerHallucination({
-        scene: this,
-        fear: this.fear,
-        spot: this.findSpotNearPlayer(2.5, 5),
-        fearAmount: BALANCE.extra.firstHallucinationFear,
-      });
+  /** Cria a alucinação sorteada. A primeira da noite dá +40 no lugar do valor da tabela. */
+  createHallucination(kind, { first }) {
+    switch (kind) {
+      case 'flicker':
+      default:
+        return new FlickerHallucination(this.fear, { first });
     }
-    return new FlickerHallucination(this.fear);
   }
 
   /**
@@ -430,7 +426,7 @@ export class HouseScene extends Phaser.Scene {
       g.on ? `${fearDecayPerSecond(night, t).toFixed(3)} %/s` : 'parado (escuro)',
     );
     const d = this.director;
-    debug.set('Noite/Alucinação: taxa', `${d.rate.toFixed(4)} /s  (fórmula ${hallucinationRate(night, t).toFixed(4)} × (1 − medo))`);
+    debug.set('Noite/Alucinação: taxa', `${hallucinationRate(night, t).toFixed(4)} /s`);
     let now = '—';
     if (d.active) now = d.active.name;
     else if (!d.enabled) now = 'esperando a chegada';

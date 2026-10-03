@@ -5,12 +5,19 @@
 import { BALANCE } from '../config/balance.js';
 
 export class FlickerHallucination {
-  constructor(fear) {
-    this.name = 'Luz piscando';
+  /** @param first primeira alucinação da noite: +40 de uma vez, no lugar dos valores da tabela */
+  constructor(fear, { first = false } = {}) {
+    this.name = first ? 'Luz piscando (primeira: +40)' : 'Luz piscando';
     this.fear = fear;
     const { right, wrong } = BALANCE.hallucinationFear.flicker;
-    this.extraPerSecond = (wrong - right) / BALANCE.extra.flickerSeconds;
-    fear.addHallucination(right); // o susto em si; se ficar se mexendo, soma até o valor "errado"
+    if (first) {
+      fear.add(BALANCE.extra.firstHallucinationFear);
+      this.extraPerSecond = 0;
+    } else {
+      // o susto em si; se ficar se mexendo, soma até o valor "errado"
+      fear.addHallucination(right);
+      this.extraPerSecond = (wrong - right) / BALANCE.extra.flickerSeconds;
+    }
     this.progress = 0;
     this.done = false;
     this.lit = true;

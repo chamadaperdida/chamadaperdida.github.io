@@ -163,8 +163,8 @@ export const BALANCE = {
     hallucinationStartDelay: 1.5,
     // Multiplica o medo de TODAS as alucinações da tabela 9.3 (decidido no protótipo: 2×).
     hallucinationFearScale: 2,
-    // Primeira alucinação da noite: sempre luz piscando com Helena, com este medo (antes do
-    // multiplicador da noite).
+    // Primeira alucinação da noite (sorteada normalmente): dá este medo no lugar do valor da
+    // tabela 9.3 (antes do multiplicador da noite).
     firstHallucinationFear: 40,
     // Caos: só dispara alucinação "na hora" com medo abaixo disto (%).
     chaosLowFearTrigger: 5,

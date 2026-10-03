@@ -1,9 +1,9 @@
 // Diretor das alucinações: a curva da noite (GDD 4.6 e 9.2).
 //
 // - Só com luz acesa. Nunca durante a sequência de sono ou com a caixa de diálogo aberta.
-// - A PRIMEIRA alucinação da noite é sempre a mais forte: luz piscando com Helena, +40 de medo.
-// - Frequência: taxa da fórmula 9.2 × (1 − medo/100). Quanto mais medo, menos alucinações;
-//   com o medo baixo elas voltam a vir com força. Nunca chega a zero com medo < 100%.
+// - Frequência: taxa da fórmula 9.2 (cai ao longo da noite, nunca chega a zero).
+// - A PRIMEIRA alucinação da noite é sorteada normalmente, mas dá +40 de medo
+//   no lugar do valor da tabela 9.3.
 // - Fase de caos (início até X s): sem janela de calma; com medo baixo (< 5%), dispara na hora.
 // - Fase de recuperação: depois de cada alucinação, uma janela de calma garantida,
 //   que cresce até o tamanho terminal da noite.
@@ -17,7 +17,7 @@ import { calmWindow, hallucinationRate } from './formulas.js';
 
 export class HallucinationDirector {
   /**
-   * @param factory (kind) => alucinação. kind: 'helena-first' | 'flicker'
+   * @param factory (kind, { first }) => alucinação
    */
   constructor(clock, fear, factory) {
     this.clock = clock;
@@ -40,9 +40,9 @@ export class HallucinationDirector {
     return this.clock.t < this.calmUntil;
   }
 
-  /** Taxa efetiva agora (alucinações por segundo). */
+  /** Taxa agora (alucinações por segundo), fórmula 9.2. */
   get rate() {
-    return hallucinationRate(this.clock.night, this.clock.t) * Math.max(0, 1 - this.fear.value / 100);
+    return hallucinationRate(this.clock.night, this.clock.t);
   }
 
   /**
@@ -63,10 +63,6 @@ export class HallucinationDirector {
 
     if (!this.enabled || !ctx.lightsOn || ctx.blocked || this.inCalm) return;
 
-    if (this.count === 0) {
-      this.start('helena-first');
-      return;
-    }
     if (this.clock.chaos && this.fear.value < BALANCE.extra.chaosLowFearTrigger) {
       this.start();
       return;
@@ -74,8 +70,11 @@ export class HallucinationDirector {
     if (Math.random() < 1 - Math.exp(-this.rate * nightDt)) this.start();
   }
 
-  start(kind = 'flicker') {
-    this.active = this.factory(kind);
+  start() {
+    // Sorteio entre os tipos disponíveis (por enquanto só a luz piscando; etapa 5 traz o resto)
+    const kinds = ['flicker'];
+    const kind = kinds[Math.floor(Math.random() * kinds.length)];
+    this.active = this.factory(kind, { first: this.count === 0 });
     this.fear.hallucinating = true;
     this.count += 1;
   }
