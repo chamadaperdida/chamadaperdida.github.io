@@ -1,20 +1,33 @@
 import Phaser from 'phaser';
-import { PrototypeScene } from './scenes/PrototypeScene.js';
+import '@fontsource/vt323';
+import { BootScene } from './scenes/BootScene.js';
+import { HouseScene } from './scenes/HouseScene.js';
+import { HudScene } from './scenes/HudScene.js';
 import { debug } from './debug/debug.js';
 import './style.css';
 
 debug.mount();
 
-new Phaser.Game({
-  type: Phaser.AUTO,
-  parent: 'game',
-  width: 640,
-  height: 360,
-  backgroundColor: '#000000',
-  pixelArt: true,
-  scale: {
-    mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  scene: [PrototypeScene],
+// Espera a fonte carregar para os textos do Phaser não saírem com a fonte padrão.
+document.fonts.load('20px VT323').finally(() => {
+  const game = new Phaser.Game({
+    type: Phaser.AUTO,
+    parent: 'game',
+    // 960×540 com zoom 2 na casa: pixel art nítido e textos legíveis no HUD
+    width: 960,
+    height: 540,
+    backgroundColor: '#000000',
+    pixelArt: true,
+    scale: {
+      mode: Phaser.Scale.FIT,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    physics: {
+      default: 'arcade',
+      arcade: { gravity: { x: 0, y: 0 }, debug: false },
+    },
+    scene: [BootScene, HouseScene, HudScene],
+  });
+  // Só no `npm run dev`: facilita inspecionar o jogo pelo console do navegador.
+  if (import.meta.env.DEV) window.game = game;
 });

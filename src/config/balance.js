@@ -120,6 +120,9 @@ export const BALANCE = {
     arturRunMultiplier: 1.6, // correr = 1,6× andar (5,6 m/s)
     staminaRunSeconds: 6, // estamina cheia dura 6 s de corrida
     staminaRechargeSeconds: 10, // recarrega em 10 s (só sem correr)
+    // Não está no GDD: depois de esgotar, só volta a correr com 25% de estamina
+    // (evita correr aos trancos segurando Shift).
+    staminaRecoverThreshold: 0.25,
 
     // Multiplicadores sobre a velocidade de Artur correndo
     shadow: 1.10, // vulto
