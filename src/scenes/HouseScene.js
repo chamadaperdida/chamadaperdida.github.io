@@ -58,7 +58,7 @@ export class HouseScene extends Phaser.Scene {
     this.buildMap();
     this.buildFurniture();
     this.doors = DOORS.map((def) => new Door(this, def));
-    this.items = new Items(this, this.clock.night);
+    this.items = new Items(this, this.clock.night, this.furnitureById);
 
     this.player = new Player(this, SPAWN.x * PPM, SPAWN.y * PPM);
     this.physics.add.collider(this.player, this.wallLayer);
@@ -119,11 +119,13 @@ export class HouseScene extends Phaser.Scene {
 
   buildFurniture() {
     this.furniture = this.physics.add.staticGroup();
+    this.furnitureById = new Map();
     const rects = [];
     for (const item of FURNITURE) {
       const sprite = this.add.image(item.x * PPM, item.y * PPM, 'props', item.sprite).setOrigin(0);
       const { width: w, height: h } = sprite;
       sprite.setDepth(sprite.y + h - 4);
+      this.furnitureById.set(item.id, { sprite, def: item });
       if (item.id === 'gerador') this.generatorSprite = sprite;
       if (item.id === 'cama') this.bedSprite = sprite;
       // Colisão no móvel inteiro (menos o contorno de 1 px)
@@ -194,7 +196,7 @@ export class HouseScene extends Phaser.Scene {
       }
     };
     for (const item of this.items.list) {
-      consider({ kind: 'item', item, anchor: { x: item.sprite.x, y: item.sprite.y - 14 } }, dist(item.x, item.y), ITEM_RANGE);
+      consider({ kind: 'item', item, anchor: { x: item.sprite.x, y: item.sprite.y - 10 } }, dist(item.x, item.y), ITEM_RANGE);
     }
     if (!this.generator.on) {
       const s = this.generatorSprite;

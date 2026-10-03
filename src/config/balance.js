@@ -116,7 +116,7 @@ export const BALANCE = {
   //     Velocidades em metros por segundo. Multiplicadores relativos a Artur correndo.
   // ---------------------------------------------------------------------------
   movement: {
-    arturWalk: 3.5, // m/s
+    arturWalk: 2.5, // m/s (GDD começou com 3,5; reduzido no protótipo)
     arturRunMultiplier: 1.6, // correr = 1,6× andar (5,6 m/s)
     staminaRunSeconds: 6, // estamina cheia dura 6 s de corrida
     staminaRechargeSeconds: 10, // recarrega em 10 s (só sem correr)

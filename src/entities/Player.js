@@ -14,13 +14,13 @@ export function createArturAnimations(anims) {
     anims.create({
       key: `artur-walk-${dir}`,
       frames: anims.generateFrameNumbers('artur', { start: first + 1, end: first + 4 }),
-      frameRate: 7, // passos arrastados
+      frameRate: 6, // passos arrastados
       repeat: -1,
     });
     anims.create({
       key: `artur-run-${dir}`,
       frames: anims.generateFrameNumbers('artur', { start: first + 5, end: first + 8 }),
-      frameRate: 12,
+      frameRate: 10,
       repeat: -1,
     });
   });

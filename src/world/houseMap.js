@@ -63,22 +63,32 @@ export const FURNITURE = [
   // Quarto do Artur
   { id: 'cama', sprite: 'bed', x: 30.5, y: 0.25, room: 'quartoArtur' },
   { id: 'criadoMudo', sprite: 'nightstand', x: 32.1, y: 0.25, room: 'quartoArtur' },
+  { id: 'comoda', sprite: 'dresser', x: 33.4, y: 0.25, room: 'quartoArtur' },
   // Sala
   { id: 'telefoneFixo', sprite: 'phone-table', x: 11.2, y: 8.25, room: 'sala' },
   { id: 'tv', sprite: 'tv', x: 13, y: 8.25, room: 'sala' },
   { id: 'estante', sprite: 'shelf', x: 16, y: 8.25, room: 'sala' },
+  { id: 'aparador', sprite: 'sideboard', x: 18.8, y: 8.25, room: 'sala' },
   { id: 'sofa', sprite: 'sofa', x: 12.5, y: 10.6, room: 'sala' },
+  { id: 'mesinhaSala', sprite: 'side-table', x: 15.2, y: 10.7, room: 'sala' },
   // Cozinha
   { id: 'geladeira', sprite: 'fridge', x: 11, y: 14.25, room: 'cozinha' },
   { id: 'pia', sprite: 'kitchen-counter', x: 20, y: 14.25, room: 'cozinha' },
+  { id: 'mesaCozinha', sprite: 'dining-table', x: 15, y: 16.6, room: 'cozinha' },
+  // Corredores e hall
+  { id: 'aparadorCorredor', sprite: 'console-table', x: 13.4, y: 6.25, room: 'corredorCima' },
+  { id: 'mesinhaHall', sprite: 'side-table', x: 27.3, y: 12.9, room: 'hall' },
+  { id: 'mesinhaCorredor', sprite: 'side-table', x: 9.2, y: 13, room: 'corredorEsquerda' },
   // Escritório
   { id: 'mesa', sprite: 'desk', x: 34.5, y: 6.5, room: 'escritorio' },
   { id: 'farda', sprite: 'uniform', x: 37, y: 6.25, room: 'escritorio' },
+  { id: 'arquivo', sprite: 'filing-cabinet', x: 29.3, y: 6.25, room: 'escritorio' },
   { id: 'caixa1', sprite: 'box', x: 38, y: 8, room: 'escritorio' },
   { id: 'caixa2', sprite: 'box', x: 37.9, y: 8.6, room: 'escritorio' },
   { id: 'caixa3', sprite: 'box', x: 30, y: 18.9, room: 'escritorio' },
   // Banheiros
   { id: 'piaSocial', sprite: 'bathroom-sink', x: 16.75, y: 0.25, room: 'banheiroSocial' },
+  { id: 'prateleiraSocial', sprite: 'bathroom-shelf', x: 18.1, y: 0.25, room: 'banheiroSocial' },
   { id: 'piaSuite', sprite: 'bathroom-sink', x: 36.5, y: 0.25, room: 'banheiroSuite' },
   { id: 'armarioSuite', sprite: 'cabinet', x: 37.5, y: 0.25, room: 'banheiroSuite' },
   // Quintal
@@ -91,29 +101,48 @@ export const BED_POINT = { x: 31.25, y: 2.7 };
 // Ponto do gerador para medir distância e segurar F (na frente dele).
 export const GENERATOR_POINT = { x: 4, y: 16.6 };
 
-// Lugares onde remédios (m) e pilhas (b) podem aparecer — GDD 4.2, coluna "Pode aparecer".
-// A cada noite o jogo sorteia entre eles (a chave entra na etapa 7).
+// O que pode aparecer em cada cômodo (GDD 4.2, coluna "Pode aparecer").
+export const ROOM_ITEMS = {
+  corredorCima: ['battery', 'key'],
+  banheiroSocial: ['medicine', 'key'],
+  quartoArtur: ['medicine', 'battery', 'key'],
+  banheiroSuite: ['medicine', 'key'],
+  hall: ['battery'],
+  sala: ['medicine', 'battery', 'key'],
+  cozinha: ['medicine', 'battery', 'key'],
+  escritorio: ['medicine', 'battery', 'key'],
+  corredorEsquerda: ['battery', 'key'],
+};
+
+// Lugares específicos onde remédios, pilhas e a chave podem aparecer: em cima dos móveis.
+// (dx, dy) = posição da BASE do item em px dentro do sprite do móvel (o tampo).
+// A cada noite o jogo sorteia entre eles; o que cabe em cada lugar vem do cômodo do móvel.
 export const ITEM_SPOTS = [
-  { room: 'banheiroSocial', x: 16, y: 4.6, types: ['medicine'] },
-  { room: 'banheiroSocial', x: 18.2, y: 2.4, types: ['medicine'] },
-  { room: 'quartoArtur', x: 33.6, y: 4.6, types: ['medicine', 'battery'] },
-  { room: 'quartoArtur', x: 28.3, y: 1.6, types: ['medicine', 'battery'] },
-  { room: 'banheiroSuite', x: 36, y: 4.6, types: ['medicine'] },
-  { room: 'banheiroSuite', x: 38.3, y: 3.2, types: ['medicine'] },
-  { room: 'corredorCima', x: 14, y: 7, types: ['battery'] },
-  { room: 'corredorCima', x: 25.6, y: 7.1, types: ['battery'] },
-  { room: 'hall', x: 28, y: 13.2, types: ['battery'] },
-  { room: 'sala', x: 25, y: 9.2, types: ['medicine', 'battery'] },
-  { room: 'sala', x: 20, y: 12.9, types: ['medicine', 'battery'] },
-  { room: 'sala', x: 11, y: 13, types: ['medicine', 'battery'] },
-  { room: 'cozinha', x: 14, y: 19, types: ['medicine', 'battery'] },
-  { room: 'cozinha', x: 24, y: 15.4, types: ['medicine', 'battery'] },
-  { room: 'cozinha', x: 27.6, y: 18.9, types: ['medicine', 'battery'] },
-  { room: 'escritorio', x: 35.2, y: 8.1, types: ['medicine', 'battery'] },
-  { room: 'escritorio', x: 31, y: 13, types: ['medicine', 'battery'] },
-  { room: 'escritorio', x: 37.4, y: 18.6, types: ['medicine', 'battery'] },
-  { room: 'corredorEsquerda', x: 9, y: 11.5, types: ['battery'] },
-  { room: 'corredorEsquerda', x: 9, y: 15, types: ['battery'] },
+  { on: 'criadoMudo', dx: 13, dy: 9 },
+  { on: 'comoda', dx: 8, dy: 6 },
+  { on: 'comoda', dx: 31, dy: 6 },
+  { on: 'telefoneFixo', dx: 14, dy: 9 },
+  { on: 'aparador', dx: 9, dy: 7 },
+  { on: 'aparador', dx: 38, dy: 7 },
+  { on: 'mesinhaSala', dx: 8, dy: 7 },
+  { on: 'pia', dx: 7, dy: 13 },
+  { on: 'pia', dx: 45, dy: 13 },
+  { on: 'mesaCozinha', dx: 10, dy: 10 },
+  { on: 'mesaCozinha', dx: 22, dy: 16 },
+  { on: 'mesaCozinha', dx: 40, dy: 13 },
+  { on: 'aparadorCorredor', dx: 16, dy: 6 },
+  { on: 'aparadorCorredor', dx: 26, dy: 6 },
+  { on: 'mesinhaHall', dx: 8, dy: 7 },
+  { on: 'mesinhaCorredor', dx: 8, dy: 7 },
+  { on: 'mesa', dx: 20, dy: 14 },
+  { on: 'mesa', dx: 34, dy: 14 },
+  { on: 'arquivo', dx: 8, dy: 4 },
+  { on: 'caixa1', dx: 5, dy: 5 },
+  { on: 'caixa3', dx: 10, dy: 5 },
+  { on: 'prateleiraSocial', dx: 11, dy: 10 },
+  { on: 'prateleiraSocial', dx: 11, dy: 20 },
+  { on: 'armarioSuite', dx: 6, dy: 3 },
+  { on: 'armarioSuite', dx: 18, dy: 3 },
 ];
 
 // Onde Artur aparece ao chegar em casa (pela porta da frente).

@@ -284,8 +284,9 @@ Na primeira vez que Artur se aproxima do quarto na noite:
 
 ### 4.10 Itens
 
-- **Remédio:** espalhado pela casa em lugares aleatórios (entre os pontos possíveis). Quantidade fixa por noite, não acumula. Ao tomar: **glitch rápido na tela** (menos de 1 s: imagem deslocada, cores separadas, linhas cortadas) e o medo cai rápido. Sem custo.
-- **Pilha:** espalhada pela casa. Som característico de encaixe. Recarrega a bateria.
+- **Onde ficam os itens:** remédios, pilhas e a chave são **pequenos** e ficam **em cima dos móveis** (mesas, cômoda, criado-mudo, aparadores, bancada da pia, prateleiras, arquivo, caixas), nunca soltos no chão. Há uma lista de lugares específicos em cada móvel; a cada noite o jogo sorteia entre eles, respeitando o que pode aparecer em cada cômodo (tabela 4.2) e preferindo cômodos diferentes.
+- **Remédio:** sorteado entre os lugares possíveis. Quantidade fixa por noite, não acumula. Ao tomar: **glitch rápido na tela** (menos de 1 s: imagem deslocada, cores separadas, linhas cortadas) e o medo cai rápido. Sem custo.
+- **Pilha:** sorteada entre os lugares possíveis. Som característico de encaixe. Recarrega a bateria.
 - **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada. Abaixo de 20%: a luz falha (aviso). Vazia: não liga. **O cone de luz para nas paredes** (não atravessa paredes nem portas fechadas).
 
 ---
@@ -399,8 +400,8 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 
 | Item | Valor |
 |---|---|
-| Artur andando | 3,5 m/s |
-| Artur correndo | 5,6 m/s (1,6× andar) |
+| Artur andando | 2,5 m/s (era 3,5; reduzido no protótipo) |
+| Artur correndo | 4,0 m/s (1,6× andar) |
 | Estamina | 6 s de corrida; recarrega em 10 s (só sem correr) |
 | Vulto | 1,1× Artur correndo |
 | Invasor (perseguição normal) | 0,92× Artur correndo |

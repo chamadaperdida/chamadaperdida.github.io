@@ -78,12 +78,10 @@ function nightstand(c, x, y) {
   c.rect(x, y + 4, 16, 12, WOOD_DARK);
   c.rect(x, y + 4, 16, 4, WOOD);
   c.rect(x + 6, y + 11, 4, 1, '#a8925e');
-  // Frascos de remédio vazios
-  c.rect(x + 2, y, 3, 6, '#9a5a22');
-  c.rect(x + 2, y, 3, 1, '#d8d4c8');
-  c.rect(x + 7, y + 2, 3, 4, '#8a5020');
-  c.rect(x + 7, y + 2, 3, 1, '#d8d4c8');
-  c.rect(x + 11, y + 5, 4, 2, '#9a5a22'); // frasco caído
+  // Frascos de remédio vazios (opacos, sem rótulo: não confundir com remédio de verdade)
+  c.rect(x + 2, y + 1, 3, 5, '#5a4232');
+  c.rect(x + 2, y + 1, 3, 1, '#7a7468');
+  c.rect(x + 6, y + 5, 4, 2, '#5a4232'); // frasco caído
 }
 
 function sofa(c, x, y) {
@@ -238,23 +236,93 @@ function generator(c, x, y) {
 // ---- Itens (GDD 4.10) ------------------------------------------------------------
 
 function medicine(c, x, y) {
-  // Frasco de remédio controlado, 8×11
-  c.rect(x + 1, y, 6, 3, '#e4e0d4'); // tampa
-  c.rect(x + 1, y + 2, 6, 1, '#b8b2a4');
-  c.rect(x, y + 3, 8, 8, '#a8561c');
-  c.rect(x + 1, y + 3, 1, 7, '#c87a3a'); // brilho
-  c.rect(x + 2, y + 5, 5, 4, '#e8e2d0'); // rótulo
-  c.rect(x + 3, y + 6, 3, 1, '#8a3030');
-  c.rect(x + 3, y + 8, 2, 1, '#8a8478');
+  // Frasco de remédio controlado (cheio), 5×7 — pequeno, fica em cima dos móveis
+  c.rect(x, y, 5, 2, '#e4e0d4'); // tampa
+  c.rect(x, y + 2, 5, 5, '#c0661e');
+  c.px(x, y + 2, '#e08a40'); // brilho
+  c.rect(x + 1, y + 3, 3, 2, '#ece6d4'); // rótulo
 }
 
 function battery(c, x, y) {
-  // Pilha grande, 6×12
-  c.rect(x + 2, y, 2, 1, '#c8c8c0'); // polo
-  c.rect(x, y + 1, 6, 5, '#d8b030');
-  c.rect(x, y + 6, 6, 6, '#1e1e20');
-  c.rect(x + 1, y + 1, 1, 10, '#f0d060');
-  c.rect(x + 2, y + 8, 2, 1, '#d8b030');
+  // Pilha, 3×7
+  c.px(x + 1, y, '#c8c8c0'); // polo
+  c.rect(x, y + 1, 3, 3, '#e0b830');
+  c.rect(x, y + 4, 3, 3, '#1e1e20');
+}
+
+// ---- Móveis onde os itens aparecem ------------------------------------------
+
+function dresser(c, x, y) {
+  // Cômoda, 40×26
+  c.rect(x, y, 40, 26, WOOD_DARK);
+  c.rect(x, y, 40, 7, WOOD);
+  c.rect(x, y, 40, 1, WOOD_LIGHT);
+  for (let i = 0; i < 2; i++) {
+    c.rect(x + 2, y + 9 + i * 8, 36, 6, WOOD_INSET);
+    c.rect(x + 18, y + 11 + i * 8, 4, 1, '#a8925e');
+  }
+}
+
+function diningTable(c, x, y) {
+  // Mesa da cozinha com toalha velha, 48×32
+  c.rect(x, y, 48, 20, '#5a4a3a');
+  c.rect(x + 2, y + 2, 44, 16, '#6e5c48');
+  c.rect(x, y + 18, 48, 4, '#3a2c20');
+  c.rect(x + 3, y + 22, 3, 10, WOOD_DARK); // pernas
+  c.rect(x + 42, y + 22, 3, 10, WOOD_DARK);
+  c.rect(x + 30, y + 4, 6, 5, '#b8b2a0'); // prato esquecido
+}
+
+function sideboard(c, x, y) {
+  // Aparador, 48×24
+  c.rect(x, y, 48, 24, WOOD_DARK);
+  c.rect(x, y, 48, 8, '#4c3626');
+  c.rect(x, y, 48, 1, WOOD);
+  c.rect(x + 3, y + 11, 19, 10, WOOD_INSET);
+  c.rect(x + 26, y + 11, 19, 10, WOOD_INSET);
+  c.rect(x + 20, y + 15, 2, 2, '#a8925e');
+  c.rect(x + 26, y + 15, 2, 2, '#a8925e');
+  c.rect(x + 20, y + 1, 7, 5, '#5a5a62'); // porta-retrato virado
+}
+
+function sideTable(c, x, y) {
+  // Mesinha, 16×16
+  c.rect(x, y, 16, 8, WOOD);
+  c.rect(x, y, 16, 1, WOOD_LIGHT);
+  c.rect(x, y + 8, 16, 2, WOOD_DARK);
+  c.rect(x + 2, y + 10, 2, 6, WOOD_DARK);
+  c.rect(x + 12, y + 10, 2, 6, WOOD_DARK);
+}
+
+function consoleTable(c, x, y) {
+  // Aparador estreito do corredor, 32×16
+  c.rect(x, y, 32, 7, WOOD);
+  c.rect(x, y, 32, 1, WOOD_LIGHT);
+  c.rect(x, y + 7, 32, 2, WOOD_DARK);
+  c.rect(x + 2, y + 9, 2, 7, WOOD_DARK);
+  c.rect(x + 28, y + 9, 2, 7, WOOD_DARK);
+  c.rect(x + 4, y + 1, 5, 4, '#3a5a3a'); // planta seca
+  c.px(x + 6, y, '#5a4a2a');
+}
+
+function bathroomShelf(c, x, y) {
+  // Prateleira de banheiro, 16×22
+  c.rect(x, y, 16, 22, '#3e4446');
+  c.rect(x + 1, y + 1, 14, 8, '#2a2e30');
+  c.rect(x + 1, y + 11, 14, 8, '#2a2e30');
+  c.rect(x, y + 9, 16, 2, '#5d6669');
+  c.rect(x, y + 19, 16, 3, '#5d6669');
+  c.rect(x + 2, y + 13, 3, 6, '#7a8a90'); // frasco vazio
+}
+
+function filingCabinet(c, x, y) {
+  // Arquivo de aço, 16×26
+  c.rect(x, y, 16, 26, '#4a4e52');
+  c.rect(x, y, 16, 4, '#5e6368');
+  for (let i = 0; i < 3; i++) {
+    c.rect(x + 1, y + 5 + i * 7, 14, 6, '#3c4044');
+    c.rect(x + 6, y + 7 + i * 7, 4, 1, '#9a9a90');
+  }
 }
 
 // ---- Atlas ------------------------------------------------------------------
@@ -280,8 +348,15 @@ const PROPS = [
   ['uniform', 16, 32, uniformRack, true],
   ['box', 16, 16, box, true],
   ['generator', 48, 40, generator, true],
-  ['medicine', 8, 11, medicine, true],
-  ['battery', 6, 12, battery, true],
+  ['medicine', 5, 7, medicine, true],
+  ['battery', 3, 7, battery, true],
+  ['dresser', 40, 26, dresser, true],
+  ['dining-table', 48, 32, diningTable, true],
+  ['sideboard', 48, 24, sideboard, true],
+  ['side-table', 16, 16, sideTable, true],
+  ['console-table', 32, 16, consoleTable, true],
+  ['bathroom-shelf', 16, 22, bathroomShelf, true],
+  ['filing-cabinet', 16, 26, filingCabinet, true],
 ];
 
 export function drawProps() {
