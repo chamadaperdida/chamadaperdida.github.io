@@ -159,6 +159,14 @@ export const BALANCE = {
     flashlightAngle: 50,
     // Remédio: duração do glitch na tela (s). GDD: menos de 1 s.
     medicineGlitchSeconds: 0.6,
+    // Alucinações só começam este tempo (s) depois de fechar a fala de chegada.
+    hallucinationStartDelay: 1.5,
+    // Luz piscando (comum): duração andando (s) e quantas vezes mais rápido acaba parado.
+    flickerSeconds: 5,
+    flickerStillSpeed: 2.5,
+    // Sono: em que momento da sequência (s) o gerador pode cair.
+    sleepGeneratorRollMin: 1.5,
+    sleepGeneratorRollMax: 6.5,
   },
 
   // ---------------------------------------------------------------------------

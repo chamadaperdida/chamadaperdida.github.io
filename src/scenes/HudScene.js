@@ -62,6 +62,24 @@ export class HudScene extends Phaser.Scene {
     this.holdFill = this.add.rectangle(0, 0, 62, 5, 0xe8e2cf).setOrigin(0, 0.5).setVisible(false);
 
     this.dialogue = new DialogueBox(this);
+
+    // Escurecer a tela (sequência de sono)
+    const { width, height } = this.scale;
+    this.fade = this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0).setAlpha(0).setDepth(3000);
+  }
+
+  /** Escurece a tela inteira aos poucos. */
+  fadeToBlack(seconds) {
+    this.tweens.killTweensOf(this.fade);
+    this.tweens.add({ targets: this.fade, alpha: 1, duration: seconds * 1000, ease: 'Sine.easeIn' });
+  }
+
+  /** Volta a imagem (0 = na hora). */
+  clearFade(seconds) {
+    if (!this.fade) return;
+    this.tweens.killTweensOf(this.fade);
+    if (seconds <= 0) this.fade.setAlpha(0);
+    else this.tweens.add({ targets: this.fade, alpha: 0, duration: seconds * 1000 });
   }
 
   update(time, deltaMs) {

@@ -20,7 +20,7 @@ npm run dev
 | Correr | Shift (segurar) |
 | Mirar a lanterna | Mouse |
 | Ligar/desligar lanterna (só no escuro) | Clique esquerdo |
-| Abrir/fechar porta, pegar remédio/pilha | F |
+| Abrir/fechar porta, pegar remédio/pilha, dormir na cama | F |
 | Religar o gerador | F (segurar 3 s) |
 | Avançar diálogo | Espaço |
 
@@ -42,14 +42,14 @@ npm run dev
 - **F9** liga/desliga o painel (fica salvo no navegador), ou abra o jogo com `?debug` no fim do link.
 - Mostra medo, fase da noite, risco e quedas do gerador, lanterna, itens e as fórmulas da noite.
 - **1–7** começa a noite daquele dia · **R** reinicia a noite · **T** acelera o relógio da noite (1×, 10×, 60×)
-- **K** derruba o gerador · **+ / −** sobe/desce o medo · **G** mostra as caixas de colisão
+- **K** derruba o gerador · **+ / −** sobe/desce o medo · **H** força uma alucinação · **N** termina a noite · **G** mostra as caixas de colisão
 
 ## Progresso (GDD, Apêndice C)
 
 - [x] 1. Base
 - [x] 2. Casa jogável
 - [x] 3. Luz e medo
-- [ ] 4. Dormir e curva da noite
+- [x] 4. Dormir e curva da noite
 - [ ] 5. Alucinações
 - [ ] 6. Monstros
 - [ ] 7. Portas e chave

@@ -6,7 +6,7 @@
 // - Toda queda soma medo (+4). Religar: segurar F por 3 s perto dele.
 
 import { BALANCE } from '../config/balance.js';
-import { stepGeneratorRisk } from './formulas.js';
+import { generatorSleepChance, reduceSleepBase, stepGeneratorRisk } from './formulas.js';
 
 export class Generator {
   constructor(clock, fear, position) {
@@ -19,6 +19,8 @@ export class Generator {
     this.lockedDoor = false;
     this.wasFull = false;
     this.holdProgress = 0; // 0 a 1 enquanto segura F
+    this.sleepBase = clock.night.generatorSleepBaseChance; // chance base no sono (9.1)
+    this.paused = false; // durante o sono, só a chance própria do sono vale
     this.listeners = { drop: [], restore: [] };
   }
 
@@ -41,7 +43,7 @@ export class Generator {
     const justFull = this.fear.full && !this.wasFull;
     this.wasFull = this.fear.full;
 
-    if (!this.on) return;
+    if (!this.on || this.paused) return;
 
     if (justFull) {
       this.drop('medo 100%');
@@ -70,6 +72,19 @@ export class Generator {
     this.lastDropReason = reason;
     this.fear.add(BALANCE.fearEvents.generatorFailure);
     this.listeners.drop.forEach((fn) => fn(reason));
+  }
+
+  /** Chance de cair durante a sequência de sono que começa agora (GDD 4.7 e 9.2). */
+  get sleepChance() {
+    return generatorSleepChance(this.sleepBase, this.clock.t);
+  }
+
+  /** Sorteia a queda durante o sono. Se cair, a base perde 35 p.p. para as próximas tentativas. */
+  rollSleep() {
+    if (!this.on || Math.random() >= this.sleepChance) return false;
+    this.sleepBase = reduceSleepBase(this.sleepBase);
+    this.drop('durante o sono');
+    return true;
   }
 
   /** Chamado todo quadro enquanto o jogador segura F perto do gerador. */

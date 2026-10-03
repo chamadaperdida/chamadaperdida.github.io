@@ -5,6 +5,7 @@ import { BALANCE, TOTAL_DAYS } from '../config/balance.js';
 import { Player } from '../entities/Player.js';
 import { Door } from '../entities/Door.js';
 import {
+  BED_POINT,
   DOORS,
   FURNITURE,
   GENERATOR_POINT,
@@ -21,6 +22,8 @@ import { Generator } from '../systems/Generator.js';
 import { Flashlight } from '../systems/Flashlight.js';
 import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
+import { HallucinationDirector } from '../systems/HallucinationDirector.js';
+import { daysLeftText } from './TransitionScene.js';
 import { calmWindow, fearDecayPerSecond, hallucinationRate } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
 import { debug } from '../debug/debug.js';
@@ -28,6 +31,7 @@ import { debug } from '../debug/debug.js';
 const CAMERA_ZOOM = 2; // mostra ~15 m × 8,4 m da casa por vez
 const DOOR_RANGE = 1.3; // metros
 const ITEM_RANGE = 1.0;
+const BED_RANGE = 1.4;
 const CHEST_OFFSET = 14; // px acima dos pés: de onde sai a luz da lanterna
 const NIGHT_SPEEDS = [1, 10, 60]; // debug: acelera só o relógio da noite
 
@@ -35,6 +39,7 @@ const NIGHT_SPEEDS = [1, 10, 60]; // debug: acelera só o relógio da noite
 const LINES = {
   arrival: { speaker: 'Artur', text: 'Estou exausto... só quero dormir.' },
   clara: { speaker: 'Artur', text: 'Não posso entrar, está trancado.' },
+  cantSleep: { speaker: 'Artur', text: 'Não consigo dormir agora, estou com medo.' },
 };
 
 export class HouseScene extends Phaser.Scene {
@@ -47,6 +52,8 @@ export class HouseScene extends Phaser.Scene {
     this.fear = new Fear(this.clock);
     this.generator = new Generator(this.clock, this.fear, GENERATOR_POINT);
     this.flashlight = new Flashlight();
+    this.director = new HallucinationDirector(this.clock, this.fear);
+    this.sleep = null; // sequência de sono em andamento
 
     this.buildMap();
     this.buildFurniture();
@@ -74,11 +81,13 @@ export class HouseScene extends Phaser.Scene {
 
     this.hud = this.scene.get('Hud');
     this.hud.dialogue.clear();
+    this.hud.clearFade(0);
+    this.scene.setVisible(true, 'Hud');
 
     this.input.keyboard.on('keydown-F', () => this.interact());
     this.keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.leftButtonDown() && !this.hud.talking) this.flashlight.toggle(!this.generator.on);
+      if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep) this.flashlight.toggle(!this.generator.on);
     });
 
     this.generator.listen('drop', () => cam.shake(180, 0.004));
@@ -86,7 +95,8 @@ export class HouseScene extends Phaser.Scene {
 
     this.setupDebugKeys();
 
-    this.time.delayedCall(600, () => this.hud.talk(LINES.arrival));
+    // Chegada: a fala, e só depois que ela fecha começa a noite de alucinações
+    this.time.delayedCall(600, () => this.hud.talk(LINES.arrival).then(() => this.director.enableAfter(this)));
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       debug.clearGroup('Casa');
@@ -109,15 +119,61 @@ export class HouseScene extends Phaser.Scene {
 
   buildFurniture() {
     this.furniture = this.physics.add.staticGroup();
+    const rects = [];
     for (const item of FURNITURE) {
       const sprite = this.add.image(item.x * PPM, item.y * PPM, 'props', item.sprite).setOrigin(0);
       const { width: w, height: h } = sprite;
-      // Colisão só na parte de baixo: dá para passar "atrás" do topo dos móveis altos
-      const top = h > 24 ? Math.round(h * 0.35) : 2;
-      const body = this.add.zone(sprite.x + w / 2, sprite.y + top + (h - top) / 2, w - 2, h - top - 1);
-      this.furniture.add(body);
       sprite.setDepth(sprite.y + h - 4);
       if (item.id === 'gerador') this.generatorSprite = sprite;
+      if (item.id === 'cama') this.bedSprite = sprite;
+      // Colisão no móvel inteiro (menos o contorno de 1 px)
+      rects.push(new Phaser.Geom.Rectangle(sprite.x + 1, sprite.y + 1, w - 2, h - 2));
+    }
+    this.closeGaps(rects);
+    for (const r of rects) this.furniture.add(this.add.zone(r.centerX, r.centerY, r.width, r.height));
+  }
+
+  /**
+   * Fecha vãos menores que o Artur entre móveis e paredes (ou entre dois móveis).
+   * Sem isso, a física "espreme" o corpo dele por frestas apertando diagonais.
+   */
+  closeGaps(rects) {
+    const MAX_GAP = 14; // px — o corpo do Artur tem 10×6
+    const solid = (x, y) => {
+      const k = this.grid.kind[Math.round(y / TILE)]?.[Math.round(x / TILE)];
+      return k === 'wall' || k === 'void';
+    };
+    const hitsFurniture = (r, x, y) => rects.some((o) => o !== r && o.contains(x, y));
+    const blocked = (r, x, y) => solid(x, y) || hitsFurniture(r, x, y);
+    for (const r of rects) {
+      const xs = [r.left + 1, r.centerX, r.right - 1];
+      const ys = [r.top + 1, r.centerY, r.bottom - 1];
+      for (let d = 1; d <= MAX_GAP; d++) {
+        if (xs.some((x) => blocked(r, x, r.top - d))) {
+          r.y -= d - 1;
+          r.height += d - 1;
+          break;
+        }
+      }
+      for (let d = 1; d <= MAX_GAP; d++) {
+        if (xs.some((x) => blocked(r, x, r.bottom + d))) {
+          r.height += d - 1;
+          break;
+        }
+      }
+      for (let d = 1; d <= MAX_GAP; d++) {
+        if (ys.some((y) => blocked(r, r.left - d, y))) {
+          r.x -= d - 1;
+          r.width += d - 1;
+          break;
+        }
+      }
+      for (let d = 1; d <= MAX_GAP; d++) {
+        if (ys.some((y) => blocked(r, r.right + d, y))) {
+          r.width += d - 1;
+          break;
+        }
+      }
     }
   }
 
@@ -148,6 +204,12 @@ export class HouseScene extends Phaser.Scene {
         BALANCE.extra.generatorInteractDistance,
       );
     }
+    const bed = this.bedSprite;
+    consider(
+      { kind: 'bed', anchor: { x: bed.x + bed.width / 2, y: bed.y + bed.height - 18 } },
+      dist(BED_POINT.x, BED_POINT.y),
+      BED_RANGE,
+    );
     for (const door of this.doors) {
       if (door.kind === 'front') continue;
       consider(
@@ -160,12 +222,63 @@ export class HouseScene extends Phaser.Scene {
   }
 
   interact() {
-    if (this.hud.talking) return;
+    if (this.hud.talking || this.sleep) return;
     const target = this.nearestInteractable();
     if (!target) return;
     if (target.kind === 'item') this.useItem(target.item);
     else if (target.kind === 'door') this.useDoor(target.door);
+    else if (target.kind === 'bed') this.tryToSleep();
     // gerador: segurar F, tratado no update
+  }
+
+  // ---- Dormir (GDD 4.7) ---------------------------------------------------
+
+  tryToSleep() {
+    if (this.fear.value > 0) {
+      this.hud.talk(LINES.cantSleep);
+      return;
+    }
+    const e = BALANCE.extra;
+    // A tela escurece aos poucos; sussurros aumentando (áudio na etapa 11); silêncio; fim.
+    // Nenhuma alucinação interrompe. Só o gerador pode cair, com a chance própria do sono,
+    // sorteada num momento aleatório da sequência.
+    this.sleep = {
+      elapsed: 0,
+      rollAt: Phaser.Math.FloatBetween(e.sleepGeneratorRollMin, e.sleepGeneratorRollMax),
+      rolled: false,
+      chance: this.generator.sleepChance,
+    };
+    this.generator.paused = true;
+    this.flashlight.forceOff();
+    this.hud.fadeToBlack(BALANCE.timings.sleepSequenceSeconds * 0.85);
+  }
+
+  updateSleep(dt) {
+    const s = this.sleep;
+    s.elapsed += dt;
+    if (!s.rolled && s.elapsed >= s.rollAt) {
+      s.rolled = true;
+      if (this.generator.rollSleep()) {
+        this.cancelSleep();
+        return;
+      }
+    }
+    if (s.elapsed >= BALANCE.timings.sleepSequenceSeconds) this.endNight();
+  }
+
+  cancelSleep() {
+    this.sleep = null;
+    this.generator.paused = false;
+    this.hud.clearFade(0.25);
+  }
+
+  /** Noite terminou: próximo dia (a delegacia e o save entram nas etapas 8 e 9). */
+  endNight() {
+    this.sleep = null;
+    const day = this.clock.day;
+    const screens = day < 7 ? [daysLeftText(day + 1), 'Casa'] : ['O final entra na etapa 10'];
+    const nextDay = day < 7 ? day + 1 : 1;
+    this.scene.start('Transition', { screens, next: { scene: 'House', data: { day: nextDay } } });
   }
 
   useDoor(door) {
@@ -194,8 +307,9 @@ export class HouseScene extends Phaser.Scene {
     const cam = this.cameras.main;
     const toScreen = (p) => ({ x: (p.x - cam.worldView.x) * cam.zoom, y: (p.y - cam.worldView.y) * cam.zoom });
 
-    // Artur fica parado enquanto a caixa de diálogo está aberta
-    this.player.frozen = this.hud.talking;
+    // Artur fica parado com a caixa de diálogo aberta e durante a sequência de sono
+    this.player.frozen = this.hud.talking || !!this.sleep;
+    if (this.sleep) this.updateSleep(dt);
 
     // Lanterna mira no mouse; parado, Artur vira para onde aponta
     const pointer = this.input.activePointer.positionToCamera(cam);
@@ -208,6 +322,11 @@ export class HouseScene extends Phaser.Scene {
     const feet = this.player.feetMeters;
 
     this.generator.update(nightDt, feet);
+    this.director.update(dt, nightDt, {
+      lightsOn: this.generator.on,
+      blocked: this.hud.talking || !!this.sleep,
+      playerMoving: this.player.body.velocity.lengthSq() > 0,
+    });
     this.fear.update(nightDt, this.generator.on);
     this.flashlight.update(dt);
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
@@ -223,13 +342,14 @@ export class HouseScene extends Phaser.Scene {
       feet,
       chest: this.chest,
       flashlight: this.flashlight,
+      zoneFactor: this.director.lightFactor,
     });
 
     // HUD
     this.hud.setFear(this.fear.value);
     this.hud.setStamina(this.player.stamina, this.player.exhausted);
     this.hud.setBattery(this.flashlight.battery, this.flashlight.low);
-    this.hud.showPrompt(target ? { ...toScreen(target.anchor), y: toScreen(target.anchor).y - 4 } : null);
+    this.hud.showPrompt(target && !this.sleep ? { ...toScreen(target.anchor), y: toScreen(target.anchor).y - 4 } : null);
     this.hud.showHold(
       atGenerator && this.generator.holdProgress > 0 ? { ...toScreen(target.anchor), y: toScreen(target.anchor).y - 40 } : null,
       this.generator.holdProgress,
@@ -250,7 +370,7 @@ export class HouseScene extends Phaser.Scene {
 
     debug.set('Geral/FPS', Math.round(this.game.loop.actualFps));
     debug.set('Geral/Atalhos', '1–7 dia · R reinicia · T tempo');
-    debug.set('Geral/Mais atalhos', 'K derruba gerador · +/− medo · G colisões');
+    debug.set('Geral/Mais atalhos', 'K derruba gerador · +/− medo · H alucinação · N termina a noite · G colisões');
 
     debug.set('Noite/Dia', `${this.clock.day}`);
     debug.set('Noite/Tempo', `${min}:${sec}  (${this.clock.speed}×)`);
@@ -263,8 +383,21 @@ export class HouseScene extends Phaser.Scene {
       'Noite/Queda do medo',
       g.on ? `${fearDecayPerSecond(night, t).toFixed(3)} %/s` : 'parado (escuro)',
     );
-    debug.set('Noite/Alucinação', `${hallucinationRate(night, t).toFixed(4)} /s  (etapa 5)`);
+    const d = this.director;
+    debug.set('Noite/Alucinação: taxa', `${hallucinationRate(night, t).toFixed(4)} /s`);
+    let now = '—';
+    if (d.active) now = d.active.name;
+    else if (!d.enabled) now = 'esperando a chegada';
+    else if (d.inCalm) now = `calma (${(d.calmUntil - t).toFixed(1)} s)`;
+    debug.set('Noite/Alucinação: agora', now);
+    debug.set('Noite/Alucinações na noite', `${d.count}`);
     debug.set('Noite/Janela de calma', `${calmWindow(night, t).toFixed(1)} s`);
+    debug.set(
+      'Noite/Dormir',
+      this.sleep
+        ? `dormindo ${this.sleep.elapsed.toFixed(1)} s · gerador ${(this.sleep.chance * 100).toFixed(1)}%`
+        : `gerador no sono ${(g.sleepChance * 100).toFixed(1)}% (base ${(g.sleepBase * 100).toFixed(0)}%)`,
+    );
 
     debug.set('Gerador/Estado', g.on ? 'ligado' : `DESLIGADO (${g.lastDropReason})`);
     debug.set('Gerador/Artur', `${g.isFar(feet) ? 'longe' : 'perto'} (${g.distanceTo(feet).toFixed(1)} m)`);
@@ -292,6 +425,8 @@ export class HouseScene extends Phaser.Scene {
         const i = NIGHT_SPEEDS.indexOf(this.clock.speed);
         this.clock.speed = NIGHT_SPEEDS[(i + 1) % NIGHT_SPEEDS.length];
       } else if (event.key === 'k' || event.key === 'K') this.generator.drop('debug');
+      else if ((event.key === 'h' || event.key === 'H') && !this.director.active && this.generator.on) this.director.start();
+      else if (event.key === 'n' || event.key === 'N') this.endNight();
       else if (event.key === '+' || event.key === '=') this.fear.add(10 / this.clock.night.fearMultiplier);
       else if (event.key === '-') this.fear.reduce(10);
       else if (event.key === 'g' || event.key === 'G') this.toggleCollisionDebug();

@@ -99,8 +99,10 @@ export function drawFaces() {
   base(c, S);
   eyes(c, S, { open: 2, pupilDx: 1 });
   brows(c, S, 'tense');
+  // Boca fechada, com o canto caído (nada de sorriso)
   c.rect(S + 10, 16, 4, 1, C.mouth);
-  c.px(S + 14, 15, C.mouth);
+  c.px(S + 14, 17, C.mouth);
+  c.px(S + 9, 17, C.mouth);
 
   // 2 — suando, olhos mais abertos, boca entreaberta
   base(c, S * 2);

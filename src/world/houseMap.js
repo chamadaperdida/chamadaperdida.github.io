@@ -85,6 +85,9 @@ export const FURNITURE = [
   { id: 'gerador', sprite: 'generator', x: 3.25, y: 15, room: 'quintal' },
 ];
 
+// Ponto de interação com a cama (ao lado dela, no quarto do Artur).
+export const BED_POINT = { x: 31.25, y: 2.7 };
+
 // Ponto do gerador para medir distância e segurar F (na frente dele).
 export const GENERATOR_POINT = { x: 4, y: 16.6 };
 

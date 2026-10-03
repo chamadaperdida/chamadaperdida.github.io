@@ -112,8 +112,10 @@ export class Lighting {
    * @param feet  posição dos pés do Artur (m) — define o cômodo atual
    * @param chest origem da lanterna (m)
    * @param flashlight sistema da lanterna
+   * @param zoneFactor brilho da zona atual (alucinação de luz piscando), 1 = normal
    */
-  update(dt, { powerOn, feet, chest, flashlight }) {
+  update(dt, { powerOn, feet, chest, flashlight, zoneFactor = 1 }) {
+    this.zoneFactor = zoneFactor;
     this.powerOn = powerOn;
     const room = roomAt(feet.x, feet.y);
     if (room) this.currentRoom = room; // no vão de uma porta, mantém o cômodo anterior
@@ -130,7 +132,7 @@ export class Lighting {
     g.clear();
 
     for (const r of ROOMS) {
-      const b = this.brightness.get(r.id);
+      const b = this.brightness.get(r.id) * (LIGHT_ZONE.get(r.id) === currentZone ? zoneFactor : 1);
       if (b <= 0.01) continue;
       g.fillStyle(COLORS.room, b);
       // Inclui meia parede em volta, para as paredes do cômodo também acenderem
@@ -158,7 +160,7 @@ export class Lighting {
     const current = this.currentRoom;
     if (!current) return;
     const zone = LIGHT_ZONE.get(current.id);
-    const b = this.brightness.get(current.id);
+    const b = this.brightness.get(current.id) * this.zoneFactor;
     for (const p of this.portals) {
       if (!p.door.isOpen) continue;
       const n = p.axis === 'h' ? { x: 0, y: 1 } : { x: 1, y: 0 };
