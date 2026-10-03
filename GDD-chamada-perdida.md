@@ -24,7 +24,7 @@
 | Sem Lovable | O projeto é só Phaser + Vite, sem React |
 | Arte | Pixel art feita pelo Claude Code (sprites gerados por código/scripts, exportados como spritesheets PNG) |
 | Sons e efeitos | Gerados por código (Web Audio: ruído branco, chiado, batimento, estática) + bancos gratuitos com licença livre (ex.: Freesound, filtrando por CC0) |
-| Vozes | TTS gratuito e local (ex.: **Piper**, que tem vozes em pt-BR), gerado por script pelo Claude Code. Efeitos de telefone aplicados no jogo |
+| Falas | **Caixa de diálogo** com nome de quem fala e texto sendo digitado (seção 11.1). Não há voz por IA; áudio de voz só em momentos específicos (a definir) |
 | Save | `localStorage` do navegador |
 
 ---
@@ -131,7 +131,7 @@ Tela preta, **todo texto em vermelho**.
 
 - Câmera frontal, 2D. **Artur não anda.**
 - O jogador interage com objetos clicando neles.
-- O telefone toca; o jogador clica para atender. A ligação é falada (voz) com legenda na tela.
+- O telefone toca; o jogador clica para atender. A ligação aparece na **caixa de diálogo** (seção 11.1), com o nome de quem fala.
 - Quando todas as ligações do dia terminam, a **porta** fica interativa. Antes disso, clicar nela não faz nada (sugestão: Artur diz *"Ainda não terminou o turno."*).
 
 ### 3.2 Objetos
@@ -286,7 +286,7 @@ Na primeira vez que Artur se aproxima do quarto na noite:
 
 - **Remédio:** espalhado pela casa em lugares aleatórios (entre os pontos possíveis). Quantidade fixa por noite, não acumula. Ao tomar: **glitch rápido na tela** (menos de 1 s: imagem deslocada, cores separadas, linhas cortadas) e o medo cai rápido. Sem custo.
 - **Pilha:** espalhada pela casa. Som característico de encaixe. Recarrega a bateria.
-- **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada. Abaixo de 20%: a luz falha (aviso). Vazia: não liga.
+- **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada. Abaixo de 20%: a luz falha (aviso). Vazia: não liga. **O cone de luz para nas paredes** (não atravessa paredes nem portas fechadas).
 
 ---
 
@@ -469,6 +469,19 @@ Quedas de gerador por noite: ~1,5 (D1) a ~2,5 (D7). Nenhuma noite trava sem poss
 - **Barra de estamina:** fina, menor, **azul**, abaixo do medo.
 - **Barra de bateria:** fina, menor, **amarela**, abaixo da estamina.
 
+### 11.1 Caixa de diálogo
+
+Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos etc.) aparecem numa caixa de diálogo. Ela **substitui as vozes por IA**.
+
+- Caixa escura na parte de baixo da tela, com uma **etiqueta com o nome de quem fala** (ex.: "Artur", "Marcos", "Senhora").
+- O texto aparece **sendo digitado**, letra por letra, com pequenas pausas na pontuação (vírgula, ponto, reticências).
+- A caixa **fica na tela até o jogador apertar Espaço**:
+  - Espaço com o texto ainda sendo digitado → mostra o texto inteiro na hora.
+  - Espaço com o texto completo → passa para a próxima fala ou fecha a caixa.
+- Um indicador piscando (▼) avisa que o texto terminou e dá para avançar.
+- Em casa, Artur fica parado enquanto a caixa está aberta.
+- Na delegacia, clicar também avança (seção 12).
+
 ---
 
 ## 12. Controles
@@ -483,6 +496,7 @@ Quedas de gerador por noite: ~1,5 (D1) a ~2,5 (D7). Nenhuma noite trava sem poss
 | Ligar/desligar lanterna | Clique esquerdo |
 | Interagir (cama, TV, telefone, portas, remédio, pilha, chave) | F |
 | Religar o gerador | F (segurar) |
+| Avançar diálogo | Espaço |
 | Pausa | Esc |
 
 ### Delegacia
@@ -500,7 +514,8 @@ Quedas de gerador por noite: ~1,5 (D1) a ~2,5 (D7). Nenhuma noite trava sem poss
 ### 13.1 Estilo geral
 
 - Pixel art, paleta escura e dessaturada (azuis-acinzentados, marrons, preto), com **vermelho** como cor de destaque (textos, balão, sangue, barra de medo).
-- Iluminação dinâmica: com luz acesa, cômodos com luz amarelada e fraca; no escuro, só o cone da lanterna (com bordas suaves e poeira no feixe).
+- Iluminação dinâmica: com luz acesa, cômodos com luz amarelada e fraca; no escuro, só o cone da lanterna (com bordas suaves e poeira no feixe, parando nas paredes).
+- **Só o cômodo onde Artur está fica iluminado.** Os outros cômodos que aparecem na tela ficam bem mais escuros (quase pretos), com a luz vazando pelas portas abertas. O cômodo vizinho só se revela quando Artur entra nele.
 - Chuva visível nas áreas externas e nas janelas; relâmpagos raros iluminam a casa por um instante.
 - Leve granulado e vinheta em toda a tela.
 
@@ -578,10 +593,9 @@ Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofega
 
 ### 14.3 Vozes
 
-- **Todas as ligações têm voz** (IA, gratuita e local) **com legenda** na tela.
-- Falas do Artur também têm voz.
-- ~8.000 caracteres de texto; reservar o dobro para regravações.
-- Vozes necessárias (~14; mínimo ~10 reaproveitando figurantes):
+> **Decisão atualizada:** não há mais voz por IA. As falas e ligações aparecem na **caixa de diálogo** (seção 11.1). Áudio de voz fica só para **momentos específicos**, ainda a definir (candidatos: as três ligações finais da Helena, gritos, risadas da Clara, choro da Helena, "ops" do balão). A lista abaixo fica como referência dos personagens que falam (nomes na etiqueta da caixa de diálogo).
+
+- Personagens que falam:
 
 | Tipo | Personagens |
 |---|---|
@@ -593,11 +607,9 @@ Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofega
 | Jovem (1) | Rapaz do pai que não volta |
 | Criança (1) | Criança do trote |
 
-- Se faltarem vozes em pt-BR no TTS gratuito: diferenciar alterando tom e velocidade. Vozes infantis: voz feminina com tom elevado por efeito.
+### 14.4 Efeitos de voz (só para os momentos com áudio de voz)
 
-### 14.4 Efeitos de voz (aplicados no jogo)
-
-Para esconder que a voz é IA:
+Aplicados nos poucos trechos que tiverem voz:
 1. Filtro de telefone (passa-faixa ~300–3400 Hz).
 2. Chiado de linha com pequenas falhas e estalos.
 3. Compressão e leve distorção.
@@ -624,7 +636,7 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 
 ## Apêndice A — Ligações completas
 
-Formato: falas com voz + legenda. *(Itálico)* = efeito sonoro ou ação. Ligações-alucinação usam os efeitos da seção 3.5 e travam o relógio no horário indicado.
+Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(Itálico)* = efeito sonoro ou ação. Ligações-alucinação usam os efeitos da seção 3.5 e travam o relógio no horário indicado.
 
 ### Dia 1
 
@@ -814,8 +826,8 @@ Formato: falas com voz + legenda. *(Itálico)* = efeito sonoro ou ação. Ligaç
 
 ## Apêndice B — Pendências
 
-- Apresentação técnica das ligações (como a legenda aparece, layout da caixa de diálogo).
-- Escolha final da ferramenta de TTS gratuita e das vozes.
+- Como as pistas das ligações-alucinação (voz distorcida, cortes) aparecem na caixa de diálogo sem áudio de voz (ex.: letras tremendo, trechos apagando).
+- Quais momentos específicos terão áudio de voz (seção 14.3).
 - Ajuste fino de todos os valores da seção 9 jogando o protótipo.
 
 ---
@@ -834,5 +846,5 @@ Cada etapa termina com o jogo rodando e publicado no GitHub Pages para teste.
 8. **Delegacia:** cena, objetos, bilhetes, ligações com legenda, pistas das alucinações.
 9. **Fluxo completo:** tela inicial, transições, save, pausa, dificuldade por dia.
 10. **Final:** madrugada do dia 7, reportagem, créditos, tela do CVV.
-11. **Áudio e vozes:** ambiente, efeitos, vozes TTS com efeitos de telefone.
+11. **Áudio:** ambiente, efeitos e as vozes dos momentos específicos (seção 14.3).
 12. **Arte final e polimento:** sprites definitivos, jumpscares detalhados, ajuste de balanceamento.

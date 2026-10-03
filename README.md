@@ -19,6 +19,7 @@ npm run dev
 | Andar | W A S D |
 | Correr | Shift (segurar) |
 | Abrir/fechar porta | F |
+| Avançar diálogo | Espaço |
 
 ## Estrutura
 

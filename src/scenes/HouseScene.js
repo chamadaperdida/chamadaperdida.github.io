@@ -11,9 +11,10 @@ import { debug } from '../debug/debug.js';
 const CAMERA_ZOOM = 2; // mostra ~15 m × 8,4 m da casa por vez
 const INTERACT_RANGE = 1.3; // metros
 
+// Falas do Artur (GDD 15), mostradas na caixa de diálogo
 const LINES = {
-  arrival: 'Estou exausto... só quero dormir.',
-  clara: '...aí não.',
+  arrival: { speaker: 'Artur', text: 'Estou exausto... só quero dormir.' },
+  clara: { speaker: 'Artur', text: '...aí não.' },
 };
 
 export class HouseScene extends Phaser.Scene {
@@ -43,7 +44,6 @@ export class HouseScene extends Phaser.Scene {
     cam.setRoundPixels(true);
     cam.setBackgroundColor('#050506');
 
-    this.scene.launch('Hud');
     this.hud = this.scene.get('Hud');
 
     this.input.keyboard.on('keydown-F', () => this.interact());
@@ -51,7 +51,7 @@ export class HouseScene extends Phaser.Scene {
     this.bench = new NightBench(this);
     this.setupCollisionDebug();
 
-    this.time.delayedCall(600, () => this.hud.say(LINES.arrival, 3.5));
+    this.time.delayedCall(600, () => this.hud.talk(LINES.arrival));
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.bench.destroy();
@@ -101,10 +101,11 @@ export class HouseScene extends Phaser.Scene {
   }
 
   interact() {
+    if (this.hud.talking) return;
     const target = this.nearestInteractable();
     if (!target) return;
     if (target.kind === 'clara') {
-      this.hud.say(LINES.clara, 2.5);
+      this.hud.talk(LINES.clara);
       return;
     }
     if (target.isOpen && target.isObstructedBy(this.player.body.getBounds({}))) return;
@@ -113,6 +114,8 @@ export class HouseScene extends Phaser.Scene {
 
   update(_time, deltaMs) {
     const dt = deltaMs / 1000;
+    // Artur fica parado enquanto a caixa de diálogo está aberta
+    this.player.frozen = this.hud.talking;
     this.player.update(dt);
     this.hud.setStamina(this.player.stamina, this.player.exhausted);
 

@@ -17,6 +17,8 @@ export class BootScene extends Phaser.Scene {
 
   create() {
     createArturAnimations(this.anims);
+    // O HUD sobe junto (e antes) da casa, para já existir no primeiro quadro dela.
+    this.scene.launch('Hud');
     this.scene.start('House');
   }
 }
