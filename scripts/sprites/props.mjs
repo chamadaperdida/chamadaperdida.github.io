@@ -2,7 +2,7 @@
 // Tudo vai para um atlas: props.png + props.json (formato JSON Hash do Phaser).
 
 import { PixelCanvas, seeded } from './canvas.mjs';
-import { ash, claraCrawl, distorted, distortedBadge, distortedEyes, helena, invader } from './monsters.mjs';
+import { ash, claraFrames, distortedFrames, helena, invaderFrames, shadowRunFrames } from './monsters.mjs';
 
 const WOOD_DARK = '#2a1d14';
 const WOOD = '#5a4130';
@@ -435,55 +435,6 @@ function drip(c, x, y) {
   c.px(x, y + 1, '#5c0a0e');
 }
 
-/**
- * Vulto correndo, de perfil (virado para a direita), 20×32. 4 quadros de corrida:
- * corpo inclinado para a frente, capa esvoaçando para trás, pernas e braços em passada.
- */
-function shadowRun(frame) {
-  // [perna da frente: x do pé, perna de trás: x do pé, pé de trás levantado?, braço da frente dx]
-  const poses = [
-    [15, 3, true, 3],
-    [12, 7, false, 1],
-    [15, 4, true, -2],
-    [11, 8, false, 0],
-  ];
-  const [front, back, backUp, arm] = poses[frame];
-  return (c, x, y) => {
-    const B = '#030304';
-    const line = (x0, y0, x1, y1) => {
-      const n = Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0));
-      for (let i = 0; i <= n; i++) {
-        const px = Math.round(x0 + ((x1 - x0) * i) / n);
-        const py = Math.round(y0 + ((y1 - y0) * i) / n);
-        c.rect(x + px, y + py, 2, 1, B);
-      }
-    };
-    // Capuz e cabeça (inclinados para a frente)
-    c.rect(x + 10, y + 2, 5, 2, B);
-    c.rect(x + 9, y + 4, 7, 6, B);
-    c.px(x + 16, y + 6, B);
-    // Tronco inclinado
-    for (let i = 0; i < 9; i++) c.rect(x + 8 - Math.floor(i / 3), y + 10 + i, 7, 1, B);
-    // Capa esvoaçando para trás (muda um pouco a cada quadro)
-    const flap = frame % 2;
-    c.rect(x + 2, y + 13 + flap, 4, 6, B);
-    c.rect(x, y + 15 + flap, 3, 3, B);
-    c.px(x, y + 19 + flap, B);
-    // Braço da frente
-    line(12, 12, 14 + arm, 18);
-    // Pernas: quadril em (8, 19)
-    line(8, 19, front, 29);
-    line(front, 29, front + 2, 30);
-    if (backUp) {
-      line(7, 19, back + 1, 25);
-      line(back + 1, 25, back - 1, 27);
-    } else {
-      line(7, 19, back, 29);
-      line(back, 29, back + 1, 30);
-    }
-  };
-}
-
 function tvStatic(seed) {
   // Chiado na tela da TV, 17×13 (encaixa na tela do sprite 'tv')
   return (c, x, y, rand) => {
@@ -509,6 +460,18 @@ function key(c, x, y) {
 }
 
 // ---- Atlas ------------------------------------------------------------------
+
+// Lista de quadros [nome-n, w, h, desenho] para uma animação
+function animated(name, draws, w, h, outline = false) {
+  return draws.map((draw, n) => [`${name}-${n}`, w, h, draw, outline]);
+}
+
+// Quadros de cada visão (side/down/up) de um monstro: <nome>-<visão>-<n>
+function views(name, frames, sizes, outline = false) {
+  return Object.entries(frames).flatMap(([view, draws]) =>
+    animated(`${name}-${view}`, draws, sizes[view][0], sizes[view][1], outline),
+  );
+}
 
 // [nome, largura, altura, desenho, contorno?]
 const PROPS = [
@@ -545,26 +508,16 @@ const PROPS = [
   ['balloon', 9, 22, balloon, true],
   ['blood-pool', 26, 10, bloodPool],
   ['drip', 1, 2, drip],
-  ['shadow-run-0', 20, 32, shadowRun(0)],
-  ['shadow-run-1', 20, 32, shadowRun(1)],
-  ['shadow-run-2', 20, 32, shadowRun(2)],
-  ['shadow-run-3', 20, 32, shadowRun(3)],
   ['tv-static-0', 17, 13, tvStatic(0)],
   ['tv-static-1', 17, 13, tvStatic(1)],
   ['tv-static-2', 17, 13, tvStatic(2)],
   ['key', 7, 4, key, true],
-  ['invader-0', 16, 32, invader(0)],
-  ['invader-1', 16, 32, invader(1)],
-  ['distorted-0', 18, 36, distorted(0)],
-  ['distorted-1', 18, 36, distorted(1)],
-  ['distorted-eyes', 18, 36, distortedEyes],
-  ['distorted-badge', 18, 36, distortedBadge],
-  ['clara-0', 22, 16, claraCrawl(0), true],
-  ['clara-1', 22, 16, claraCrawl(1), true],
-  ['helena-0', 16, 32, helena(0)],
-  ['helena-1', 16, 32, helena(1)],
-  ['helena-2', 16, 32, helena(2)],
   ['ash', 2, 2, ash],
+  ...animated('shadow-run', shadowRunFrames(), 22, 32),
+  ...views('invader', invaderFrames(), { side: [20, 32], down: [20, 32], up: [20, 32] }),
+  ...views('distorted', distortedFrames(), { side: [22, 36], down: [18, 36], up: [18, 36] }),
+  ...views('clara', claraFrames(), { side: [24, 16], down: [18, 18], up: [18, 18] }, true),
+  ...[0, 1, 2].flatMap((head) => [0, 1].map((sway) => [`helena-${head}-${sway}`, 16, 32, helena(head, sway)])),
 ];
 
 export function drawProps() {

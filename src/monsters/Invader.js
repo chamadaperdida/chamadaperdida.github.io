@@ -1,10 +1,11 @@
-// Invasor (GDD 6): perseguições periódicas no escuro, 0,92× Artur correndo.
-// Com medo em 100%: perseguição garantida e mais agressiva (0,98×) — correr quase não
+// Invasor (GDD 6): perseguições periódicas no escuro, 0,80× Artur correndo.
+// Com medo em 100%: perseguição garantida e mais agressiva (0,90×) — correr quase não
 // adianta, mas ainda dá para escapar. Fugir: correr, usar portas e os circuitos da casa.
 // Desiste se Artur abrir distância (ou depois de um tempo).
 
 import { BALANCE } from '../config/balance.js';
 import { Chaser } from './Chaser.js';
+import { MONSTER_ANIMS } from './anims.js';
 
 const GIVE_UP_DISTANCE = 11; // m de caminho reto (aprox.)
 const GIVE_UP_AFTER = 3; // s longe
@@ -27,9 +28,9 @@ export class InvaderEvent {
     const m = BALANCE.movement;
     const run = m.arturWalk * m.arturRunMultiplier;
     this.chaser = new Chaser(ctx, spawn, {
-      frames: ['invader-0', 'invader-1'],
+      anims: MONSTER_ANIMS.invader,
       speed: run * (furious ? m.intruderChaseMaxFear : m.intruderChase),
-      frameTime: 0.32, // passo rígido, de manequim
+      frameTime: 0.11, // passo rígido, de manequim
     });
     this.chasing = true;
     ctx.fear.add(BALANCE.fearEvents.chase);

@@ -1,14 +1,20 @@
-// Helena (GDD 6): ao apontar a lanterna, há chance de ela estar ali. Com a luz nela, vai
+// Helena (GDD 6): presença quase constante no escuro. Ela fica em algum lugar perto de
+// Artur, onde a lanterna alcança — às vezes exatamente onde ela aponta. Com a luz nela, vai
 // surgindo como espírito: a cabeça vai se erguendo e o choro aumenta conforme fica menos
-// transparente. Visível por completo (2,5 s de luz contínua): mata.
+// transparente. Visível por completo: mata. O tempo para surgir diminui a cada noite.
 // Sobreviver: tirar a lanterna dela antes; ela volta a sumir (2× mais rápido).
+//
+// Quando outro monstro age, ela some (o diretor a encerra) e volta depois.
+// Cada "aparição" termina quando ela some de novo ou fica tempo demais sem ser vista:
+// o diretor a coloca em outro lugar logo em seguida.
 
 import Phaser from 'phaser';
 import { BALANCE } from '../config/balance.js';
 import { PPM } from '../world/tiles.js';
 import { positional } from '../audio/Sfx.js';
 
-const MAX_UNSEEN = 25; // s sem nunca ser iluminada: o evento acaba
+const RELOCATE_UNSEEN = 7; // s sem ser iluminada: muda de lugar
+const GONE_AFTER_FADE = 1.5; // s depois de sumir (de volta a 0): muda de lugar
 
 export class HelenaEvent {
   constructor(ctx) {
@@ -20,8 +26,10 @@ export class HelenaEvent {
     this.reveal = 0; // 0 a 1
     this.elapsed = 0;
     this.everLit = false;
+    this.fadedFor = 0;
+    this.swayIn = 0;
+    this.sway = 0;
 
-    // Ela está onde a lanterna aponta (ou numa direção qualquer, se estiver desligada)
     const spot = ctx.findHelenaSpot();
     if (!spot) {
       this.done = true;
@@ -29,29 +37,39 @@ export class HelenaEvent {
     }
     this.pos = spot;
     this.sprite = ctx.scene.add
-      .image(spot.x * PPM, spot.y * PPM, 'props', 'helena-0')
+      .image(spot.x * PPM, spot.y * PPM, 'props', 'helena-0-0')
       .setOrigin(0.5, 1)
       .setDepth(spot.y * PPM)
       .setAlpha(0);
     this.cry = ctx.sfx.cryLoop();
   }
 
+  get revealSeconds() {
+    return this.ctx.night.helenaRevealSeconds;
+  }
+
   update(dt) {
     if (this.done) return;
     this.elapsed += dt;
-    const t = BALANCE.timings;
     const lit = this.ctx.litByFlashlight(this.pos.x, this.pos.y - 0.6);
     if (lit) {
       this.everLit = true;
-      this.reveal = Math.min(1, this.reveal + dt / t.helenaRevealSeconds);
+      this.reveal = Math.min(1, this.reveal + dt / this.revealSeconds);
     } else {
-      this.reveal = Math.max(0, this.reveal - (dt * t.helenaFadeSpeedMultiplier) / t.helenaRevealSeconds);
+      const fade = BALANCE.timings.helenaFadeSpeedMultiplier;
+      this.reveal = Math.max(0, this.reveal - (dt * fade) / this.revealSeconds);
     }
 
-    // Surgindo: menos transparente e a cabeça se erguendo; pula quadros (movimento travado)
+    // Movimento travado, "pulando quadros": cabelo e corpo trocam aos trancos
+    this.swayIn -= dt;
+    if (this.swayIn <= 0) {
+      this.swayIn = 0.12 + Math.random() * 0.35;
+      this.sway = 1 - this.sway;
+    }
+    const head = this.reveal < 0.4 ? 0 : this.reveal < 0.75 ? 1 : 2;
+    this.sprite.setFrame(`helena-${head}-${this.sway}`);
     const jitter = lit && Math.random() < 0.15 ? Phaser.Math.Between(-1, 1) : 0;
     this.sprite.setAlpha(this.reveal * 0.95).setX(this.pos.x * PPM + jitter);
-    this.sprite.setFrame(this.reveal < 0.4 ? 'helena-0' : this.reveal < 0.75 ? 'helena-1' : 'helena-2');
     const { pan } = positional(this.ctx.player.feetMeters, this.pos, 10);
     this.cry.setVolume(this.reveal > 0 ? 0.15 + 0.75 * this.reveal : 0, pan);
 
@@ -59,8 +77,9 @@ export class HelenaEvent {
       this.ctx.die('helena');
       return;
     }
-    if (!this.everLit && this.elapsed > MAX_UNSEEN) this.done = true;
-    if (this.everLit && this.reveal === 0 && !lit && this.elapsed > 6) this.done = true;
+    // Muda de lugar: se ficou tempo demais sem ser vista, ou depois de sumir de novo
+    this.fadedFor = this.everLit && this.reveal === 0 ? this.fadedFor + dt : 0;
+    if ((!this.everLit && this.elapsed > RELOCATE_UNSEEN) || this.fadedFor > GONE_AFTER_FADE) this.done = true;
   }
 
   end() {

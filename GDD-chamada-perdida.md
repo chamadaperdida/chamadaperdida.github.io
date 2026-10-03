@@ -317,9 +317,9 @@ Toda ação que aumenta muito o medo vem com **som de coração batendo**.
 | Monstro | Comportamento | Como sobreviver |
 |---|---|---|
 | **Invasor** | Perseguições periódicas. Com medo em 100%: perseguição garantida, mais agressiva — correr quase não adianta, mas ainda dá para escapar. | Correr, usar portas e os circuitos da casa. |
-| **Artur distorcido** | Chance de aparecer no escuro e perseguir. Um pouco mais rápido que Artur correndo. Reconhecido pelos **passos pesados**. Quase invisível no escuro. | Apontar a lanterna: ele **se desfaz em cinzas**. |
+| **Artur distorcido** | Chance de aparecer no escuro e perseguir. Um pouco mais rápido que Artur correndo. Reconhecido pelos **passos pesados**. Quase invisível no escuro: todo preto, **sem nenhuma parte brilhante**. | Apontar a lanterna: ele **se desfaz em cinzas**. |
 | **Clara** | Do nada, risadas de criança diabólicas. A risada é um **aviso**: há um delay para o jogador parar; depois disso, mexer-se faz ela aparecer e correr atrás dele (um pouco mais rápida que Artur correndo) — fuga impossível. A risada sumir é o aviso de que pode voltar a se mexer. | Ficar parado durante as risadas. |
-| **Helena** | Ao apontar a lanterna, há chance de ela estar ali. Com a luz nela, vai surgindo como espírito; a cabeça vai se erguendo e o **choro aumenta** conforme fica menos transparente. Visível por completo: mata. | Tirar a lanterna dela antes; ela volta a sumir. |
+| **Helena** | **Presença quase constante no escuro:** sempre que nenhum outro monstro está agindo, ela está em algum lugar perto, onde a lanterna alcança (às vezes exatamente para onde ela aponta), e vai mudando de lugar. Quando outro monstro age, ela some e volta depois. O jogador precisa cuidar da lanterna o tempo todo. Com a luz nela, vai surgindo como espírito; a cabeça vai se erguendo e o **choro aumenta** conforme fica menos transparente. Visível por completo: mata. | Tirar a lanterna dela antes; ela volta a sumir. |
 
 ### Frases da tela de morte (vermelho)
 
@@ -370,7 +370,7 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 | Gerador: incremento do risco (por s) | 0,00012 | 0,00013 | 0,00015 | 0,00016 | 0,00017 | 0,00019 | 0,00020 |
 | Gerador: teto do risco (por s) | 0,0060 | 0,0067 | 0,0073 | 0,0080 | 0,0087 | 0,0093 | 0,0100 |
 | Gerador na hora de dormir: chance base | 45% | 50% | 55% | 60% | 65% | 70% | 75% |
-| Eventos de monstro no escuro (por s) | 1/40 | 1/29 | 1/22,5 | 1/18,5 | 1/15,6 | 1/13,6 | 1/12 |
+| Eventos de monstro no escuro (por s) — Invasor, Artur distorcido e Clara; a Helena é presença constante | 1/40 | 1/29 | 1/22,5 | 1/18,5 | 1/15,6 | 1/13,6 | 1/12 |
 | Remédios na casa | 4 | 4 | 4 | 3 | 3 | 3 | 3 |
 | Pilhas na casa | 3 | 3 | 3 | 2 | 2 | 2 | 2 |
 
@@ -408,14 +408,14 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Artur correndo | 4,0 m/s (1,6× andar) |
 | Estamina | 6 s de corrida; recarrega em 10 s (só sem correr) |
 | Vulto | 2,0× Artur correndo (era 1,1×; aumentado no protótipo) |
-| Invasor (perseguição normal) | 0,92× Artur correndo |
-| Invasor (medo 100%) | 0,98× Artur correndo |
+| Invasor (perseguição normal) | 0,80× Artur correndo (era 0,92×; reduzido no protótipo) |
+| Invasor (medo 100%) | 0,90× Artur correndo (era 0,98×) |
 | Artur distorcido | 1,08× Artur correndo |
-| Clara | 1,12× Artur correndo |
+| Clara | 1,6× Artur correndo, de quatro (era 1,12×; aumentado no protótipo) |
 | Atraso ao fechar porta numa perseguição | 1,2 s |
 | Clara: delay entre o início da risada e a proibição de mexer | 1,2 s |
 | Clara: duração da risada | 4 a 6 s |
-| Helena: luz contínua para aparecer por completo | 2,5 s (some 2× mais rápido) |
+| Helena: luz contínua para aparecer por completo | Diminui a cada noite: 2,5 / 2,3 / 2,1 / 1,9 / 1,7 / 1,5 / 1,3 s (some 2× mais rápido) |
 | Artur distorcido: luz contínua para virar cinzas | 0,6 s |
 | Lanterna: bateria cheia | 90 s de uso contínuo |
 | Gerador: segurar F | 3 s |
@@ -560,7 +560,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 - Jumpscare: o escuro do capuz racha e se abre num **sorriso enorme e distorcido** — cantos da boca quase nas orelhas, dentes demais e desalinhados, gengiva exposta (o rosto que a mente de Artur inventou para ele). Cabeça tremendo de forma irregular.
 
 **Artur distorcido**
-- No jogo: sprite quase todo **preto**, difícil de ver no escuro. Só o **distintivo** no peito reflete a lanterna, e há dois pontos pálidos no lugar dos olhos. Alto, curvado, braços longos que quase arrastam no chão. **Boca costurada** com linha grossa. Pele rachada como carvão. Cabeça dá trancos para os lados. **Sem rastro de cinzas.** Ao ser iluminado, **se desfaz em cinzas**.
+- No jogo: sprite quase todo **preto**, difícil de ver no escuro. **Nenhuma parte brilhante** (sem olhos pálidos nem distintivo refletindo). Alto, curvado, braços longos que quase arrastam no chão. **Boca costurada** com linha grossa. Pele rachada como carvão. Cabeça dá trancos para os lados. **Sem rastro de cinzas.** Ao ser iluminado, **se desfaz em cinzas**.
 - Jumpscare: os pontos da costura **arrebentam um por um**, a boca se abre rasgando num grito; olhos brancos; glitch alternando com o rosto normal do Artur. **Sem nuvem de cinzas.**
 
 **Helena** (na linha da Samara)

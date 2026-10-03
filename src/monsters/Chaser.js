@@ -13,19 +13,24 @@ export class Chaser {
   /**
    * @param ctx    { scene, nav, player, colliders: [] }
    * @param spawn  posição inicial (m)
-   * @param opts   { frames: [nomes no atlas], speed (m/s), frameTime, origin }
+   * @param opts   { anims: { side, down, up } (nomes no atlas), speed (m/s), frameTime }
+   *                side = de perfil virado para a direita (espelha para a esquerda)
    */
-  constructor(ctx, spawn, { frames, speed, frameTime = 0.25, bodySize = [10, 6] }) {
+  constructor(ctx, spawn, { anims, speed, frameTime = 0.1, bodySize = [10, 6] }) {
     this.ctx = ctx;
-    this.frames = frames;
+    this.anims = anims;
+    this.view = 'down';
+    const frames = anims.down;
     this.speed = speed;
     this.frameTime = frameTime;
     const s = ctx.scene.physics.add.sprite(spawn.x * PPM, spawn.y * PPM, 'props', frames[0]);
+    this.frames = frames;
     s.setOrigin(0.5, 1);
     s.body.setSize(bodySize[0], bodySize[1]);
     s.body.setOffset((s.width - bodySize[0]) / 2, s.height - bodySize[1]);
     ctx.colliders.forEach((c) => ctx.scene.physics.add.collider(s, c));
     this.sprite = s;
+    this.bodySize = bodySize;
     this.path = null;
     this.repathIn = 0;
     this.doorWait = 0;
@@ -87,7 +92,14 @@ export class Chaser {
     const v = new Phaser.Math.Vector2(target.x - f.x, target.y - f.y);
     if (v.lengthSq() > 0.0001) v.normalize().scale(this.speed * PPM);
     s.body.setVelocity(v.x, v.y);
-    if (v.x !== 0) s.setFlipX(v.x < 0);
+    // Visão pela direção: perfil (espelhado), frente (descendo) ou costas (subindo)
+    if (Math.abs(v.x) >= Math.abs(v.y) * 0.8 && v.x !== 0) {
+      this.view = 'side';
+      s.setFlipX(v.x < 0);
+    } else if (v.y !== 0) {
+      this.view = v.y > 0 ? 'down' : 'up';
+      s.setFlipX(false);
+    }
 
     // Preso em algum canto: recalcula logo
     const moved = Math.hypot(s.x - this.lastPos.x, s.y - this.lastPos.y);
@@ -102,8 +114,11 @@ export class Chaser {
     this.frameIn -= dt;
     if (this.frameIn <= 0) {
       this.frameIn = this.frameTime;
-      this.frame = (this.frame + 1) % this.frames.length;
-      s.setFrame(this.frames[this.frame]);
+      const frames = this.anims[this.view];
+      this.frame = (this.frame + 1) % frames.length;
+      s.setFrame(frames[this.frame]);
+      // Quadros de tamanhos diferentes (perfil × frente): mantém o corpo nos pés
+      s.body.setOffset((s.width - this.bodySize[0]) / 2, s.height - this.bodySize[1]);
     }
     s.setDepth(s.y);
     return true;

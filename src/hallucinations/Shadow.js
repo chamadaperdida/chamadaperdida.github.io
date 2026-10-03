@@ -77,8 +77,8 @@ export class ShadowHallucination extends Hallucination {
     // Animação de corrida
     this.frameIn -= dt;
     if (this.frameIn <= 0) {
-      this.frameIn = 0.07;
-      this.frame = (this.frame + 1) % 4;
+      this.frameIn = 0.05;
+      this.frame = (this.frame + 1) % 8;
       this.sprite.setFrame(`shadow-run-${this.frame}`);
     }
     // Indo na direção da porta (atrás dele): medo extra

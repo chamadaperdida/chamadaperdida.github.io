@@ -1,12 +1,13 @@
 // Artur distorcido (GDD 6): aparece no escuro e persegue, um pouco mais rápido que Artur
-// correndo (1,08×). Reconhecido pelos passos pesados; quase invisível no escuro (só dois
-// pontos pálidos no lugar dos olhos; o distintivo reflete a lanterna).
+// correndo (1,08×). Reconhecido pelos passos pesados; quase invisível no escuro (todo
+// preto, sem nenhuma parte brilhante).
 // Sobreviver: apontar a lanterna nele por 0,6 s contínuos — ele se desfaz em cinzas.
 
 import Phaser from 'phaser';
 import { BALANCE } from '../config/balance.js';
 import { positional } from '../audio/Sfx.js';
 import { Chaser } from './Chaser.js';
+import { MONSTER_ANIMS } from './anims.js';
 
 const STEP_EVERY = 0.34; // s
 
@@ -26,13 +27,10 @@ export class DistortedArturEvent {
     }
     const m = BALANCE.movement;
     this.chaser = new Chaser(ctx, spawn, {
-      frames: ['distorted-0', 'distorted-1'],
+      anims: MONSTER_ANIMS.distorted,
       speed: m.arturWalk * m.arturRunMultiplier * m.distortedArtur,
-      frameTime: 0.22,
+      frameTime: 0.075,
     });
-    // Olhos pálidos acima da escuridão (aparecem mesmo no escuro); distintivo só na luz
-    this.eyes = ctx.scene.add.image(0, 0, 'props', 'distorted-eyes').setOrigin(0.5, 1).setDepth(1_500_000).setAlpha(0.7);
-    this.badge = ctx.scene.add.image(0, 0, 'props', 'distorted-badge').setOrigin(0.5, 1).setDepth(1_500_000).setVisible(false);
     this.chasing = true;
     ctx.fear.add(BALANCE.fearEvents.chase);
   }
@@ -40,9 +38,6 @@ export class DistortedArturEvent {
   update(dt) {
     if (this.done || this.dying) return;
     this.chaser.update(dt);
-    const s = this.chaser.sprite;
-    this.eyes.setPosition(s.x, s.y).setFlipX(s.flipX);
-    this.badge.setPosition(s.x, s.y).setFlipX(s.flipX);
 
     // Passos pesados, pela posição
     this.stepIn -= dt;
@@ -55,7 +50,6 @@ export class DistortedArturEvent {
     // Lanterna nele: 0,6 s contínuos e ele vira cinzas
     const f = this.chaser.feet;
     const inLight = this.ctx.litByFlashlight(f.x, f.y - 0.6);
-    this.badge.setVisible(inLight);
     this.lit = inLight ? this.lit + dt : 0;
     if (this.lit >= BALANCE.timings.distortedArturAshSeconds) {
       this.crumble();
@@ -70,8 +64,6 @@ export class DistortedArturEvent {
     this.chasing = false;
     const s = this.chaser.sprite;
     s.body.setVelocity(0, 0);
-    this.eyes.setVisible(false);
-    this.badge.setVisible(false);
     const scene = this.ctx.scene;
     for (let i = 0; i < 40; i++) {
       const px = s.x + Phaser.Math.Between(-7, 7);
@@ -99,8 +91,6 @@ export class DistortedArturEvent {
 
   end() {
     this.chaser?.destroy();
-    this.eyes?.destroy();
-    this.badge?.destroy();
   }
 }
 

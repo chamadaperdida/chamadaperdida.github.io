@@ -685,6 +685,9 @@ export class HouseScene extends Phaser.Scene {
       get hud() {
         return scene.hud;
       },
+      get night() {
+        return scene.clock.night;
+      },
       player: this.player,
       colliders: [this.wallLayer, this.furniture, this.doors.map((d) => d.blocker)],
       fear: this.fear,
@@ -717,7 +720,10 @@ export class HouseScene extends Phaser.Scene {
     return options.length ? options[Math.floor(Math.random() * options.length)] : null;
   }
 
-  /** Helena: onde a lanterna aponta (se estiver ligada), senão num ponto escuro por perto. */
+  /**
+   * Helena: num ponto por perto onde a lanterna alcança. Com a lanterna ligada, às vezes
+   * (40%) exatamente na direção para onde ela aponta.
+   */
   findHelenaSpot() {
     const chest = this.chest;
     // Precisa dar para iluminá-la: chão livre e nenhuma parede entre ela e o Artur
@@ -730,7 +736,7 @@ export class HouseScene extends Phaser.Scene {
       const dist = Math.hypot(x - chest.x, y - 0.6 - chest.y);
       return this.lighting.castRay(chest.x, chest.y, a, dist) >= dist - 0.35 ? { x, y } : null;
     };
-    if (this.flashlight.on) {
+    if (this.flashlight.on && Math.random() < 0.4) {
       const a = this.flashlight.angle;
       const free = this.lighting.castRay(chest.x, chest.y, a, BALANCE.extra.flashlightRange);
       for (let d = Math.min(5, free - 0.6); d >= 2; d -= 0.5) {

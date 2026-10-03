@@ -51,6 +51,10 @@ export const BALANCE = {
 
     // Itens espalhados pela casa (quantidade fixa por noite, não acumula).
     medicineCount: [4, 4, 4, 3, 3, 3, 3],
+
+    // Helena: segundos de luz contínua para ela surgir por completo (e matar). Fica mais
+    // rápida a cada noite (decidido no protótipo; o GDD começou com 2,5 s fixos).
+    helenaRevealSeconds: [2.5, 2.3, 2.1, 1.9, 1.7, 1.5, 1.3],
     batteryCount: [3, 3, 3, 2, 2, 2, 2],
   },
 
@@ -126,10 +130,10 @@ export const BALANCE = {
 
     // Multiplicadores sobre a velocidade de Artur correndo
     shadow: 2.0, // vulto (GDD começou com 1,1×; aumentado no protótipo)
-    intruderChase: 0.92, // Invasor, perseguição normal
-    intruderChaseMaxFear: 0.98, // Invasor com medo em 100%
+    intruderChase: 0.80, // Invasor, perseguição normal (GDD começou com 0,92; reduzido no protótipo)
+    intruderChaseMaxFear: 0.90, // Invasor com medo em 100% (era 0,98)
     distortedArtur: 1.08, // Artur distorcido
-    clara: 1.12,
+    clara: 1.6, // de quatro, muito rápida (GDD começou com 1,12)
   },
 
   timings: {

@@ -1,12 +1,13 @@
 // Clara (GDD 6): do nada, risadas de criança diabólicas. A risada é um AVISO: depois de
-// 1,2 s, se Artur se mexer, ela aparece e corre atrás dele de quatro (1,12× Artur
-// correndo) — fuga impossível. A risada sumir é o aviso de que pode voltar a se mexer.
+// 1,2 s, se Artur se mexer, ela aparece e corre atrás dele de quatro, muito rápida (1,6×
+// Artur correndo) — fuga impossível. A risada sumir é o aviso de que pode voltar a se mexer.
 // Sobreviver: ficar parado durante as risadas.
 
 import Phaser from 'phaser';
 import { BALANCE } from '../config/balance.js';
 import { positional } from '../audio/Sfx.js';
 import { Chaser } from './Chaser.js';
+import { MONSTER_ANIMS } from './anims.js';
 
 const CRACK_EVERY = 0.18; // s — estalos enquanto corre
 
@@ -59,9 +60,9 @@ export class ClaraEvent {
     }
     const m = BALANCE.movement;
     this.chaser = new Chaser(this.ctx, spawn, {
-      frames: ['clara-0', 'clara-1'],
+      anims: MONSTER_ANIMS.clara,
       speed: m.arturWalk * m.arturRunMultiplier * m.clara,
-      frameTime: 0.08, // rápido e desconjuntado
+      frameTime: 0.045, // rápido e desconjuntado
       bodySize: [12, 6],
     });
     this.chasing = true;
