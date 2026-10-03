@@ -370,7 +370,7 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 | Gerador: incremento do risco (por s) | 0,00012 | 0,00013 | 0,00015 | 0,00016 | 0,00017 | 0,00019 | 0,00020 |
 | Gerador: teto do risco (por s) | 0,0060 | 0,0067 | 0,0073 | 0,0080 | 0,0087 | 0,0093 | 0,0100 |
 | Gerador na hora de dormir: chance base | 45% | 50% | 55% | 60% | 65% | 70% | 75% |
-| Eventos de monstro no escuro (por s) — Invasor, Artur distorcido e Clara; a Helena é presença constante | 1/40 | 1/29 | 1/22,5 | 1/18,5 | 1/15,6 | 1/13,6 | 1/12 |
+| Eventos de monstro no escuro (por s) — Invasor, Artur distorcido e Clara; a Helena é presença constante. Dobrado no protótipo (simulação usava 1/40 … 1/12) | 1/20 | 1/14,5 | 1/11,25 | 1/9,25 | 1/7,8 | 1/6,8 | 1/6 |
 | Remédios na casa | 4 | 4 | 4 | 3 | 3 | 3 | 3 |
 | Pilhas na casa | 3 | 3 | 3 | 2 | 2 | 2 | 2 |
 

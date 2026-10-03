@@ -46,8 +46,8 @@ export const BALANCE = {
     // Gerador na hora de dormir: chance base de cair durante a sequência de sono.
     generatorSleepBaseChance: [0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75],
 
-    // Eventos de monstro no escuro (por segundo).
-    monsterEventRate: [1 / 40, 1 / 29, 1 / 22.5, 1 / 18.5, 1 / 15.6, 1 / 13.6, 1 / 12],
+    // Eventos de monstro no escuro (por segundo). Dobrado no protótipo (GDD: 1/40 … 1/12).
+    monsterEventRate: [1 / 20, 1 / 14.5, 1 / 11.25, 1 / 9.25, 1 / 7.8, 1 / 6.8, 1 / 6],
 
     // Itens espalhados pela casa (quantidade fixa por noite, não acumula).
     medicineCount: [4, 4, 4, 3, 3, 3, 3],
