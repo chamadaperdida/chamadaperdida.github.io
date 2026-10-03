@@ -36,8 +36,9 @@ export class Items {
   }
 
   /** Sorteia `count` lugares livres para `type`, evitando repetir cômodo enquanto der. */
-  place(type, count) {
-    const options = shuffle(this.free.filter((s) => s.types.includes(type)));
+  place(type, count, excludeRooms = []) {
+    // excludeRooms: ex.: a chave nunca cai dentro do cômodo trancado (GDD 4.9)
+    const options = shuffle(this.free.filter((s) => s.types.includes(type) && !excludeRooms.includes(s.room)));
     const picked = [];
     const rooms = new Set();
     for (const avoidRepeat of [true, false]) {

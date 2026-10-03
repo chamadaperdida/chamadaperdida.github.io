@@ -13,6 +13,7 @@ export class Door {
     this.kind = def.kind;
     this.axis = def.axis;
     this.isOpen = def.open;
+    this.locked = false;
 
     const cx = def.x * PPM;
     const cy = def.y * PPM;
@@ -37,9 +38,19 @@ export class Door {
     return this.isOpen ? 'door-h-open' : 'door-h-closed';
   }
 
-  /** Pode ser aberta/fechada pelo jogador? */
+  /** Pode ser aberta/fechada pelo jogador? (trancada não; GDD 4.9) */
   get operable() {
-    return this.kind === 'normal';
+    return this.kind === 'normal' && !this.locked;
+  }
+
+  /** Tranca (fechando antes, se estiver aberta). O jogador nunca tranca; só destranca. */
+  lock() {
+    this.setOpen(false);
+    this.locked = true;
+  }
+
+  unlock() {
+    this.locked = false;
   }
 
   /** Algo (retângulo em px) está no vão da porta? Não dá para fechar em cima. */

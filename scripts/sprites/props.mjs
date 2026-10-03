@@ -363,6 +363,87 @@ function helenaSilhouette(c, x, y) {
   c.px(x + 10, y + 21, '#3a4248'); // pingando
 }
 
+function balloon(c, x, y) {
+  // Balão vermelho de festa com barbante, 9×22
+  c.rect(x + 2, y, 5, 1, '#9a1218');
+  c.rect(x + 1, y + 1, 7, 1, '#b3161d');
+  c.rect(x, y + 2, 9, 7, '#b3161d');
+  c.rect(x + 1, y + 9, 7, 2, '#9a1218');
+  c.rect(x + 2, y + 11, 5, 1, '#7a0e14');
+  c.rect(x + 2, y + 2, 2, 3, '#e05a60'); // brilho
+  c.px(x + 4, y + 12, '#7a0e14'); // nó
+  // Barbante
+  c.px(x + 4, y + 13, '#c8c2b0');
+  c.px(x + 5, y + 14, '#c8c2b0');
+  c.px(x + 5, y + 15, '#c8c2b0');
+  c.px(x + 4, y + 16, '#c8c2b0');
+  c.px(x + 4, y + 17, '#c8c2b0');
+  c.px(x + 3, y + 18, '#c8c2b0');
+  c.px(x + 4, y + 19, '#c8c2b0');
+  c.px(x + 4, y + 20, '#c8c2b0');
+  c.px(x + 5, y + 21, '#c8c2b0');
+}
+
+function bloodPool(c, x, y) {
+  // Poça de sangue no chão, 26×10
+  const dark = '#3e0608';
+  const mid = '#5c0a0e';
+  const hi = '#7a161a';
+  c.rect(x + 5, y, 14, 1, dark);
+  c.rect(x + 2, y + 1, 20, 2, mid);
+  c.rect(x, y + 3, 26, 4, mid);
+  c.rect(x + 3, y + 7, 18, 2, mid);
+  c.rect(x + 7, y + 9, 9, 1, dark);
+  c.rect(x + 20, y + 2, 4, 1, dark);
+  c.rect(x + 6, y + 3, 6, 1, hi); // reflexo
+  c.px(x + 15, y + 5, hi);
+}
+
+function drip(c, x, y) {
+  c.px(x, y, '#7a161a');
+  c.px(x, y + 1, '#5c0a0e');
+}
+
+function shadowFigure(c, x, y) {
+  // Vulto: a forma do Invasor (capa de chuva com capuz) feita de luz fraca, 16×32
+  const body = '#5a6670';
+  const edge = '#7e8c96';
+  c.rect(x + 5, y + 2, 6, 2, body); // capuz
+  c.rect(x + 4, y + 4, 8, 7, body);
+  c.rect(x + 6, y + 6, 4, 4, '#2a3036'); // rosto no escuro total
+  c.rect(x + 3, y + 11, 10, 14, body); // capa
+  c.rect(x + 2, y + 16, 12, 9, body);
+  c.rect(x + 4, y + 25, 3, 6, body); // pernas rígidas
+  c.rect(x + 9, y + 25, 3, 6, body);
+  c.rect(x + 3, y + 11, 1, 14, edge);
+  c.rect(x + 12, y + 11, 1, 14, edge);
+  c.rect(x + 5, y + 2, 6, 1, edge);
+}
+
+function tvStatic(seed) {
+  // Chiado na tela da TV, 17×13 (encaixa na tela do sprite 'tv')
+  return (c, x, y, rand) => {
+    c.rect(x, y, 17, 13, '#5a6266');
+    for (let yy = 0; yy < 13; yy++) {
+      for (let xx = 0; xx < 17; xx++) {
+        const v = rand();
+        if (v < 0.33) c.px(x + xx, y + yy, '#c8d0d4');
+        else if (v < 0.55) c.px(x + xx, y + yy, '#1e2426');
+      }
+    }
+    c.rect(x, y + ((seed * 5) % 13), 17, 1, '#e8eef0'); // linha de varredura
+  };
+}
+
+function key(c, x, y) {
+  // Chave pequena de latão, 7×4
+  c.rect(x, y, 3, 3, '#b8973a');
+  c.px(x + 1, y + 1, '#2a2416');
+  c.rect(x + 3, y + 1, 4, 1, '#b8973a');
+  c.px(x + 5, y + 2, '#b8973a');
+  c.px(x + 6, y + 2, '#8a6e28');
+}
+
 // ---- Atlas ------------------------------------------------------------------
 
 // [nome, largura, altura, desenho, contorno?]
@@ -396,6 +477,14 @@ const PROPS = [
   ['bathroom-shelf', 16, 22, bathroomShelf, true],
   ['filing-cabinet', 16, 26, filingCabinet, true],
   ['helena-silhouette', 16, 32, helenaSilhouette, true],
+  ['balloon', 9, 22, balloon, true],
+  ['blood-pool', 26, 10, bloodPool],
+  ['drip', 1, 2, drip],
+  ['shadow-figure', 16, 32, shadowFigure],
+  ['tv-static-0', 17, 13, tvStatic(0)],
+  ['tv-static-1', 17, 13, tvStatic(1)],
+  ['tv-static-2', 17, 13, tvStatic(2)],
+  ['key', 7, 4, key, true],
 ];
 
 export function drawProps() {

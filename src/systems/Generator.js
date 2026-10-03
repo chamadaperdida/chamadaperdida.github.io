@@ -43,7 +43,8 @@ export class Generator {
     const justFull = this.fear.full && !this.wasFull;
     this.wasFull = this.fear.full;
 
-    if (!this.on || this.paused) return;
+    // Antes do evento garantido a noite ainda não começou (sem sabotagem)
+    if (!this.on || this.paused || !this.clock.started) return;
 
     if (justFull) {
       this.drop('medo 100%');

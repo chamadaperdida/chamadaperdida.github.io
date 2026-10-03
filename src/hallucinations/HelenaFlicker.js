@@ -1,10 +1,8 @@
-// Luz piscando com Helena (GDD 5): pisca → silhueta de Helena → pisca → some.
-// Duração fixa, nenhuma reação muda nada. Sons de susto + coração entram na etapa 11.
-//
-// É a alucinação mais forte: a primeira de toda noite é sempre ela, com +40 de medo
-// (BALANCE.extra.firstHallucinationFear). Fora isso, rara (etapa 5), com o valor da 9.3.
+// Luz piscando com Helena (rara) — GDD 5: pisca → silhueta de Helena → pisca → some.
+// Duração fixa, nenhuma reação muda nada. Sons de susto + coração. Medo: 12 (9.3).
 
 import { BALANCE } from '../config/balance.js';
+import { Hallucination } from './Hallucination.js';
 
 // Linha do tempo (s): [início, brilho da luz, Helena visível?]
 const TIMELINE = [
@@ -19,20 +17,13 @@ const TIMELINE = [
 ];
 const DURATION = 2.1;
 
-export class HelenaFlickerHallucination {
-  /**
-   * @param ctx { scene, fear, spot: {x, y} em px onde ela aparece, fearAmount (base) }
-   */
-  constructor({ scene, fear, spot, fearAmount }) {
-    this.name = 'Luz piscando com Helena';
-    this.scene = scene;
-    this.fear = fear;
-    this.fearAmount = fearAmount ?? BALANCE.hallucinationFear.flickerHelena.right;
-    this.elapsed = 0;
-    this.done = false;
-    this.scared = false;
+export class HelenaFlickerHallucination extends Hallucination {
+  constructor(ctx, opts) {
+    super(ctx, opts);
+    const spot = ctx.findSpot(2.5, 5, { onScreen: true, sameRoom: true });
     this.factor = 1;
-    this.sprite = scene.add
+    this.scared = false;
+    this.sprite = ctx.scene.add
       .image(spot.x, spot.y, 'props', 'helena-silhouette')
       .setOrigin(0.5, 1)
       .setDepth(spot.y)
@@ -40,12 +31,16 @@ export class HelenaFlickerHallucination {
       .setVisible(false);
   }
 
+  get name() {
+    return 'Luz piscando com Helena';
+  }
+
   get lightFactor() {
     return this.factor;
   }
 
   update(dt) {
-    this.elapsed += dt;
+    super.update(dt);
     let step = TIMELINE[0];
     for (const s of TIMELINE) if (this.elapsed >= s[0]) step = s;
     this.factor = step[1];
@@ -53,8 +48,8 @@ export class HelenaFlickerHallucination {
 
     if (!this.scared && step[2]) {
       this.scared = true;
-      this.fear.add(this.fearAmount);
-      this.scene.cameras.main.shake(250, 0.006);
+      this.addFear(BALANCE.hallucinationFear.flickerHelena.right);
+      this.ctx.scene.cameras.main.shake(250, 0.006);
     }
     if (this.elapsed >= DURATION) this.done = true;
   }

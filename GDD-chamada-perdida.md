@@ -244,7 +244,7 @@ Arquivo de referência: `planta-casa.svg`. Casa térrea (**sem segundo andar**),
 
 ### 4.6 Caos e recuperação (curva da noite)
 
-- **Primeira alucinação da noite:** sorteada normalmente, mas dá **+40 de medo** de uma vez, no lugar do valor da tabela 9.3.
+- **A noite começa no evento garantido a caminho do quarto (4.8).** Antes dele não há alucinações, o relógio da noite (caos, curva) fica parado e o gerador não sofre sabotagem. Esse evento é a **primeira alucinação da noite** e dá **+25 de medo** de uma vez, no lugar do valor da tabela 9.3.
 - **Fase de caos** (do início até X segundos, X definido por noite): não há janelas de calma; alucinações frequentes. Se o medo estiver **baixo (abaixo de 5%)** nessa fase, uma alucinação é disparada na hora. O jogo nunca trava o medo artificialmente — garante eventos.
 - Sempre há um intervalo mínimo de **3 s** entre o fim de uma alucinação e a próxima.
 - **Fase de recuperação** (depois de X): após cada alucinação há uma **janela de calma** garantida (nenhuma nova alucinação). As janelas crescem ao longo da noite até um tamanho terminal definido pela noite.
@@ -259,7 +259,7 @@ Arquivo de referência: `planta-casa.svg`. Casa térrea (**sem segundo andar**),
 
 ### 4.8 Evento garantido a caminho do quarto
 
-Na primeira vez que Artur se aproxima do quarto na noite:
+Na primeira vez que Artur se aproxima do quarto na noite (a menos de 3,5 m da porta). **É a primeira alucinação da noite (+25 de medo) e é quando a noite começa** (seção 4.6). Nas noites 5–7 a porta do quarto já começa trancada e a chave está em algum lugar da casa (nunca dentro do quarto):
 
 | Noite | Evento | Fala do Artur |
 |---|---|---|
@@ -385,7 +385,7 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 
 ### 9.3 Quanto cada alucinação soma no medo (antes do multiplicador)
 
-> **Ajuste do protótipo:** todos os valores desta tabela são multiplicados por **2** (`hallucinationFearScale` no `config/balance`). A primeira alucinação da noite dá +40 no lugar do valor da tabela (seção 4.6).
+> **Ajuste do protótipo:** todos os valores desta tabela são multiplicados por **2** (`hallucinationFearScale` no `config/balance`). A primeira alucinação da noite (evento do quarto, 4.8) dá +25 no lugar do valor da tabela.
 
 | Alucinação | Reação certa | Reação errada / demorada |
 |---|---|---|

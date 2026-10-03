@@ -165,7 +165,7 @@ export const BALANCE = {
     hallucinationFearScale: 2,
     // Primeira alucinação da noite (sorteada normalmente): dá este medo no lugar do valor da
     // tabela 9.3 (antes do multiplicador da noite).
-    firstHallucinationFear: 40,
+    firstHallucinationFear: 25,
     // Caos: só dispara alucinação "na hora" com medo abaixo disto (%).
     chaosLowFearTrigger: 5,
     // Intervalo mínimo (s) entre o fim de uma alucinação e a próxima, mesmo no caos.
@@ -173,6 +173,16 @@ export const BALANCE = {
     // Luz piscando (comum): duração andando (s) e quantas vezes mais rápido acaba parado.
     flickerSeconds: 5,
     flickerStillSpeed: 2.5,
+    // Balão: tempo na tela até o medo chegar no valor "errado" da tabela (s).
+    balloonSeconds: 15,
+    // TV ligada: tempo até o medo chegar no valor "errado" (s).
+    tvSeconds: 12,
+    // Telefone fixo: quanto tempo toca se ninguém atender (s).
+    landlineRingSeconds: 9,
+    // TV e telefone só tocam/ligam com Artur a menos desta distância (m).
+    nearDeviceDistance: 6,
+    // Evento garantido: dispara quando Artur chega a esta distância (m) da porta do quarto.
+    bedroomApproachDistance: 3.5,
     // Sono: em que momento da sequência (s) o gerador pode cair.
     sleepGeneratorRollMin: 1.5,
     sleepGeneratorRollMax: 6.5,
