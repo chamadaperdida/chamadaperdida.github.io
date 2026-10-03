@@ -244,7 +244,10 @@ Arquivo de referência: `planta-casa.svg`. Casa térrea (**sem segundo andar**),
 
 ### 4.6 Caos e recuperação (curva da noite)
 
-- **Fase de caos** (do início até X segundos, X definido por noite): não há janelas de calma; alucinações frequentes. Se o medo se aproximar de zero nessa fase, uma alucinação é disparada na hora. O jogo nunca trava o medo artificialmente — garante eventos.
+- **Primeira alucinação da noite:** sempre a mais forte, **luz piscando com Helena**, com **+40 de medo** de uma vez (logo depois da fala de chegada).
+- **Fase de caos** (do início até X segundos, X definido por noite): não há janelas de calma; alucinações frequentes. Se o medo estiver **baixo (abaixo de 5%)** nessa fase, uma alucinação é disparada na hora. O jogo nunca trava o medo artificialmente — garante eventos.
+- **A frequência depende do medo:** a taxa da fórmula é multiplicada por (1 − medo/100). Com medo alto, poucas alucinações; com medo baixo, elas voltam com força.
+- Sempre há um intervalo mínimo de **3 s** entre o fim de uma alucinação e a próxima.
 - **Fase de recuperação** (depois de X): após cada alucinação há uma **janela de calma** garantida (nenhuma nova alucinação). As janelas crescem ao longo da noite até um tamanho terminal definido pela noite.
 - Ao longo da noite: alucinações ficam menos frequentes (nunca param) e o medo cai mais rápido, aproximando-se de um piso de dificuldade definido por noite.
 
@@ -382,6 +385,8 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 - **Evento da tranca:** primeira tentativa entre 60 e 400 s; chances 80% → 30% → 10%; intervalo de 120 a 300 s entre tentativas.
 
 ### 9.3 Quanto cada alucinação soma no medo (antes do multiplicador)
+
+> **Ajuste do protótipo:** todos os valores desta tabela são multiplicados por **2** (`hallucinationFearScale` no `config/balance`). A primeira alucinação da noite dá +40 (seção 4.6).
 
 | Alucinação | Reação certa | Reação errada / demorada |
 |---|---|---|

@@ -1,25 +1,28 @@
 // Diretor das alucinações: a curva da noite (GDD 4.6 e 9.2).
 //
 // - Só com luz acesa. Nunca durante a sequência de sono ou com a caixa de diálogo aberta.
-// - Frequência cai ao longo da noite (fórmula da taxa), mas nunca chega a zero.
-// - Fase de caos (início até X s): sem janela de calma; se o medo chegar perto de zero,
-//   dispara uma alucinação na hora.
+// - A PRIMEIRA alucinação da noite é sempre a mais forte: luz piscando com Helena, +40 de medo.
+// - Frequência: taxa da fórmula 9.2 × (1 − medo/100). Quanto mais medo, menos alucinações;
+//   com o medo baixo elas voltam a vir com força. Nunca chega a zero com medo < 100%.
+// - Fase de caos (início até X s): sem janela de calma; com medo baixo (< 5%), dispara na hora.
 // - Fase de recuperação: depois de cada alucinação, uma janela de calma garantida,
 //   que cresce até o tamanho terminal da noite.
+// - Sempre um intervalo mínimo entre uma alucinação e a próxima (3 s).
 // - Enquanto uma alucinação acontece, o medo não cai sozinho.
 //
-// Os tipos de alucinação entram na etapa 5; por enquanto só a luz piscando.
+// Os outros tipos de alucinação entram na etapa 5.
 
 import { BALANCE } from '../config/balance.js';
-import { FlickerHallucination } from '../hallucinations/Flicker.js';
 import { calmWindow, hallucinationRate } from './formulas.js';
 
-const NEAR_ZERO_FEAR = 1; // % — "medo se aproximando de zero" no caos
-
 export class HallucinationDirector {
-  constructor(clock, fear) {
+  /**
+   * @param factory (kind) => alucinação. kind: 'helena-first' | 'flicker'
+   */
+  constructor(clock, fear, factory) {
     this.clock = clock;
     this.fear = fear;
+    this.factory = factory;
     this.active = null;
     this.calmUntil = 0; // tempo da noite (s) até quando não pode haver alucinação
     this.enabled = false; // liga depois da fala de chegada
@@ -35,6 +38,11 @@ export class HallucinationDirector {
 
   get inCalm() {
     return this.clock.t < this.calmUntil;
+  }
+
+  /** Taxa efetiva agora (alucinações por segundo). */
+  get rate() {
+    return hallucinationRate(this.clock.night, this.clock.t) * Math.max(0, 1 - this.fear.value / 100);
   }
 
   /**
@@ -55,17 +63,19 @@ export class HallucinationDirector {
 
     if (!this.enabled || !ctx.lightsOn || ctx.blocked || this.inCalm) return;
 
-    const { night, t } = this.clock;
-    if (this.clock.chaos && this.fear.value < NEAR_ZERO_FEAR) {
+    if (this.count === 0) {
+      this.start('helena-first');
+      return;
+    }
+    if (this.clock.chaos && this.fear.value < BALANCE.extra.chaosLowFearTrigger) {
       this.start();
       return;
     }
-    const rate = hallucinationRate(night, t);
-    if (Math.random() < 1 - Math.exp(-rate * nightDt)) this.start();
+    if (Math.random() < 1 - Math.exp(-this.rate * nightDt)) this.start();
   }
 
-  start() {
-    this.active = new FlickerHallucination(this.fear);
+  start(kind = 'flicker') {
+    this.active = this.factory(kind);
     this.fear.hallucinating = true;
     this.count += 1;
   }
@@ -74,8 +84,9 @@ export class HallucinationDirector {
     this.active.end();
     this.active = null;
     this.fear.hallucinating = false;
-    // Janela de calma só na fase de recuperação (a fórmula já dá 0 durante o caos)
-    this.calmUntil = this.clock.t + calmWindow(this.clock.night, this.clock.t);
+    // Janela de calma (a fórmula dá 0 durante o caos), nunca menor que o intervalo mínimo
+    const calm = Math.max(BALANCE.extra.hallucinationMinGap, calmWindow(this.clock.night, this.clock.t));
+    this.calmUntil = this.clock.t + calm;
   }
 
   /** Brilho extra da zona atual (alucinações de luz), 1 = normal. */

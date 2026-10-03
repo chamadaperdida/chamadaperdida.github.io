@@ -23,6 +23,8 @@ import { Flashlight } from '../systems/Flashlight.js';
 import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
 import { HallucinationDirector } from '../systems/HallucinationDirector.js';
+import { FlickerHallucination } from '../hallucinations/Flicker.js';
+import { HelenaFlickerHallucination } from '../hallucinations/HelenaFlicker.js';
 import { daysLeftText } from './TransitionScene.js';
 import { calmWindow, fearDecayPerSecond, hallucinationRate } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
@@ -52,7 +54,7 @@ export class HouseScene extends Phaser.Scene {
     this.fear = new Fear(this.clock);
     this.generator = new Generator(this.clock, this.fear, GENERATOR_POINT);
     this.flashlight = new Flashlight();
-    this.director = new HallucinationDirector(this.clock, this.fear);
+    this.director = new HallucinationDirector(this.clock, this.fear, (kind) => this.createHallucination(kind));
     this.sleep = null; // sequência de sono em andamento
 
     this.buildMap();
@@ -132,6 +134,7 @@ export class HouseScene extends Phaser.Scene {
       rects.push(new Phaser.Geom.Rectangle(sprite.x + 1, sprite.y + 1, w - 2, h - 2));
     }
     this.closeGaps(rects);
+    this.furnitureRects = rects;
     for (const r of rects) this.furniture.add(this.add.zone(r.centerX, r.centerY, r.width, r.height));
   }
 
@@ -231,6 +234,47 @@ export class HouseScene extends Phaser.Scene {
     else if (target.kind === 'door') this.useDoor(target.door);
     else if (target.kind === 'bed') this.tryToSleep();
     // gerador: segurar F, tratado no update
+  }
+
+  // ---- Alucinações --------------------------------------------------------
+
+  createHallucination(kind) {
+    if (kind === 'helena-first') {
+      return new HelenaFlickerHallucination({
+        scene: this,
+        fear: this.fear,
+        spot: this.findSpotNearPlayer(2.5, 5),
+        fearAmount: BALANCE.extra.firstHallucinationFear,
+      });
+    }
+    return new FlickerHallucination(this.fear);
+  }
+
+  /**
+   * Um ponto livre no mesmo cômodo do Artur, na tela, entre `min` e `max` metros dele.
+   * Devolve px (base dos pés). Se não achar, o mais longe possível dentro do cômodo.
+   */
+  findSpotNearPlayer(min, max) {
+    const feet = this.player.feetMeters;
+    const room = roomAt(feet.x, feet.y) ?? this.lighting.currentRoom;
+    const view = this.cameras.main.worldView;
+    let best = null;
+    let bestDist = -1;
+    for (let i = 0; i < 80; i++) {
+      const x = Phaser.Math.FloatBetween(room.x + 0.6, room.x + room.w - 0.6);
+      const y = Phaser.Math.FloatBetween(room.y + 1.2, room.y + room.h - 0.4);
+      const px = x * PPM;
+      const py = y * PPM;
+      if (!view.contains(px, py - 16)) continue;
+      if (this.furnitureRects.some((r) => r.contains(px, py) || r.contains(px, py - 20))) continue;
+      const d = Math.hypot(x - feet.x, y - feet.y);
+      if (d >= min && d <= max) return { x: px, y: py };
+      if (d > bestDist && d <= max) {
+        best = { x: px, y: py };
+        bestDist = d;
+      }
+    }
+    return best ?? { x: this.player.x + 2 * PPM, y: this.player.y };
   }
 
   // ---- Dormir (GDD 4.7) ---------------------------------------------------
@@ -386,7 +430,7 @@ export class HouseScene extends Phaser.Scene {
       g.on ? `${fearDecayPerSecond(night, t).toFixed(3)} %/s` : 'parado (escuro)',
     );
     const d = this.director;
-    debug.set('Noite/Alucinação: taxa', `${hallucinationRate(night, t).toFixed(4)} /s`);
+    debug.set('Noite/Alucinação: taxa', `${d.rate.toFixed(4)} /s  (fórmula ${hallucinationRate(night, t).toFixed(4)} × (1 − medo))`);
     let now = '—';
     if (d.active) now = d.active.name;
     else if (!d.enabled) now = 'esperando a chegada';

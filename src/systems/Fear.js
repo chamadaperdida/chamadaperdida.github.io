@@ -4,6 +4,7 @@
 // - No escuro fica parado: só sobe com eventos e só cai com remédio.
 // - Tudo que soma passa pelo multiplicador da noite.
 
+import { BALANCE } from '../config/balance.js';
 import { fearDecayPerSecond } from './formulas.js';
 
 export const FEAR_MAX = 100;
@@ -26,6 +27,11 @@ export class Fear {
     this.value = Math.min(FEAR_MAX, this.value + amount);
     this.listeners.forEach((fn) => fn(amount));
     return amount;
+  }
+
+  /** Medo de uma alucinação (tabela 9.3): passa também pela escala das alucinações. */
+  addHallucination(base) {
+    return this.add(base * BALANCE.extra.hallucinationFearScale);
   }
 
   /** Tira medo direto (remédio), sem multiplicador. */

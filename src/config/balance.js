@@ -161,6 +161,15 @@ export const BALANCE = {
     medicineGlitchSeconds: 0.6,
     // Alucinações só começam este tempo (s) depois de fechar a fala de chegada.
     hallucinationStartDelay: 1.5,
+    // Multiplica o medo de TODAS as alucinações da tabela 9.3 (decidido no protótipo: 2×).
+    hallucinationFearScale: 2,
+    // Primeira alucinação da noite: sempre luz piscando com Helena, com este medo (antes do
+    // multiplicador da noite).
+    firstHallucinationFear: 40,
+    // Caos: só dispara alucinação "na hora" com medo abaixo disto (%).
+    chaosLowFearTrigger: 5,
+    // Intervalo mínimo (s) entre o fim de uma alucinação e a próxima, mesmo no caos.
+    hallucinationMinGap: 3,
     // Luz piscando (comum): duração andando (s) e quantas vezes mais rápido acaba parado.
     flickerSeconds: 5,
     flickerStillSpeed: 2.5,

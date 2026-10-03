@@ -325,6 +325,44 @@ function filingCabinet(c, x, y) {
   }
 }
 
+// ---- Alucinações -------------------------------------------------------------
+
+function helenaSilhouette(c, x, y) {
+  // Helena na luz piscando (GDD 5 e 13.5): cabelo preto longo e molhado cobrindo o rosto,
+  // camisola branca suja, dedos longos demais. 16×32, de frente.
+  const hair = '#0c0b0d';
+  const hairWet = '#1c1a20';
+  const gown = '#b8b4a8';
+  const gownShade = '#8e8a80';
+  const skin = '#7c8084';
+  // Camisola
+  c.rect(x + 4, y + 12, 8, 17, gown);
+  c.rect(x + 3, y + 18, 10, 11, gown);
+  c.rect(x + 5, y + 20, 1, 9, gownShade);
+  c.rect(x + 9, y + 16, 1, 13, gownShade);
+  c.rect(x + 7, y + 24, 2, 2, '#6e6a60'); // mancha
+  // Braços caídos e dedos longos
+  c.rect(x + 2, y + 13, 1, 10, skin);
+  c.rect(x + 13, y + 13, 1, 10, skin);
+  c.rect(x + 2, y + 23, 1, 4, skin);
+  c.rect(x + 13, y + 23, 1, 4, skin);
+  c.px(x + 1, y + 26, skin);
+  c.px(x + 14, y + 26, skin);
+  // Pés
+  c.rect(x + 5, y + 29, 2, 2, skin);
+  c.rect(x + 9, y + 29, 2, 2, skin);
+  // Cabelo cobrindo o rosto, caindo até o peito
+  c.rect(x + 5, y + 2, 6, 2, hair);
+  c.rect(x + 4, y + 4, 8, 10, hair);
+  c.rect(x + 3, y + 7, 10, 9, hair);
+  c.rect(x + 4, y + 16, 2, 3, hair);
+  c.rect(x + 10, y + 16, 2, 4, hair);
+  c.px(x + 6, y + 6, hairWet);
+  c.px(x + 9, y + 9, hairWet);
+  c.px(x + 7, y + 12, hairWet);
+  c.px(x + 10, y + 21, '#3a4248'); // pingando
+}
+
 // ---- Atlas ------------------------------------------------------------------
 
 // [nome, largura, altura, desenho, contorno?]
@@ -357,6 +395,7 @@ const PROPS = [
   ['console-table', 32, 16, consoleTable, true],
   ['bathroom-shelf', 16, 22, bathroomShelf, true],
   ['filing-cabinet', 16, 26, filingCabinet, true],
+  ['helena-silhouette', 16, 32, helenaSilhouette, true],
 ];
 
 export function drawProps() {
