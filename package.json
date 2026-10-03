@@ -1,0 +1,18 @@
+{
+  "name": "chamada-perdida",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Chamada Perdida — terror psicológico 2D em pixel art (Phaser 3 + Vite)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "vite": "^8.3.2"
+  }
+}
