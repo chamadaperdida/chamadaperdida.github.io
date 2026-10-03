@@ -85,6 +85,34 @@ export const FURNITURE = [
   { id: 'gerador', sprite: 'generator', x: 3.25, y: 15, room: 'quintal' },
 ];
 
+// Ponto do gerador para medir distância e segurar F (na frente dele).
+export const GENERATOR_POINT = { x: 4, y: 16.6 };
+
+// Lugares onde remédios (m) e pilhas (b) podem aparecer — GDD 4.2, coluna "Pode aparecer".
+// A cada noite o jogo sorteia entre eles (a chave entra na etapa 7).
+export const ITEM_SPOTS = [
+  { room: 'banheiroSocial', x: 16, y: 4.6, types: ['medicine'] },
+  { room: 'banheiroSocial', x: 18.2, y: 2.4, types: ['medicine'] },
+  { room: 'quartoArtur', x: 33.6, y: 4.6, types: ['medicine', 'battery'] },
+  { room: 'quartoArtur', x: 28.3, y: 1.6, types: ['medicine', 'battery'] },
+  { room: 'banheiroSuite', x: 36, y: 4.6, types: ['medicine'] },
+  { room: 'banheiroSuite', x: 38.3, y: 3.2, types: ['medicine'] },
+  { room: 'corredorCima', x: 14, y: 7, types: ['battery'] },
+  { room: 'corredorCima', x: 25.6, y: 7.1, types: ['battery'] },
+  { room: 'hall', x: 28, y: 13.2, types: ['battery'] },
+  { room: 'sala', x: 25, y: 9.2, types: ['medicine', 'battery'] },
+  { room: 'sala', x: 20, y: 12.9, types: ['medicine', 'battery'] },
+  { room: 'sala', x: 11, y: 13, types: ['medicine', 'battery'] },
+  { room: 'cozinha', x: 14, y: 19, types: ['medicine', 'battery'] },
+  { room: 'cozinha', x: 24, y: 15.4, types: ['medicine', 'battery'] },
+  { room: 'cozinha', x: 27.6, y: 18.9, types: ['medicine', 'battery'] },
+  { room: 'escritorio', x: 35.2, y: 8.1, types: ['medicine', 'battery'] },
+  { room: 'escritorio', x: 31, y: 13, types: ['medicine', 'battery'] },
+  { room: 'escritorio', x: 37.4, y: 18.6, types: ['medicine', 'battery'] },
+  { room: 'corredorEsquerda', x: 9, y: 11.5, types: ['battery'] },
+  { room: 'corredorEsquerda', x: 9, y: 15, types: ['battery'] },
+];
+
 // Onde Artur aparece ao chegar em casa (pela porta da frente).
 export const SPAWN = { x: 23, y: 1.5 };
 

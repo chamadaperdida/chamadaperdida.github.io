@@ -235,6 +235,28 @@ function generator(c, x, y) {
   c.rect(x + 8, y + 36, 32, 2, '#2a2d20');
 }
 
+// ---- Itens (GDD 4.10) ------------------------------------------------------------
+
+function medicine(c, x, y) {
+  // Frasco de remédio controlado, 8×11
+  c.rect(x + 1, y, 6, 3, '#e4e0d4'); // tampa
+  c.rect(x + 1, y + 2, 6, 1, '#b8b2a4');
+  c.rect(x, y + 3, 8, 8, '#a8561c');
+  c.rect(x + 1, y + 3, 1, 7, '#c87a3a'); // brilho
+  c.rect(x + 2, y + 5, 5, 4, '#e8e2d0'); // rótulo
+  c.rect(x + 3, y + 6, 3, 1, '#8a3030');
+  c.rect(x + 3, y + 8, 2, 1, '#8a8478');
+}
+
+function battery(c, x, y) {
+  // Pilha grande, 6×12
+  c.rect(x + 2, y, 2, 1, '#c8c8c0'); // polo
+  c.rect(x, y + 1, 6, 5, '#d8b030');
+  c.rect(x, y + 6, 6, 6, '#1e1e20');
+  c.rect(x + 1, y + 1, 1, 10, '#f0d060');
+  c.rect(x + 2, y + 8, 2, 1, '#d8b030');
+}
+
 // ---- Atlas ------------------------------------------------------------------
 
 // [nome, largura, altura, desenho, contorno?]
@@ -258,6 +280,8 @@ const PROPS = [
   ['uniform', 16, 32, uniformRack, true],
   ['box', 16, 16, box, true],
   ['generator', 48, 40, generator, true],
+  ['medicine', 8, 11, medicine, true],
+  ['battery', 6, 12, battery, true],
 ];
 
 export function drawProps() {

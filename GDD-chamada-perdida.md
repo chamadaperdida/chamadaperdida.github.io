@@ -214,7 +214,7 @@ Arquivo de referência: `planta-casa.svg`. Casa térrea (**sem segundo andar**),
 | Varanda externa (externo, chuva) | Quintal, escritório | — | — |
 
 - Cada cômodo tem iluminação ligada ao gerador.
-- Quarto da Clara: ao interagir, Artur diz *"...aí não."*
+- Quarto da Clara: ao interagir, Artur diz *"Não posso entrar, está trancado."*
 - Circuitos fechados (sala–cozinha–corredores–escritório) permitem fugir em perseguições.
 - O gerador tem duas rotas: pela cozinha/corredor da esquerda ou pela varanda externa.
 
@@ -627,7 +627,7 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Chegando em casa | "Estou exausto... só quero dormir." |
 | Tentando dormir com medo | "Não consigo dormir agora, estou com medo." |
 | Porta da delegacia antes da hora (sugestão) | "Ainda não terminou o turno." |
-| Quarto da Clara | "...aí não." |
+| Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
 | Achou a chave | "Achei." |
 | Eventos garantidos (noites 1–4) | Ver seção 4.8 |

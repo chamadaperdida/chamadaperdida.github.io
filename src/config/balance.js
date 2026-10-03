@@ -147,6 +147,21 @@ export const BALANCE = {
   },
 
   // ---------------------------------------------------------------------------
+  // Valores que NÃO estão no GDD (decididos no protótipo — ajustar jogando)
+  // ---------------------------------------------------------------------------
+  extra: {
+    // Gerador: Artur conta como "perto" a menos desta distância (m) — sem sabotagem.
+    generatorNearDistance: 8,
+    // Distância (m) para segurar F no gerador.
+    generatorInteractDistance: 1.6,
+    // Lanterna: alcance (m) e abertura do cone (graus, total).
+    flashlightRange: 7.5,
+    flashlightAngle: 50,
+    // Remédio: duração do glitch na tela (s). GDD: menos de 1 s.
+    medicineGlitchSeconds: 0.6,
+  },
+
+  // ---------------------------------------------------------------------------
   // 9.5 Resultado da simulação (só referência — o jogo não usa estes números)
   //     Chance de vencer a noite por perfil de jogador.
   // ---------------------------------------------------------------------------

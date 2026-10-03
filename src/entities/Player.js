@@ -60,6 +60,15 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     return { x: this.x / PPM, y: (this.y - 3) / PPM };
   }
 
+  /** Vira para um ângulo (radianos), ex.: para onde a lanterna aponta. */
+  faceAngle(angle) {
+    const deg = Phaser.Math.RadToDeg(angle);
+    if (deg > -45 && deg <= 45) this.facing = 'right';
+    else if (deg > 45 && deg <= 135) this.facing = 'down';
+    else if (deg > -135 && deg <= -45) this.facing = 'up';
+    else this.facing = 'left';
+  }
+
   update(dt) {
     const k = this.keys;
     let dx = 0;

@@ -78,6 +78,14 @@ export class DialogueBox {
     return this.pending;
   }
 
+  /** Fecha na hora, sem avisar quem esperava (ex.: noite reiniciada). */
+  clear() {
+    this.queue = [];
+    this.typing = false;
+    this.resolve = null;
+    this.container.setVisible(false);
+  }
+
   advance() {
     if (!this.isOpen) return;
     if (this.typing) {

@@ -18,7 +18,10 @@ npm run dev
 |---|---|
 | Andar | W A S D |
 | Correr | Shift (segurar) |
-| Abrir/fechar porta | F |
+| Mirar a lanterna | Mouse |
+| Ligar/desligar lanterna (só no escuro) | Clique esquerdo |
+| Abrir/fechar porta, pegar remédio/pilha | F |
+| Religar o gerador | F (segurar 3 s) |
 | Avançar diálogo | Espaço |
 
 ## Estrutura
@@ -26,7 +29,7 @@ npm run dev
 | Caminho | O que é |
 |---|---|
 | `src/config/balance.js` | Todos os valores de balanceamento (GDD seção 9). Ajuste aqui. |
-| `src/systems/formulas.js` | Fórmulas da curva da noite (GDD 9.2). |
+| `src/systems/` | Fórmulas (GDD 9.2), relógio da noite, medo, gerador, lanterna, iluminação e itens. |
 | `src/world/houseMap.js` | Mapa da casa em metros (cômodos, portas, móveis), feito a partir da planta. |
 | `src/entities/` | Artur (`Player.js`) e portas (`Door.js`). |
 | `src/scenes/` | Cenas do Phaser (carregamento, casa, HUD). |
@@ -37,15 +40,15 @@ npm run dev
 ## Modo debug
 
 - **F9** liga/desliga o painel (fica salvo no navegador), ou abra o jogo com `?debug` no fim do link.
-- Mostra posição, cômodo, velocidade, estamina e portas, além de uma noite simulada com os valores das fórmulas.
-- **G** mostra as caixas de colisão.
-- Noite simulada: **1–7** escolhe o dia, **R** reinicia, **T** acelera o tempo (1×, 10×, 60×).
+- Mostra medo, fase da noite, risco e quedas do gerador, lanterna, itens e as fórmulas da noite.
+- **1–7** começa a noite daquele dia · **R** reinicia a noite · **T** acelera o relógio da noite (1×, 10×, 60×)
+- **K** derruba o gerador · **+ / −** sobe/desce o medo · **G** mostra as caixas de colisão
 
 ## Progresso (GDD, Apêndice C)
 
 - [x] 1. Base
 - [x] 2. Casa jogável
-- [ ] 3. Luz e medo
+- [x] 3. Luz e medo
 - [ ] 4. Dormir e curva da noite
 - [ ] 5. Alucinações
 - [ ] 6. Monstros
