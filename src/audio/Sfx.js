@@ -99,10 +99,10 @@ class Sfx {
   }
 
   /** Um passo pesado no piso de madeira: calcanhar + ponta do pé, madeira estalando. */
-  #footstep(at, volume, pan) {
+  #footstep(at, volume, pan, pitch = 1) {
     // Ruído filtrado perde muita energia: ganho extra para ficar no volume dos outros sons
     const { gain } = this.#out(volume * 6, pan);
-    const jitter = 0.85 + Math.random() * 0.3;
+    const jitter = (0.85 + Math.random() * 0.3) * pitch;
     // Calcanhar: batida abafada no taco (grave, sem "tom" de tambor)
     this.#burst(at, gain, { filter: { type: 'lowpass', freq: 260 * jitter, q: 0.9 }, decay: 0.07, level: 1 });
     // Madeira cedendo: corpo médio curtinho
@@ -253,6 +253,250 @@ class Sfx {
         oscs.forEach((o) => o.stop(this.ctx.currentTime + 0.1));
       },
     };
+  }
+
+  // ---- Monstros (etapa 6) — provisórios até a etapa 11 -----------------------
+
+  /** Um passo avulso (ex.: Artur distorcido se aproximando). heavy = mais grave e forte. */
+  step(volume = 0.6, pan = 0, heavy = false) {
+    if (!this.ready || volume <= 0.01) return;
+    this.#footstep(this.ctx.currentTime, volume * (heavy ? 1.4 : 1), pan, heavy ? 0.7 : 1);
+  }
+
+  /** Estalos secos (Clara correndo de quatro). */
+  cracks(volume = 0.5, pan = 0) {
+    if (!this.ready) return;
+    const { gain } = this.#out(volume * 4, pan);
+    const at = this.ctx.currentTime;
+    for (let i = 0; i < 2; i++) {
+      this.#burst(at + i * 0.04 + Math.random() * 0.02, gain, {
+        filter: { type: 'bandpass', freq: 2500 + Math.random() * 1500, q: 3 },
+        attack: 0.0005,
+        decay: 0.015,
+        level: 1,
+      });
+    }
+  }
+
+  /** Corta todo o som por um instante (início do jumpscare, GDD 13.6). */
+  cutFor(seconds) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setValueAtTime(0, t);
+    this.master.gain.setValueAtTime(0.7, t + seconds);
+  }
+
+  /** Voz "sintética" com formantes (base da risada e do choro). Devolve nós para controlar. */
+  #voice(baseFreq, formants) {
+    const src = this.ctx.createOscillator();
+    src.type = 'sawtooth';
+    src.frequency.value = baseFreq;
+    const vib = this.ctx.createOscillator();
+    vib.frequency.value = 6;
+    const vibGain = this.ctx.createGain();
+    vibGain.gain.value = baseFreq * 0.04;
+    vib.connect(vibGain).connect(src.frequency);
+    const sum = this.ctx.createGain();
+    sum.gain.value = 0;
+    for (const [f, q, g] of formants) {
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = f;
+      bp.Q.value = q;
+      const fg = this.ctx.createGain();
+      fg.gain.value = g;
+      src.connect(bp).connect(fg).connect(sum);
+    }
+    src.start();
+    vib.start();
+    return { src, vib, sum };
+  }
+
+  #loopHandle(gain, panner, stopNodes, onStop) {
+    return {
+      setVolume: (v, pan = 0) => {
+        gain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05);
+        panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), this.ctx.currentTime, 0.05);
+      },
+      stop: () => {
+        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.03);
+        const at = this.ctx.currentTime + 0.2;
+        stopNodes.forEach((n) => n.stop(at));
+        onStop?.();
+      },
+    };
+  }
+
+  #silentHandle() {
+    return { setVolume() {}, stop() {} };
+  }
+
+  /**
+   * Risadas de criança, distorcidas (Clara). Toca por `seconds` e para sozinha.
+   * Sílabas "hi-hi-hi" curtas, agudas, com distorção e eco.
+   */
+  laugh(seconds = 5, volume = 0.6, pan = 0) {
+    if (!this.ready) return this.#silentHandle();
+    const { gain, panner } = this.#out(volume, pan);
+    const v = this.#voice(520, [
+      [900, 6, 1],
+      [2600, 8, 0.6],
+    ]);
+    // Distorção leve ("diabólica")
+    const shaper = this.ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) {
+      const x = (i / 128) - 1;
+      curve[i] = Math.tanh(3 * x);
+    }
+    shaper.curve = curve;
+    const delay = this.ctx.createDelay();
+    delay.delayTime.value = 0.11;
+    const fb = this.ctx.createGain();
+    fb.gain.value = 0.3;
+    v.sum.connect(shaper).connect(gain);
+    shaper.connect(delay).connect(fb).connect(delay);
+    fb.connect(gain);
+    // Sílabas: rajadas de risada com pausas
+    const t0 = this.ctx.currentTime + 0.05;
+    let t = 0;
+    while (t < seconds - 0.2) {
+      const burst = 3 + Math.floor(Math.random() * 4);
+      for (let k = 0; k < burst && t < seconds - 0.2; k++) {
+        const at = t0 + t;
+        const pitch = 480 + Math.random() * 200 + k * 25;
+        v.src.frequency.setValueAtTime(pitch, at);
+        v.src.frequency.linearRampToValueAtTime(pitch * 0.85, at + 0.1);
+        v.sum.gain.setValueAtTime(0, at);
+        v.sum.gain.linearRampToValueAtTime(1.6, at + 0.015);
+        v.sum.gain.linearRampToValueAtTime(0, at + 0.11);
+        t += 0.14 + Math.random() * 0.04;
+      }
+      t += 0.25 + Math.random() * 0.35;
+    }
+    const end = t0 + seconds;
+    v.src.stop(end + 0.3);
+    v.vib.stop(end + 0.3);
+    return this.#loopHandle(gain, panner, [], null);
+  }
+
+  /** Choro (Helena). Contínuo; o volume acompanha o quanto ela já surgiu. */
+  cryLoop() {
+    if (!this.ready) return this.#silentHandle();
+    const { gain, panner } = this.#out(0);
+    const v = this.#voice(330, [
+      [700, 5, 1],
+      [1150, 6, 0.7],
+    ]);
+    v.sum.connect(gain);
+    // Soluços: o volume e o tom sobem e caem em ondas
+    const t0 = this.ctx.currentTime + 0.05;
+    for (let i = 0; i < 40; i++) {
+      const at = t0 + i * 1.3;
+      v.src.frequency.setValueAtTime(380, at);
+      v.src.frequency.exponentialRampToValueAtTime(260, at + 1.1);
+      v.sum.gain.setValueAtTime(0.05, at);
+      v.sum.gain.linearRampToValueAtTime(1.2, at + 0.15);
+      v.sum.gain.linearRampToValueAtTime(0.3, at + 0.9);
+      v.sum.gain.linearRampToValueAtTime(0.05, at + 1.2);
+    }
+    // Respiração entre os soluços
+    const n = this.#noiseSource();
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1400;
+    bp.Q.value = 0.8;
+    const ng = this.ctx.createGain();
+    ng.gain.value = 0.08;
+    n.connect(bp).connect(ng).connect(gain);
+    n.start();
+    return this.#loopHandle(gain, panner, [v.src, v.vib, n]);
+  }
+
+  /** Perseguição: coração forte + respiração ofegante de Artur, em loop. */
+  chaseLoop(volume = 0.8) {
+    if (!this.ready) return this.#silentHandle();
+    const { gain, panner } = this.#out(volume);
+    // Respiração ofegante: ruído filtrado entrando e saindo rápido
+    const n = this.#noiseSource();
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1100;
+    bp.Q.value = 0.9;
+    const breath = this.ctx.createGain();
+    breath.gain.value = 0;
+    n.connect(bp).connect(breath).connect(gain);
+    n.start();
+    const t0 = this.ctx.currentTime + 0.05;
+    for (let i = 0; i < 160; i++) {
+      const at = t0 + i * 0.42;
+      const inhale = i % 2 === 0;
+      breath.gain.setValueAtTime(0, at);
+      breath.gain.linearRampToValueAtTime(inhale ? 0.25 : 0.35, at + 0.08);
+      breath.gain.linearRampToValueAtTime(0, at + (inhale ? 0.3 : 0.36));
+    }
+    // Coração forte e rápido
+    const beats = [];
+    for (let i = 0; i < 120; i++) beats.push(t0 + i * 0.55);
+    const heart = this.ctx.createGain();
+    heart.gain.value = 1;
+    heart.connect(gain);
+    beats.forEach((at) => {
+      this.#thumpTo(at, heart, 50, 0.14, 0.9);
+      this.#thumpTo(at + 0.17, heart, 44, 0.16, 0.65);
+    });
+    return this.#loopHandle(gain, panner, [n], () => heart.disconnect());
+  }
+
+  #thumpTo(at, out, freq, dur, level) {
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(level, at + 0.01);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + dur);
+    env.connect(out);
+    const osc = this.ctx.createOscillator();
+    osc.frequency.setValueAtTime(freq * 1.6, at);
+    osc.frequency.exponentialRampToValueAtTime(freq, at + dur * 0.6);
+    osc.connect(env);
+    osc.start(at);
+    osc.stop(at + dur + 0.02);
+  }
+
+  /** Grito do jumpscare (~1 s): ruído rasgado + vozes desafinadas subindo. */
+  scream(volume = 0.9) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime;
+    const { gain } = this.#out(volume);
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(1, at + 0.03);
+    env.gain.setValueAtTime(1, at + 0.8);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + 1.2);
+    env.connect(gain);
+    const shaper = this.ctx.createWaveShaper();
+    const curve = new Float32Array(256);
+    for (let i = 0; i < 256; i++) curve[i] = Math.tanh(5 * ((i / 128) - 1));
+    shaper.curve = curve;
+    shaper.connect(env);
+    for (const [f, detune] of [
+      [420, 0],
+      [437, 30],
+      [630, -20],
+      [890, 15],
+    ]) {
+      const o = this.ctx.createOscillator();
+      o.type = 'sawtooth';
+      o.detune.value = detune;
+      o.frequency.setValueAtTime(f, at);
+      o.frequency.exponentialRampToValueAtTime(f * 1.9, at + 0.9);
+      const og = this.ctx.createGain();
+      og.gain.value = 0.18;
+      o.connect(og).connect(shaper);
+      o.start(at);
+      o.stop(at + 1.25);
+    }
+    this.#burst(at, env, { filter: { type: 'bandpass', freq: 2200, q: 0.5 }, attack: 0.01, decay: 1.1, level: 0.6 });
   }
 }
 

@@ -66,6 +66,35 @@ export class HudScene extends Phaser.Scene {
     // Escurecer a tela (sequência de sono)
     const { width, height } = this.scale;
     this.fade = this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0).setAlpha(0).setDepth(3000);
+
+    // Perseguição (GDD 7): bordas da tela escurecem e pulsam no ritmo do coração
+    if (!this.textures.exists('chase-vignette')) {
+      const tex = this.textures.createCanvas('chase-vignette', width, height);
+      const ctx = tex.getContext();
+      const g = ctx.createRadialGradient(width / 2, height / 2, height * 0.25, width / 2, height / 2, width * 0.62);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(0.6, 'rgba(10,0,0,0.55)');
+      g.addColorStop(1, 'rgba(0,0,0,0.97)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+      tex.refresh();
+    }
+    this.vignette = this.add.image(0, 0, 'chase-vignette').setOrigin(0).setAlpha(0).setDepth(-10);
+    this.chaseLevel = 0;
+  }
+
+  /** Liga/desliga o efeito de perseguição (bordas escuras pulsando como o coração). */
+  setChase(active) {
+    this.chaseTarget = active ? 1 : 0;
+  }
+
+  updateChase(time, dt) {
+    const target = this.chaseTarget ?? 0;
+    this.chaseLevel += Math.max(-dt * 2, Math.min(dt * 3, target - this.chaseLevel));
+    // Pulso no ritmo do coração da perseguição (~0,55 s), duas batidas (tum-tum)
+    const phase = (time / 1000) % 0.55;
+    const beat = Math.exp(-phase * 14) + 0.6 * Math.exp(-Math.max(0, phase - 0.17) * 14) * (phase > 0.17 ? 1 : 0);
+    this.vignette.setAlpha(this.chaseLevel * (0.6 + 0.4 * Math.min(1, beat)));
   }
 
   /** Escurece a tela inteira aos poucos. */
@@ -86,6 +115,7 @@ export class HudScene extends Phaser.Scene {
     const dt = deltaMs / 1000;
     this.dialogue.update(dt);
     this.updateFace(time, dt);
+    this.updateChase(time, dt);
   }
 
   /** O HUD já foi montado? (a casa espera por ele antes do primeiro quadro) */

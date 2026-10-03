@@ -34,6 +34,8 @@ import { FakeStepsHallucination } from '../hallucinations/FakeSteps.js';
 import { TvHallucination } from '../hallucinations/Tv.js';
 import { LandlineHallucination } from '../hallucinations/Landline.js';
 import { daysLeftText } from './TransitionScene.js';
+import { NavGrid } from '../world/nav.js';
+import { MONSTER_KINDS, MonsterDirector } from '../systems/MonsterDirector.js';
 import { calmWindow, fearDecayPerSecond, hallucinationRate } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
 import { sfx } from '../audio/Sfx.js';
@@ -84,6 +86,7 @@ export class HouseScene extends Phaser.Scene {
       (kind, ctx) => this.hallucinationAvailable(kind, ctx),
     );
     this.sleep = null; // sequência de sono em andamento
+    this.dead = false; // a cena é reaproveitada a cada noite: zera o estado
     this.arrived = false; // fala de chegada já fechada
     this.bedroomEvent = { ...BEDROOM_EVENTS[this.clock.day], done: false };
     this.hasKey = false;
@@ -109,6 +112,11 @@ export class HouseScene extends Phaser.Scene {
     );
 
     this.lighting = new Lighting(this, { kind: this.grid.kind, bounds: this.bounds, doors: this.doors });
+    this.nav = new NavGrid(this.grid.kind, this.furnitureRects, this.lighting.doorByCell);
+    this.monsters = new MonsterDirector(this.createMonsterCtx(), this.clock, this.fear);
+    this.godMode = false; // debug: monstros não matam
+    this.chaseSound = null;
+    this.shakeIn = 0;
 
     const cam = this.cameras.main;
     cam.setZoom(CAMERA_ZOOM);
@@ -169,9 +177,13 @@ export class HouseScene extends Phaser.Scene {
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.director.active?.end();
+      this.monsters.endAll();
+      this.chaseSound?.stop();
+      this.hud.setChase?.(false);
       debug.clearGroup('Casa');
       debug.clearGroup('Noite');
       debug.clearGroup('Gerador');
+      debug.clearGroup('Monstros');
     });
   }
 
@@ -557,6 +569,14 @@ export class HouseScene extends Phaser.Scene {
     this.flashlight.update(dt);
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
 
+    // Monstros (só no escuro) e efeitos de perseguição
+    this.monsters.update(dt, nightDt, {
+      dark: this.clock.started && !this.generator.on,
+      playerMoving: this.frameCtx.playerMoving,
+    });
+    if (this.dead) return;
+    this.updateChaseEffects(dt);
+
     // Segurar F no gerador
     const target = this.nearestInteractable();
     const atGenerator = target?.kind === 'generator';
@@ -645,6 +665,124 @@ export class HouseScene extends Phaser.Scene {
     const key = this.hasKey ? ' · chave no bolso' : this.items.remaining('key') ? ' · chave na casa' : '';
     debug.set('Casa/Itens', `remédios ${this.items.remaining('medicine')} · pilhas ${this.items.remaining('battery')}${key}`);
     debug.set('Casa/Interação', target ? target.kind : '—');
+    const mons = this.monsters.active.map((e) => e.name).join(', ') || '—';
+    debug.set('Monstros/Agora', mons);
+    debug.set('Monstros/Taxa no escuro', `${night.monsterEventRate.toFixed(4)} /s`);
+    debug.set('Monstros/Eventos na noite', `${this.monsters.count}`);
+    debug.set('Monstros/Atalhos', `M força monstro · I imortal (${this.godMode ? 'ligado' : 'desligado'})`);
+  }
+
+  // ---- Monstros (GDD 6 e 7) -----------------------------------------------
+
+  createMonsterCtx() {
+    const scene = this;
+    return {
+      scene,
+      // nav e hud são criados depois: lidos na hora do uso
+      get nav() {
+        return scene.nav;
+      },
+      get hud() {
+        return scene.hud;
+      },
+      player: this.player,
+      colliders: [this.wallLayer, this.furniture, this.doors.map((d) => d.blocker)],
+      fear: this.fear,
+      sfx,
+      findSpawn: (min, max) => this.findMonsterSpawn(min, max),
+      findHelenaSpot: () => this.findHelenaSpot(),
+      litByFlashlight: (xm, ym) => this.litByFlashlight(xm, ym),
+      die: (kind) => this.die(kind),
+    };
+  }
+
+  /** Lugar para um monstro surgir: fora da tela, a `min`–`max` m de caminho do Artur. */
+  findMonsterSpawn(min, max) {
+    const dist = this.nav.distancesFrom(this.player.feetMeters, Math.ceil(max / CELL_METERS));
+    const view = this.cameras.main.worldView;
+    const options = [];
+    for (const [key, steps] of dist) {
+      const d = steps * CELL_METERS;
+      if (d < min || d > max) continue;
+      const i = key % this.nav.w;
+      const j = Math.floor(key / this.nav.w);
+      const p = this.nav.center(i, j);
+      const px = p.x * PPM;
+      const py = p.y * PPM;
+      if (px > view.x - 24 && px < view.right + 24 && py > view.y - 40 && py < view.bottom + 24) continue;
+      const room = roomAt(p.x, p.y);
+      if (!room || room.id === 'quartoClara' || this.nav.doorAt(i, j)) continue;
+      options.push(p);
+    }
+    return options.length ? options[Math.floor(Math.random() * options.length)] : null;
+  }
+
+  /** Helena: onde a lanterna aponta (se estiver ligada), senão num ponto escuro por perto. */
+  findHelenaSpot() {
+    const chest = this.chest;
+    // Precisa dar para iluminá-la: chão livre e nenhuma parede entre ela e o Artur
+    const tryAt = (angle, d) => {
+      const x = chest.x + Math.cos(angle) * d;
+      const y = chest.y + Math.sin(angle) * d + 0.45;
+      const [i, j] = this.nav.cellOf(x, y);
+      if (!this.nav.passable(i, j) || roomAt(x, y)?.id === 'quartoClara') return null;
+      const a = Math.atan2(y - 0.6 - chest.y, x - chest.x);
+      const dist = Math.hypot(x - chest.x, y - 0.6 - chest.y);
+      return this.lighting.castRay(chest.x, chest.y, a, dist) >= dist - 0.35 ? { x, y } : null;
+    };
+    if (this.flashlight.on) {
+      const a = this.flashlight.angle;
+      const free = this.lighting.castRay(chest.x, chest.y, a, BALANCE.extra.flashlightRange);
+      for (let d = Math.min(5, free - 0.6); d >= 2; d -= 0.5) {
+        const spot = tryAt(a, d);
+        if (spot) return spot;
+      }
+    }
+    for (let k = 0; k < 40; k++) {
+      const spot = tryAt(Math.random() * Math.PI * 2, Phaser.Math.FloatBetween(2.5, 5));
+      if (spot) return spot;
+    }
+    return null;
+  }
+
+  /** Um ponto (m) está dentro do cone da lanterna, sem parede no meio? */
+  litByFlashlight(xm, ym) {
+    const f = this.flashlight;
+    if (!f.shining) return false;
+    const c = this.chest;
+    const d = Math.hypot(xm - c.x, ym - c.y);
+    if (d > BALANCE.extra.flashlightRange) return false;
+    const angle = Math.atan2(ym - c.y, xm - c.x);
+    const diff = Math.abs(Phaser.Math.Angle.Wrap(angle - f.angle));
+    if (diff > Phaser.Math.DegToRad(BALANCE.extra.flashlightAngle / 2)) return false;
+    return this.lighting.castRay(c.x, c.y, angle, d) >= d - 0.35;
+  }
+
+  /** Perseguição (GDD 7): coração forte + respiração, bordas pulsando e leve tremor. */
+  updateChaseEffects(dt) {
+    const chasing = this.monsters.chasing;
+    this.hud.setChase(chasing);
+    if (chasing && !this.chaseSound) this.chaseSound = sfx.chaseLoop(0.8);
+    if (!chasing && this.chaseSound) {
+      this.chaseSound.stop();
+      this.chaseSound = null;
+    }
+    this.shakeIn = (this.shakeIn ?? 0) - dt;
+    if (chasing && this.shakeIn <= 0) {
+      this.shakeIn = 0.5;
+      this.cameras.main.shake(450, 0.0018);
+    }
+  }
+
+  /** Pego por um monstro: jumpscare e tela de morte (GDD 2.5). */
+  die(monster) {
+    if (this.dead || this.godMode) return;
+    this.dead = true;
+    this.chaseSound?.stop();
+    this.chaseSound = null;
+    this.hud.setChase(false);
+    this.hud.dialogue?.clear();
+    this.scene.start('Death', { monster, day: this.clock.day });
   }
 
   setupDebugKeys() {
@@ -673,6 +811,14 @@ export class HouseScene extends Phaser.Scene {
       else if (k === '+' || k === '=') this.fear.add(10 / this.clock.night.fearMultiplier);
       else if (k === '-') this.fear.reduce(10);
       else if (k === 'g') this.toggleCollisionDebug();
+      else if (k === 'm') {
+        // M: força os monstros em sequência (apaga a luz se precisar)
+        if (!this.clock.started) this.startBedroomEvent();
+        if (this.generator.on) this.generator.drop('debug');
+        this.monsterDebugIndex = ((this.monsterDebugIndex ?? -1) + 1) % MONSTER_KINDS.length;
+        this.monsters.endAll();
+        this.monsters.start(MONSTER_KINDS[this.monsterDebugIndex]);
+      } else if (k === 'i') this.godMode = !this.godMode;
     });
   }
 

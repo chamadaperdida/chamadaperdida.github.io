@@ -2,6 +2,7 @@
 // Tudo vai para um atlas: props.png + props.json (formato JSON Hash do Phaser).
 
 import { PixelCanvas, seeded } from './canvas.mjs';
+import { ash, claraCrawl, distorted, distortedBadge, distortedEyes, helena, invader } from './monsters.mjs';
 
 const WOOD_DARK = '#2a1d14';
 const WOOD = '#5a4130';
@@ -552,6 +553,18 @@ const PROPS = [
   ['tv-static-1', 17, 13, tvStatic(1)],
   ['tv-static-2', 17, 13, tvStatic(2)],
   ['key', 7, 4, key, true],
+  ['invader-0', 16, 32, invader(0)],
+  ['invader-1', 16, 32, invader(1)],
+  ['distorted-0', 18, 36, distorted(0)],
+  ['distorted-1', 18, 36, distorted(1)],
+  ['distorted-eyes', 18, 36, distortedEyes],
+  ['distorted-badge', 18, 36, distortedBadge],
+  ['clara-0', 22, 16, claraCrawl(0), true],
+  ['clara-1', 22, 16, claraCrawl(1), true],
+  ['helena-0', 16, 32, helena(0)],
+  ['helena-1', 16, 32, helena(1)],
+  ['helena-2', 16, 32, helena(2)],
+  ['ash', 2, 2, ash],
 ];
 
 export function drawProps() {

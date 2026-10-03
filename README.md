@@ -42,7 +42,7 @@ npm run dev
 - **F9** liga/desliga o painel (fica salvo no navegador), ou abra o jogo com `?debug` no fim do link.
 - Mostra medo, fase da noite, risco e quedas do gerador, lanterna, itens e as fórmulas da noite.
 - **1–7** começa a noite daquele dia · **R** reinicia a noite · **T** acelera o relógio da noite (1×, 10×, 60×)
-- **K** derruba o gerador · **+ / −** sobe/desce o medo · **H** sorteia uma alucinação · **J** força cada tipo em sequência · **N** termina a noite · **G** mostra as caixas de colisão
+- **K** derruba o gerador · **+ / −** sobe/desce o medo · **H** sorteia uma alucinação · **J** força cada tipo em sequência · **M** força cada monstro em sequência (apaga a luz) · **I** imortal · **N** termina a noite · **G** mostra as caixas de colisão
 
 ## Progresso (GDD, Apêndice C)
 
@@ -51,7 +51,7 @@ npm run dev
 - [x] 3. Luz e medo
 - [x] 4. Dormir e curva da noite
 - [x] 5. Alucinações
-- [ ] 6. Monstros
+- [x] 6. Monstros
 - [ ] 7. Portas e chave
 - [ ] 8. Delegacia
 - [ ] 9. Fluxo completo
