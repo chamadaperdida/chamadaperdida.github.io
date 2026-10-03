@@ -136,6 +136,12 @@ export class HouseScene extends Phaser.Scene {
         return px > v.x - margin && px < v.right + margin && py > v.y - margin && py < v.bottom + margin;
       },
       findSpot: (min, max, opts) => this.findSpot(min, max, opts),
+      // Ponto (m) está iluminado? = na zona de luz do Artur, com o gerador ligado
+      isLit: (xm, ym) => {
+        const r = roomAt(xm, ym);
+        const here = this.lighting.currentRoom;
+        return !!(r && here && this.generator.on && LIGHT_ZONE.get(r.id) === LIGHT_ZONE.get(here.id));
+      },
       furniture: (id) => this.furnitureById.get(id).sprite,
     };
 
@@ -391,9 +397,10 @@ export class HouseScene extends Phaser.Scene {
 
   /**
    * Um ponto livre no chão, entre `min` e `max` metros do Artur. Devolve px (base dos pés).
-   * opts.onScreen: precisa estar na tela · opts.sameRoom: no mesmo cômodo do Artur.
+   * opts.onScreen: precisa estar na tela · opts.offScreen: precisa estar FORA da tela (com folga)
+   * opts.sameRoom: no mesmo cômodo do Artur.
    */
-  findSpot(min, max, { onScreen = true, sameRoom = false } = {}) {
+  findSpot(min, max, { onScreen = true, offScreen = false, sameRoom = false } = {}) {
     const feet = this.player.feetMeters;
     const here = roomAt(feet.x, feet.y) ?? this.lighting.currentRoom;
     const view = this.cameras.main.worldView;
@@ -406,6 +413,7 @@ export class HouseScene extends Phaser.Scene {
       const px = x * PPM;
       const py = y * PPM;
       if (onScreen && !view.contains(px, py - 16)) return false;
+      if (offScreen && px > view.x - 48 && px < view.right + 48 && py > view.y - 48 && py < view.bottom + 48) return false;
       return !this.furnitureRects.some((r) => r.contains(px, py) || r.contains(px, py - 20));
     };
     let best = null;
@@ -422,6 +430,8 @@ export class HouseScene extends Phaser.Scene {
         bestDist = d;
       }
     }
+    // Fora da tela é obrigatório: sem lugar válido, melhor não aparecer
+    if (!best && offScreen) return null;
     return best ?? { x: this.player.x + 2 * PPM, y: this.player.y };
   }
 

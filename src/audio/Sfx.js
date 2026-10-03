@@ -79,23 +79,52 @@ class Sfx {
     }
   }
 
+  /**
+   * Ruído filtrado com envelope curto: a base dos sons de impacto (passo, estouro, respingo).
+   * filter: { type, freq, q } · attack/decay em segundos.
+   */
+  #burst(at, out, { filter, attack = 0.002, decay = 0.08, level = 1 }) {
+    const n = this.#noiseSource();
+    const f = this.ctx.createBiquadFilter();
+    f.type = filter.type;
+    f.frequency.value = filter.freq;
+    f.Q.value = filter.q ?? 0.7;
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(level, at + attack);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + attack + decay);
+    n.connect(f).connect(env).connect(out);
+    n.start(at);
+    n.stop(at + attack + decay + 0.02);
+  }
+
+  /** Um passo pesado no piso de madeira: calcanhar + ponta do pé, madeira estalando. */
+  #footstep(at, volume, pan) {
+    // Ruído filtrado perde muita energia: ganho extra para ficar no volume dos outros sons
+    const { gain } = this.#out(volume * 6, pan);
+    const jitter = 0.85 + Math.random() * 0.3;
+    // Calcanhar: batida abafada no taco (grave, sem "tom" de tambor)
+    this.#burst(at, gain, { filter: { type: 'lowpass', freq: 260 * jitter, q: 0.9 }, decay: 0.07, level: 1 });
+    // Madeira cedendo: corpo médio curtinho
+    this.#burst(at + 0.004, gain, { filter: { type: 'bandpass', freq: 520 * jitter, q: 2.5 }, decay: 0.045, level: 0.35 });
+    // Ponta do pé, logo depois e mais fraca
+    const toe = at + 0.06 + Math.random() * 0.02;
+    this.#burst(toe, gain, { filter: { type: 'lowpass', freq: 340 * jitter, q: 0.8 }, decay: 0.05, level: 0.45 });
+    // Arrasto da sola (bem baixinho)
+    this.#burst(toe, gain, { filter: { type: 'highpass', freq: 2500, q: 0.5 }, attack: 0.01, decay: 0.05, level: 0.06 });
+  }
+
   /** Passos pesados correndo (passos falsos / Artur distorcido), passando de um lado ao outro. */
   heavySteps(seconds = 2.6, panFrom = -0.8, panTo = 0.8, volume = 0.9) {
     if (!this.ready) return;
     const t0 = this.ctx.currentTime + 0.05;
-    const interval = 0.27;
-    const count = Math.floor(seconds / interval);
-    for (let i = 0; i < count; i++) {
-      const k = i / Math.max(1, count - 1);
+    let t = 0;
+    while (t < seconds) {
+      const k = t / seconds;
       // Mais alto no meio (passa perto), mais baixo nas pontas
-      const v = volume * (0.45 + 0.55 * Math.sin(Math.PI * k));
-      this.#thump(t0 + i * interval + Math.random() * 0.03, {
-        freq: 55 + Math.random() * 10,
-        dur: 0.16,
-        volume: v,
-        pan: panFrom + (panTo - panFrom) * k,
-        noise: 0.7,
-      });
+      const v = volume * (0.35 + 0.65 * Math.sin(Math.PI * k));
+      this.#footstep(t0 + t, v, panFrom + (panTo - panFrom) * k);
+      t += 0.3 + Math.random() * 0.05; // ritmo irregular de alguém correndo pesado
     }
   }
 
@@ -110,39 +139,50 @@ class Sfx {
     }
   }
 
-  /** Estouro de balão. */
+  /** Estouro de balão: estalo seco e curtíssimo, com um "tapa" de borracha. */
   pop(volume = 0.8, pan = 0) {
     if (!this.ready) return;
     const at = this.ctx.currentTime;
-    const { gain } = this.#out(volume, pan);
-    const n = this.#noiseSource();
-    const hp = this.ctx.createBiquadFilter();
-    hp.type = 'highpass';
-    hp.frequency.value = 900;
-    const env = this.ctx.createGain();
-    env.gain.setValueAtTime(1, at);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.12);
-    n.connect(hp).connect(env).connect(gain);
-    n.start(at);
-    n.stop(at + 0.15);
+    const { gain } = this.#out(volume * 1.8, pan);
+    // Estalo: ruído de banda larga, ataque instantâneo, some em ~25 ms
+    this.#burst(at, gain, { filter: { type: 'bandpass', freq: 1800, q: 0.5 }, attack: 0.0005, decay: 0.025, level: 1 });
+    // Corpo do estouro (ar saindo de uma vez)
+    this.#burst(at, gain, { filter: { type: 'lowpass', freq: 700, q: 0.7 }, attack: 0.001, decay: 0.06, level: 0.5 });
+    // Borracha batendo (bem curto, agudo)
+    this.#burst(at + 0.02, gain, { filter: { type: 'highpass', freq: 3500, q: 0.7 }, attack: 0.001, decay: 0.03, level: 0.15 });
   }
 
-  /** Gota caindo. */
+  /** Gota caindo numa poça: "plim" de bolha (tom subindo) + respingo + eco do cômodo. */
   drip(volume = 0.5, pan = 0) {
     if (!this.ready || volume <= 0.01) return;
     const at = this.ctx.currentTime;
     const { gain } = this.#out(volume, pan);
+    // Eco curto, como num cômodo vazio
+    const delay = this.ctx.createDelay();
+    delay.delayTime.value = 0.07;
+    const fb = this.ctx.createGain();
+    fb.gain.value = 0.25;
+    const wet = this.ctx.createGain();
+    wet.gain.value = 0.35;
+    delay.connect(fb).connect(delay);
+    delay.connect(wet).connect(gain);
+    // Bolha: a frequência SOBE rápido (é isso que dá o som de gota)
     const osc = this.ctx.createOscillator();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(1500, at);
-    osc.frequency.exponentialRampToValueAtTime(500, at + 0.08);
+    const f0 = 700 + Math.random() * 250;
+    osc.frequency.setValueAtTime(f0, at);
+    osc.frequency.exponentialRampToValueAtTime(f0 * 2.2, at + 0.035);
     const env = this.ctx.createGain();
     env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(0.6, at + 0.005);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.12);
-    osc.connect(env).connect(gain);
+    env.gain.exponentialRampToValueAtTime(0.5, at + 0.003);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.06);
+    osc.connect(env);
+    env.connect(gain);
+    env.connect(delay);
     osc.start(at);
-    osc.stop(at + 0.14);
+    osc.stop(at + 0.08);
+    // Respingo baixinho
+    this.#burst(at, gain, { filter: { type: 'highpass', freq: 4000, q: 0.6 }, attack: 0.001, decay: 0.02, level: 0.12 });
   }
 
   /** Clique de tranca/destrancar. */

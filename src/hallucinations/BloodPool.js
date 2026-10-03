@@ -1,5 +1,6 @@
-// Poça de sangue — GDD 5. Aparece num lugar do mapa (não precisa ser na tela). Perto:
-// som de goteira e gota caindo do teto. O medo sobe ao se aproximar.
+// Poça de sangue — GDD 5. Aparece num lugar do mapa FORA do campo de visão do jogador.
+// Quando entra na tela, o medo sobe — mais rápido quanto mais perto (inversamente
+// proporcional à distância). Perto: goteira e gota caindo do teto.
 // Reação certa: ficar longe por tempo suficiente, e ela some. Medo: 4 certo / 11 errado (9.3).
 
 import { BALANCE } from '../config/balance.js';
@@ -7,24 +8,30 @@ import { PPM } from '../world/tiles.js';
 import { Hallucination } from './Hallucination.js';
 import { positional } from '../audio/Sfx.js';
 
-const DISCOVER_DIST = 4; // m — ao chegar a esta distância, o primeiro susto
-const CLOSE_DIST = 2; // m — perto demais: medo continua subindo
+// Medo por segundo com a poça na tela = FEAR_RATE / distância (m), antes da escala ×2.
+// Ex.: a 4 m sobe 1/s; a 1 m, 4/s. Para no valor "errado" da tabela.
+const FEAR_RATE = 4;
+const MIN_DIST = 0.75; // m — evita divisão por quase zero em cima da poça
 const FAR_DIST = 5; // m — longe
-const VANISH_AFTER_FAR = 8; // s longe e ela some
+const VANISH_AFTER_FAR = 8; // s longe (depois de vista) e ela some
+const UNSEEN_LIFE = 30; // s — se ninguém a viu até lá, some
 const MAX_LIFE = 60;
 const DRIP_EVERY = 1.3;
 
 export class BloodPoolHallucination extends Hallucination {
   constructor(ctx, opts) {
     super(ctx, opts);
-    const { right, wrong } = BALANCE.hallucinationFear.bloodPool;
-    this.right = right;
-    this.extraLeft = wrong - right;
-    this.discovered = false;
+    this.fearLeft = BALANCE.hallucinationFear.bloodPool.wrong;
+    this.seen = false;
     this.farTime = 0;
     this.dripIn = 0.3;
 
-    const spot = ctx.findSpot(3, 8, { onScreen: false, sameRoom: false });
+    // Sempre fora da tela: ela "já estava lá" quando o jogador chega
+    const spot = ctx.findSpot(5, 12, { onScreen: false, offScreen: true });
+    if (!spot) {
+      this.done = true; // nenhum lugar fora da tela por perto: não aparece
+      return;
+    }
     this.pos = { x: spot.x / PPM, y: spot.y / PPM };
     this.pool = ctx.scene.add.image(spot.x, spot.y, 'props', 'blood-pool').setOrigin(0.5, 0.5).setDepth(spot.y - 20);
     this.drop = ctx.scene.add.image(spot.x, spot.y - 48, 'props', 'drip').setDepth(spot.y + 1).setVisible(false);
@@ -36,17 +43,20 @@ export class BloodPoolHallucination extends Hallucination {
 
   update(dt) {
     super.update(dt);
+    if (!this.pool) return;
     const feet = this.ctx.feet();
     const d = Math.hypot(feet.x - this.pos.x, feet.y - this.pos.y);
+    // "Entrou no campo de visão" = na tela e iluminada (nos cômodos escuros ela não aparece)
+    const visible = this.ctx.onScreen(this.pool.x, this.pool.y) && this.ctx.isLit(this.pos.x, this.pos.y);
 
-    if (!this.discovered && d < DISCOVER_DIST) {
-      this.discovered = true;
-      this.addFear(this.right);
-    }
-    if (d < CLOSE_DIST && this.extraLeft > 0) {
-      const add = Math.min(this.extraLeft, 3 * dt);
-      this.extraLeft -= add;
-      this.addFear(add);
+    // Na tela: medo inversamente proporcional à distância, até o valor "errado"
+    if (visible) {
+      this.seen = true;
+      if (this.fearLeft > 0) {
+        const add = Math.min(this.fearLeft, (FEAR_RATE / Math.max(MIN_DIST, d)) * dt);
+        this.fearLeft -= add;
+        this.addFear(add);
+      }
     }
 
     // Gota caindo do teto + goteira (som pela distância)
@@ -61,17 +71,20 @@ export class BloodPoolHallucination extends Hallucination {
         ease: 'Quad.easeIn',
         onComplete: () => {
           this.drop.setVisible(false);
-          const { volume, pan } = positional(feet, this.pos, 7);
+          const { volume, pan } = positional(this.ctx.feet(), this.pos, 7);
           this.ctx.sfx.drip(volume * 0.7, pan);
         },
       });
     }
 
-    this.farTime = d > FAR_DIST ? this.farTime + dt : 0;
-    if (this.farTime > VANISH_AFTER_FAR || this.elapsed > MAX_LIFE) this.done = true;
+    // Some depois de um tempo longe (só conta depois de ter sido vista)
+    this.farTime = this.seen && d > FAR_DIST ? this.farTime + dt : 0;
+    const gone = this.farTime > VANISH_AFTER_FAR || (!this.seen && this.elapsed > UNSEEN_LIFE);
+    if (gone || this.elapsed > MAX_LIFE) this.done = true;
   }
 
   end() {
+    if (!this.pool) return;
     this.ctx.scene.tweens.killTweensOf(this.drop);
     this.pool.destroy();
     this.drop.destroy();

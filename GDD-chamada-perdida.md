@@ -300,7 +300,7 @@ Inevitáveis, sempre aumentam o medo, mais frequentes no começo da noite e dimi
 | Alucinação | Como funciona | Reação do jogador |
 |---|---|---|
 | **Balão vermelho** | Aparece na tela e fica parado ali. Enquanto estiver na tela, o medo sobe aos poucos. | Ir até ele e estourar: voz diz "ops" e o medo para de subir. |
-| **Poça de sangue** | Aparece num lugar do mapa. Perto: som de goteira e gota caindo do teto. O medo sobe ao se aproximar. | Ficar longe por tempo suficiente: ela some. |
+| **Poça de sangue** | Aparece num lugar do mapa **sempre fora do campo de visão** do jogador. Perto: som de goteira e gota caindo do teto. Quando ela entra no campo de visão (na tela e iluminada), o medo sobe **inversamente proporcional à distância** (quanto mais perto, mais rápido), até o valor "errado" da tabela 9.3. | Ficar longe por tempo suficiente: ela some. |
 | **Vulto** | Silhueta (forma do Invasor com luz). Ao aparecer na tela, foge de Artur (um pouco mais rápido que ele correndo) até sair da tela. | Fugir para o lado oposto: medo sobe menos. Correr atrás dele: sobe mais. |
 | **Luz piscando (comum)** | A luz do cômodo pisca. | Ficar parado: para de piscar mais rápido. |
 | **Luz piscando com Helena (rara)** | Pisca → silhueta de Helena → pisca → some. Sons de susto + coração. | Nenhuma (duração fixa). |
