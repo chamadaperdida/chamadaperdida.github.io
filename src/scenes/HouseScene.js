@@ -36,8 +36,10 @@ export class HouseScene extends Phaser.Scene {
 
     const cam = this.cameras.main;
     cam.setZoom(CAMERA_ZOOM);
-    cam.setBounds(this.bounds.x, this.bounds.y, this.bounds.width, this.bounds.height);
-    cam.startFollow(this.player, true, 0.15, 0.15, 0, 16);
+    // Artur sempre no centro da tela: sem suavização e sem limite nas bordas
+    // (perto das bordas aparece o escuro em volta da casa). O deslocamento de 16 px
+    // centraliza pelo meio do corpo, já que a origem do sprite fica nos pés.
+    cam.startFollow(this.player, true, 1, 1, 0, 16);
     cam.setRoundPixels(true);
     cam.setBackgroundColor('#050506');
 
