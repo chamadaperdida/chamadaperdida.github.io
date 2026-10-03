@@ -229,7 +229,7 @@ Arquivo de referência: `planta-casa.svg`. Casa térrea (**sem segundo andar**),
 - **Sabotagem:** só acontece quando Artur está **longe** do gerador.
 - **Chance de cair:** cresce com o tempo e **zera** quando o gerador cai. A velocidade de crescimento diminui ao longo da noite, e a chance tem um **teto** (nunca vira certeza).
 - **Queda garantida:** se o caos da noite terminou e o gerador ainda não caiu nenhuma vez, ele cai assim que Artur estiver longe.
-- **Medo em 100%:** o gerador cai **na hora**, mesmo com Artur perto.
+- **Medo chegando a 100%:** o gerador cai **na hora**, mesmo com Artur perto. Se o medo continuar em 100%, o gerador pode ser religado normalmente (ele só cai de novo se o medo baixar e voltar a 100%).
 - Enquanto houver uma porta trancada, a chance cresce mais rápido (×1,5).
 - Toda queda faz o medo subir um pouco e toca o som característico do gerador falhando.
 
@@ -516,6 +516,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 - Pixel art, paleta escura e dessaturada (azuis-acinzentados, marrons, preto), com **vermelho** como cor de destaque (textos, balão, sangue, barra de medo).
 - Iluminação dinâmica: com luz acesa, cômodos com luz amarelada e fraca; no escuro, só o cone da lanterna (com bordas suaves e poeira no feixe, parando nas paredes).
 - **Só o cômodo onde Artur está fica iluminado.** Os outros cômodos que aparecem na tela ficam bem mais escuros (quase pretos), com a luz vazando pelas portas abertas. O cômodo vizinho só se revela quando Artur entra nele.
+- A transição de luz só acontece em **portas**. Áreas ligadas por vão sem porta acendem juntas: os três corredores (de cima, da esquerda e hall) são uma área só, e o quintal com a varanda externa também.
 - Chuva visível nas áreas externas e nas janelas; relâmpagos raros iluminam a casa por um instante.
 - Leve granulado e vinheta em toda a tela.
 

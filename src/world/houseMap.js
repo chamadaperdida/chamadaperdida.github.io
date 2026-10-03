@@ -129,6 +129,25 @@ export function roomAt(xm, ym) {
   return ROOMS.find((r) => xm > r.x && xm < r.x + r.w && ym > r.y && ym < r.y + r.h) ?? null;
 }
 
+/** Os dois cômodos de cada lado de uma passagem (porta ou vão) centrada em (x, y). */
+export function roomsAcross(x, y, axis) {
+  const n = axis === 'h' ? { x: 0, y: 0.6 } : { x: 0.6, y: 0 };
+  return [roomAt(x - n.x, y - n.y), roomAt(x + n.x, y + n.y)];
+}
+
+// Zonas de luz: cômodos ligados por vão sem porta acendem juntos (GDD 13.1).
+// Ex.: os três corredores formam uma zona; quintal + varanda, outra.
+export const LIGHT_ZONE = (() => {
+  const zone = new Map(ROOMS.map((r) => [r.id, r.id]));
+  const find = (id) => (zone.get(id) === id ? id : find(zone.get(id)));
+  for (const o of OPENINGS) {
+    const [a, b] =
+      o.axis === 'h' ? roomsAcross((o.x0 + o.x1) / 2, o.y, 'h') : roomsAcross(o.x, (o.y0 + o.y1) / 2, 'v');
+    if (a && b) zone.set(find(a.id), find(b.id));
+  }
+  return new Map(ROOMS.map((r) => [r.id, find(r.id)]));
+})();
+
 /** Células cobertas por uma porta: [[i, j], ...] */
 export function doorCells(door) {
   const ci = Math.round(door.x / CELL_METERS);

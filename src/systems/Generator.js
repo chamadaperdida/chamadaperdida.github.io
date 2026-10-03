@@ -1,7 +1,7 @@
 // Gerador (GDD 4.4 e 9.2).
 // - Risco de queda cresce por segundo só com Artur LONGE, até um teto; zera quando cai.
 // - Queda garantida: caos acabou e ainda não caiu nenhuma vez → cai assim que Artur estiver longe.
-// - Medo em 100%: cai na hora, mesmo com Artur perto.
+// - Medo chegando a 100%: cai na hora, mesmo com Artur perto.
 // - Com uma porta trancada, o risco cresce ×1,5 (a tranca entra na etapa 7).
 // - Toda queda soma medo (+4). Religar: segurar F por 3 s perto dele.
 
@@ -17,6 +17,7 @@ export class Generator {
     this.risk = 0;
     this.drops = 0;
     this.lockedDoor = false;
+    this.wasFull = false;
     this.holdProgress = 0; // 0 a 1 enquanto segura F
     this.listeners = { drop: [], restore: [] };
   }
@@ -34,9 +35,15 @@ export class Generator {
   }
 
   update(nightDt, feet) {
+    // Medo em 100% derruba o gerador só no instante em que o medo CHEGA a 100%.
+    // Se continuar em 100%, dá para religar (senão o jogador ficaria preso no escuro,
+    // onde o medo não cai).
+    const justFull = this.fear.full && !this.wasFull;
+    this.wasFull = this.fear.full;
+
     if (!this.on) return;
 
-    if (this.fear.full) {
+    if (justFull) {
       this.drop('medo 100%');
       return;
     }

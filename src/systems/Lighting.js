@@ -9,7 +9,7 @@
 
 import Phaser from 'phaser';
 import { BALANCE } from '../config/balance.js';
-import { DOORS, OPENINGS, ROOMS, doorCells, roomAt } from '../world/houseMap.js';
+import { DOORS, LIGHT_ZONE, ROOMS, doorCells, roomAt, roomsAcross } from '../world/houseMap.js';
 import { CELL_METERS, PPM } from '../world/tiles.js';
 
 const COLORS = {
@@ -34,15 +34,9 @@ export class Lighting {
       for (const [i, j] of doorCells(DOORS[index])) this.doorByCell.set(`${i},${j}`, door);
     });
 
-    // Passagens por onde a luz vaza: portas (quando abertas) e vãos sem porta
-    this.portals = [
-      ...doors.map((door) => ({ x: door.def.x, y: door.def.y, axis: door.axis, door })),
-      ...OPENINGS.map((o) =>
-        o.axis === 'h'
-          ? { x: (o.x0 + o.x1) / 2, y: o.y, axis: 'h', door: null }
-          : { x: o.x, y: (o.y0 + o.y1) / 2, axis: 'v', door: null },
-      ),
-    ];
+    // Passagens por onde a luz vaza para outra zona: só portas (quando abertas).
+    // Vãos sem porta ligam cômodos da mesma zona, que já acendem juntos.
+    this.portals = doors.map((door) => ({ x: door.def.x, y: door.def.y, axis: door.axis, door }));
 
     this.brightness = new Map(ROOMS.map((r) => [r.id, 0]));
     this.currentRoom = null;
@@ -124,9 +118,10 @@ export class Lighting {
     const room = roomAt(feet.x, feet.y);
     if (room) this.currentRoom = room; // no vão de uma porta, mantém o cômodo anterior
 
-    // Brilho de cada cômodo vai suavemente até o alvo
+    // Brilho de cada cômodo vai suavemente até o alvo: acende a zona inteira do cômodo atual
+    const currentZone = this.currentRoom && LIGHT_ZONE.get(this.currentRoom.id);
     for (const r of ROOMS) {
-      const target = powerOn && this.currentRoom?.id === r.id ? 1 : 0;
+      const target = powerOn && LIGHT_ZONE.get(r.id) === currentZone ? 1 : 0;
       const b = this.brightness.get(r.id);
       this.brightness.set(r.id, b + Phaser.Math.Clamp(target - b, -FADE_SPEED * dt, FADE_SPEED * dt));
     }
@@ -158,19 +153,22 @@ export class Lighting {
     this.rt.draw(g, -this.bounds.x, -this.bounds.y);
   }
 
-  /** Luz do cômodo atual vazando pelas portas abertas e vãos para os vizinhos. */
+  /** Luz da zona atual vazando pelas portas abertas para as outras zonas. */
   drawLeaks() {
     const current = this.currentRoom;
     if (!current) return;
+    const zone = LIGHT_ZONE.get(current.id);
     const b = this.brightness.get(current.id);
     for (const p of this.portals) {
-      if (p.door && !p.door.isOpen) continue;
+      if (!p.door.isOpen) continue;
       const n = p.axis === 'h' ? { x: 0, y: 1 } : { x: 1, y: 0 };
-      const a = roomAt(p.x - n.x * 0.6, p.y - n.y * 0.6);
-      const c = roomAt(p.x + n.x * 0.6, p.y + n.y * 0.6);
+      const [a, c] = roomsAcross(p.x, p.y, p.axis);
+      if (!a || !c) continue;
+      const za = LIGHT_ZONE.get(a.id);
+      const zc = LIGHT_ZONE.get(c.id);
       let dir;
-      if (a?.id === current.id && c && c.id !== current.id) dir = n;
-      else if (c?.id === current.id && a && a.id !== current.id) dir = { x: -n.x, y: -n.y };
+      if (za === zone && zc !== zone) dir = n;
+      else if (zc === zone && za !== zone) dir = { x: -n.x, y: -n.y };
       else continue;
       const origin = { x: p.x - dir.x * 0.3, y: p.y - dir.y * 0.3 };
       this.drawCone(origin, Math.atan2(dir.y, dir.x), Phaser.Math.DegToRad(65), 3.2, COLORS.room, 4, 0.16 * b);
