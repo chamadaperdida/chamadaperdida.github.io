@@ -1,6 +1,6 @@
 // Medo (GDD 4.5): 0 a 100.
 // - Começa em 0 toda noite.
-// - Cai com luz acesa e sem alucinação acontecendo (fórmula da 9.2), ou com remédio.
+// - Cai com luz acesa e sem alucinação acontecendo (valor fixo da noite, 9.1), ou com remédio.
 // - No escuro fica parado: só sobe com eventos e só cai com remédio.
 // - Tudo que soma passa pelo multiplicador da noite.
 
@@ -45,7 +45,7 @@ export class Fear {
 
   update(nightDt, lightsOn) {
     if (lightsOn && !this.hallucinating) {
-      this.value = Math.max(0, this.value - fearDecayPerSecond(this.clock.night, this.clock.t) * nightDt);
+      this.value = Math.max(0, this.value - fearDecayPerSecond(this.clock.night) * nightDt);
     }
   }
 }

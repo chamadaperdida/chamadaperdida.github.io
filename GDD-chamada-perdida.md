@@ -195,7 +195,7 @@ Só nas alucinações (nunca nas reais):
 
 ### 4.2 Mapa
 
-Arquivo de referência: `planta-casa-v2.svg` (a planta antiga, `planta-casa.svg`, é a que o protótipo usa até a casa nova ser construída). Casa térrea (**sem segundo andar**), cerca de 48 m × 29 m contando quintal, jardim e varanda. A planta evita a casa "quadradinha": corredor em Z, cômodos em L, contorno irregular e vários circuitos.
+Arquivo de referência: `planta-casa-v2.svg` (gerada por `scripts/planta-v2.py`). Casa térrea (**sem segundo andar**), cerca de 48 m × 29 m contando quintal, jardim e varanda. A planta evita a casa "quadradinha": corredor em Z, cômodos em L, contorno irregular e vários circuitos.
 
 | Cômodo | Conexões | Objetos fixos | Pode aparecer |
 |---|---|---|---|

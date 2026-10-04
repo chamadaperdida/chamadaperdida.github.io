@@ -356,6 +356,107 @@ function filingCabinet(c, x, y) {
   }
 }
 
+// ---- Móveis da casa nova (GDD 4.2) -----------------------------------------------
+
+function diningBig(c, x, y) {
+  // Mesa grande da sala de jantar, cadeiras demais para uma pessoa só, 80×40
+  for (const cx of [10, 30, 50, 66]) {
+    c.rect(x + cx, y, 8, 5, WOOD_DARK); // cadeiras atrás
+    c.rect(x + cx, y + 34, 8, 6, WOOD_DARK); // cadeiras na frente
+    c.rect(x + cx + 1, y + 35, 6, 2, WOOD);
+  }
+  c.rect(x + 2, y + 5, 76, 22, '#5a4a3a');
+  c.rect(x + 4, y + 7, 72, 18, '#6e5c48');
+  c.rect(x + 2, y + 27, 76, 4, '#3a2c20');
+  c.rect(x + 5, y + 31, 3, 4, WOOD_DARK);
+  c.rect(x + 72, y + 31, 3, 4, WOOD_DARK);
+  c.rect(x + 34, y + 10, 10, 8, '#7a7468'); // fruteira vazia
+}
+
+function washer(c, x, y) {
+  // Máquina de lavar velha, 24×24
+  c.rect(x, y, 24, 24, '#a4a6a0');
+  c.rect(x, y, 24, 5, '#8a8c86'); // painel
+  c.rect(x + 3, y + 2, 4, 1, '#3a3a36');
+  c.rect(x + 16, y + 1, 3, 3, '#5a5c58'); // botão
+  c.rect(x + 5, y + 8, 14, 13, '#6e706b'); // tampa
+  c.rect(x + 7, y + 10, 10, 9, '#4e5a60');
+  c.rect(x + 8, y + 11, 3, 2, '#7a8a90');
+  c.rect(x, y + 22, 24, 2, '#5c5e59');
+}
+
+function laundryTank(c, x, y) {
+  // Tanque de lavar roupa, 24×20
+  c.rect(x, y, 24, 20, '#8a8c86');
+  c.rect(x + 2, y + 2, 20, 10, '#5c6266');
+  c.rect(x + 3, y + 3, 18, 8, '#4a5054');
+  c.rect(x + 11, y, 2, 3, '#b0b6b8'); // torneira
+  c.rect(x + 2, y + 13, 20, 1, '#6e706b'); // tábua de esfregar
+  c.rect(x + 3, y + 14, 4, 6, '#5c5e59');
+  c.rect(x + 17, y + 14, 4, 6, '#5c5e59');
+}
+
+function ironingBoard(c, x, y) {
+  // Tábua de passar com ferro, 32×14
+  c.rect(x + 2, y + 2, 28, 7, '#7a8a94');
+  c.rect(x + 2, y + 2, 28, 1, '#9aaab4');
+  c.rect(x, y + 4, 3, 4, '#7a8a94'); // bico
+  c.rect(x + 20, y + 3, 7, 4, '#3a3a3e'); // ferro
+  c.rect(x + 21, y + 3, 5, 1, '#5a5a60');
+  c.rect(x + 6, y + 9, 2, 5, '#4a4a4e');
+  c.rect(x + 24, y + 9, 2, 5, '#4a4a4e');
+}
+
+function counterMicrowave(c, x, y) {
+  // Bancada com micro-ondas, 32×28
+  c.rect(x, y, 32, 28, '#3e3a34');
+  c.rect(x, y, 32, 14, '#68635a');
+  c.rect(x + 4, y + 1, 24, 11, '#2e2e30');
+  c.rect(x + 6, y + 3, 15, 7, '#1a1e20');
+  c.rect(x + 7, y + 4, 3, 2, '#2e383c');
+  c.rect(x + 23, y + 3, 3, 1, '#7a3a2a'); // visor
+  c.rect(x + 23, y + 6, 3, 3, '#55555a');
+  c.rect(x, y + 14, 32, 1, '#2c2924');
+  c.rect(x + 4, y + 18, 24, 8, '#36322d');
+}
+
+function garbageCan(c, x, y) {
+  // Latão de lixo da garagem, 16×20
+  c.rect(x + 1, y, 14, 4, '#3e4a40');
+  c.rect(x + 6, y, 4, 1, '#2a322c'); // alça
+  c.rect(x + 2, y + 4, 12, 16, '#334036');
+  for (let i = 0; i < 3; i++) c.rect(x + 4 + i * 4, y + 6, 1, 12, '#2a342c');
+}
+
+function trashBin(c, x, y) {
+  // Lixeira pequena, 8×10
+  c.rect(x, y, 8, 2, '#4a4a4e');
+  c.rect(x + 1, y + 2, 6, 8, '#3a3a3e');
+  c.rect(x + 2, y + 3, 1, 6, '#2a2a2e');
+}
+
+function plantPot(c, x, y) {
+  // Vaso com planta morrendo, 12×14
+  c.rect(x + 2, y + 8, 8, 6, '#7a4a32');
+  c.rect(x + 1, y + 8, 10, 2, '#8a5a3e');
+  c.rect(x + 5, y + 2, 2, 6, '#4a5a32');
+  c.rect(x + 2, y + 3, 3, 2, '#5a6a3a');
+  c.rect(x + 7, y + 1, 3, 2, '#6a6a3a');
+  c.rect(x + 1, y + 5, 2, 2, '#5a5432'); // folha seca
+  c.px(x + 9, y + 5, '#6a5a32');
+}
+
+function clothesline(c, x, y) {
+  // Varal coberto: telhadinho e varal com prendedores, 64×24
+  c.rect(x, y, 64, 5, '#2b2f33');
+  c.rect(x, y + 4, 64, 1, '#1b1e21');
+  c.rect(x + 2, y + 5, 2, 19, '#3a3e42');
+  c.rect(x + 60, y + 5, 2, 19, '#3a3e42');
+  c.rect(x + 4, y + 10, 56, 1, '#8a8a84');
+  c.rect(x + 4, y + 15, 56, 1, '#8a8a84');
+  for (let i = 0; i < 6; i++) c.px(x + 10 + i * 9, y + 9, '#b0a080');
+}
+
 // ---- Alucinações -------------------------------------------------------------
 
 function helenaSilhouette(c, x, y) {
@@ -504,6 +605,15 @@ const PROPS = [
   ['console-table', 32, 16, consoleTable, true],
   ['bathroom-shelf', 16, 22, bathroomShelf, true],
   ['filing-cabinet', 16, 26, filingCabinet, true],
+  ['dining-big', 80, 40, diningBig, true],
+  ['washer', 24, 24, washer, true],
+  ['laundry-tank', 24, 20, laundryTank, true],
+  ['ironing-board', 32, 14, ironingBoard, true],
+  ['counter-microwave', 32, 28, counterMicrowave, true],
+  ['garbage-can', 16, 20, garbageCan, true],
+  ['trash-bin', 8, 10, trashBin, true],
+  ['plant-pot', 12, 14, plantPot, true],
+  ['clothesline', 64, 24, clothesline, true],
   ['helena-silhouette', 16, 32, helenaSilhouette, true],
   ['balloon', 9, 22, balloon, true],
   ['blood-pool', 26, 10, bloodPool],

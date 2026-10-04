@@ -1,9 +1,8 @@
 // Relógio da noite e os valores do dia.
-// A noite (curva, caos, gerador) só começa a contar no evento garantido a caminho do
-// quarto (GDD 4.8): "o jogo começa depois desse evento".
+// A noite (alucinações, sabotagem do gerador, prazo da queda garantida) só começa a
+// contar quando ela começa de verdade (GDD 4.6).
 
 import { nightBalance } from '../config/balance.js';
-import { isChaosPhase } from './formulas.js';
 
 export class NightClock {
   constructor(day) {
@@ -11,7 +10,15 @@ export class NightClock {
     this.night = nightBalance(day);
     this.t = 0;
     this.started = false;
-    this.speed = 1; // só o modo debug muda (acelera a curva da noite)
+    this.speed = 1; // só o modo debug muda (acelera o relógio da noite)
+    // Ursos coletados na noite (GDD 4.12). Provisório até a etapa 8: metade dos ursos,
+    // para a noite seguir jogável enquanto os ursos ainda não existem na casa.
+    this.bearsCollected = Math.ceil(this.night.bearCount / 2);
+  }
+
+  /** Fração dos ursos da noite já coletados (0 a 1). */
+  get bears() {
+    return this.bearsCollected / this.night.bearCount;
   }
 
   start() {
@@ -26,7 +33,8 @@ export class NightClock {
     return nightDt;
   }
 
-  get chaos() {
-    return isChaosPhase(this.night, this.t);
+  /** Passou o prazo da queda garantida do gerador? (GDD 4.4) */
+  get guaranteedDropDue() {
+    return this.t >= this.night.generatorGuaranteedDropAt;
   }
 }

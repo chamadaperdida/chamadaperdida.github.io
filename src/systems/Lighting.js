@@ -20,6 +20,13 @@ const COLORS = {
   halo: 0x2a2a34, // um mínimo em volta do Artur no escuro, para ele não sumir
 };
 
+/** Mistura duas cores 0xRRGGBB (t = 0 → a, t = 1 → b). */
+function mix(a, b, t) {
+  const ch = (c, s) => (c >> s) & 0xff;
+  const m = (s) => Math.round(ch(a, s) + (ch(b, s) - ch(a, s)) * t) << s;
+  return m(16) | m(8) | m(0);
+}
+
 const RAY_STEP = 0.1; // metros
 const WALL_LIT_DEPTH = 0.3; // metros (a parede tem 0,5 m)
 const FADE_SPEED = 5; // quão rápido um cômodo acende/apaga ao entrar/sair (por s)
@@ -131,10 +138,13 @@ export class Lighting {
     const g = this.g;
     g.clear();
 
+    const ambient = powerOn ? COLORS.ambientOn : COLORS.ambientOff;
     for (const r of ROOMS) {
       const b = this.brightness.get(r.id) * (LIGHT_ZONE.get(r.id) === currentZone ? zoneFactor : 1);
       if (b <= 0.01) continue;
-      g.fillStyle(COLORS.room, b);
+      // Cor já misturada com o escuro e opaca: retângulos do mesmo cômodo em L se
+      // sobrepõem na emenda sem criar uma faixa mais clara.
+      g.fillStyle(mix(ambient, COLORS.room, Math.min(1, b)), 1);
       // Inclui meia parede em volta, para as paredes do cômodo também acenderem
       g.fillRect((r.x - 0.25) * PPM, (r.y - 0.25) * PPM, (r.w + 0.5) * PPM, (r.h + 0.5) * PPM);
     }

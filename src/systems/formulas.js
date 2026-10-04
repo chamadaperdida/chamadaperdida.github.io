@@ -1,53 +1,49 @@
-// Fórmulas da curva da noite (GDD, seção 9.2).
-// Todas recebem `night` = nightBalance(dia) e `t` = segundos desde o início da noite.
+// Fórmulas da noite (GDD, seção 9.2).
+// Todas recebem `night` = nightBalance(dia). O que antes o tempo facilitava agora depende
+// dos ursos coletados: `bears` = fração dos ursos da noite já coletados (0 a 1).
 
 import { BALANCE } from '../config/balance.js';
 
 const F = BALANCE.formulas;
 
-/** Alucinações por segundo no instante t. */
-export function hallucinationRate(night, t) {
-  const { hallucinationRateStart: start, hallucinationRateMin: min } = night;
-  return min + (start - min) * Math.exp(-t / F.hallucinationDecayTau);
+/** Intervalo médio (s) entre o fim de uma alucinação e o começo da próxima. */
+export function hallucinationGap(night, bears) {
+  const { hallucinationGapNoBears: none, hallucinationGapAllBears: all } = night;
+  return none + (all - none) * Math.pow(bears, F.hallucinationGapExponent);
 }
 
-/** Está na fase de caos? (sem janelas de calma) */
-export function isChaosPhase(night, t) {
-  return t < night.chaosDuration;
-}
-
-/** Janela de calma garantida após cada alucinação (s). Zero durante o caos. */
-export function calmWindow(night, t) {
-  if (isChaosPhase(night, t)) return 0;
-  return night.calmWindowTerminal * (1 - Math.exp(-(t - night.chaosDuration) / F.calmWindowTau));
+/** Intervalo sorteado: o médio com ±20%, nunca menor que o mínimo. */
+export function rollHallucinationGap(night, bears) {
+  const j = F.hallucinationGapJitter;
+  const gap = hallucinationGap(night, bears) * (1 - j + Math.random() * 2 * j);
+  return Math.max(BALANCE.extra.hallucinationMinGap, gap);
 }
 
 /** Quanto o medo cai por segundo (luz acesa, sem alucinação), em pontos percentuais. */
-export function fearDecayPerSecond(night, t) {
-  const { fearDecayStart: start, fearDecayTerminal: terminal } = night;
-  return terminal - (terminal - start) * Math.exp(-t / F.fearDecayTau);
+export function fearDecayPerSecond(night) {
+  return night.fearDecay;
 }
 
 /**
  * Quanto o risco do gerador cresce neste segundo (só com Artur longe).
  * O chamador soma ao risco atual e limita com generatorRiskCap.
  */
-export function generatorRiskIncrement(night, t, lockedDoor = false) {
+export function generatorRiskIncrement(night, bears, lockedDoor = false) {
   const mult = lockedDoor ? F.generatorRiskLockedDoorMultiplier : 1;
-  return night.generatorRiskIncrement * Math.exp(-t / F.generatorRiskTau) * mult;
+  return night.generatorRiskIncrement * (1 - F.generatorRiskBearFactor * bears) * mult;
 }
 
 /** Soma `dt` segundos de crescimento ao risco atual, respeitando o teto. */
-export function stepGeneratorRisk(night, risk, t, dt, lockedDoor = false) {
-  return Math.min(night.generatorRiskCap, risk + generatorRiskIncrement(night, t, lockedDoor) * dt);
+export function stepGeneratorRisk(night, risk, bears, dt, lockedDoor = false) {
+  return Math.min(night.generatorRiskCap, risk + generatorRiskIncrement(night, bears, lockedDoor) * dt);
 }
 
 /**
  * Chance de o gerador cair durante a sequência de sono.
  * `base` começa em night.generatorSleepBaseChance e perde 35 p.p. a cada queda no sono.
  */
-export function generatorSleepChance(base, t) {
-  return base * Math.exp(-t / F.generatorSleepTau);
+export function generatorSleepChance(base, bears) {
+  return base * (1 - F.generatorSleepBearFactor * bears);
 }
 
 /** Nova base depois de uma queda durante o sono. */

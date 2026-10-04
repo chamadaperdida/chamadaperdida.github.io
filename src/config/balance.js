@@ -18,24 +18,27 @@ export const BALANCE = {
   // 9.1 Valores por noite  [D1, D2, D3, D4, D5, D6, D7]
   // ---------------------------------------------------------------------------
   perNight: {
-    // Duração da fase de caos (s): sem janelas de calma, alucinações frequentes.
-    chaosDuration: [90, 110, 130, 150, 170, 190, 210],
+    // Ursos de pelúcia na casa (GDD 4.12). Substituem o tempo como o que facilita a noite.
+    bearCount: [4, 4, 5, 5, 6, 6, 7],
 
-    // Taxa de alucinação no início da noite (alucinações por segundo).
-    hallucinationRateStart: [0.100, 0.107, 0.114, 0.121, 0.129, 0.136, 0.143],
+    // Trava (GDD 4.6): enquanto os ursos coletados forem MENOS que isto, medo abaixo de
+    // 5% (luz acesa) dispara uma alucinação na hora.
+    bearLock: [2, 2, 2, 3, 3, 3, 3],
 
-    // Taxa mínima de alucinação (por segundo) — nunca chega a zero.
-    hallucinationRateMin: [0.025, 0.028, 0.031, 0.033, 0.036, 0.039, 0.042],
+    // Intervalo entre alucinações (s), do fim de uma ao começo da próxima:
+    // sem nenhum urso e com todos os ursos (fórmula em formulas.js).
+    hallucinationGapNoBears: [9, 8.5, 8, 7.5, 7, 6.5, 6],
+    hallucinationGapAllBears: [50, 47, 44, 41, 38, 35, 32],
 
-    // Tamanho final da janela de calma após cada alucinação (s).
-    calmWindowTerminal: [45, 42.5, 40, 37.5, 35, 32.5, 30],
+    // Gerador: se ainda não caiu nenhuma vez depois deste tempo (s), cai assim que
+    // Artur estiver longe (GDD 4.4).
+    generatorGuaranteedDropAt: [90, 110, 130, 150, 170, 190, 210],
 
     // Multiplicador aplicado a tudo que soma no medo.
     fearMultiplier: [1.00, 1.03, 1.07, 1.10, 1.13, 1.17, 1.20],
 
-    // Queda do medo com luz acesa e sem alucinação (% por segundo).
-    fearDecayStart: [0.30, 0.28, 0.27, 0.25, 0.23, 0.22, 0.20],
-    fearDecayTerminal: [0.90, 0.84, 0.78, 0.73, 0.67, 0.61, 0.55],
+    // Queda do medo com luz acesa e sem alucinação (% por segundo). Fixa na noite.
+    fearDecay: [0.90, 0.84, 0.78, 0.73, 0.67, 0.61, 0.55],
 
     // Gerador: quanto o risco de queda cresce por segundo (com Artur longe).
     generatorRiskIncrement: [0.00012, 0.00013, 0.00015, 0.00016, 0.00017, 0.00019, 0.00020],
@@ -62,20 +65,16 @@ export const BALANCE = {
   // 9.2 Constantes das fórmulas (usadas em src/systems/formulas.js)
   // ---------------------------------------------------------------------------
   formulas: {
-    // Taxa de alucinação: min + (inicio − min) · e^(−t / hallucinationDecayTau)
-    hallucinationDecayTau: 180,
+    // Intervalo entre alucinações com k de N ursos:
+    // semUrsos + (todosUrsos − semUrsos) · (k/N)^hallucinationGapExponent, com ±20%.
+    hallucinationGapExponent: 1.6,
+    hallucinationGapJitter: 0.2,
 
-    // Janela de calma (só depois do caos): terminal · (1 − e^(−(t − caos) / calmWindowTau))
-    calmWindowTau: 120,
+    // Risco do gerador: a cada segundo soma incremento · (1 − generatorRiskBearFactor · k/N).
+    generatorRiskBearFactor: 0.7,
 
-    // Queda do medo: terminal − (terminal − inicio) · e^(−t / fearDecayTau)
-    fearDecayTau: 150,
-
-    // Risco do gerador: a cada segundo soma incremento · e^(−t / generatorRiskTau), até o teto.
-    generatorRiskTau: 300,
-
-    // Gerador ao dormir: base · e^(−t / generatorSleepTau)
-    generatorSleepTau: 420,
+    // Gerador ao dormir: base · (1 − generatorSleepBearFactor · k/N).
+    generatorSleepBearFactor: 0.6,
     // Cada queda durante o sono tira esse valor da base (35 pontos percentuais, mínimo 0).
     generatorSleepBasePenalty: 0.35,
 
@@ -167,12 +166,9 @@ export const BALANCE = {
     hallucinationStartDelay: 1.5,
     // Multiplica o medo de TODAS as alucinações da tabela 9.3 (decidido no protótipo: 2×).
     hallucinationFearScale: 2,
-    // Primeira alucinação da noite (sorteada normalmente): dá este medo no lugar do valor da
-    // tabela 9.3 (antes do multiplicador da noite).
-    firstHallucinationFear: 25,
-    // Caos: só dispara alucinação "na hora" com medo abaixo disto (%).
-    chaosLowFearTrigger: 5,
-    // Intervalo mínimo (s) entre o fim de uma alucinação e a próxima, mesmo no caos.
+    // Trava dos ursos (GDD 4.6): dispara alucinação "na hora" com medo abaixo disto (%).
+    lowFearTrigger: 5,
+    // Intervalo mínimo (s) entre o fim de uma alucinação e a próxima.
     hallucinationMinGap: 3,
     // Luz piscando (comum): duração andando (s) e quantas vezes mais rápido acaba parado.
     flickerSeconds: 5,
@@ -187,8 +183,6 @@ export const BALANCE = {
     nearDeviceDistance: 7,
     // Vulto: Artur a esta distância (m) de uma porta aberta para a sombra passar do outro lado.
     shadowDoorDistance: { min: 2.5, max: 7 },
-    // Evento garantido: dispara quando Artur chega a esta distância (m) da porta do quarto.
-    bedroomApproachDistance: 3.5,
     // Sono: em que momento da sequência (s) o gerador pode cair.
     sleepGeneratorRollMin: 1.5,
     sleepGeneratorRollMax: 6.5,
@@ -210,7 +204,7 @@ export const TOTAL_DAYS = 7;
 
 /**
  * Retorna os valores da seção 9.1 de uma noite específica (dia 1 a 7),
- * já "achatados": nightBalance(3).chaosDuration === 130.
+ * já "achatados": nightBalance(3).bearCount === 5.
  */
 export function nightBalance(day) {
   const index = Math.min(Math.max(day, 1), TOTAL_DAYS) - 1;

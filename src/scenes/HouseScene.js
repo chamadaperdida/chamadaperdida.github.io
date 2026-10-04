@@ -24,7 +24,7 @@ import { Flashlight } from '../systems/Flashlight.js';
 import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
 import { HALLUCINATION_KINDS, HallucinationDirector } from '../systems/HallucinationDirector.js';
-import { BEDROOM_DOOR_ID, BEDROOM_EVENTS } from '../systems/BedroomEvent.js';
+import { BEDROOM_DOOR_ID, BEDROOM_LOCKED_FROM_DAY, BEDROOM_ROOMS, LOCKED_DOOR_LINE } from '../systems/BedroomEvent.js';
 import { FlickerHallucination } from '../hallucinations/Flicker.js';
 import { HelenaFlickerHallucination } from '../hallucinations/HelenaFlicker.js';
 import { BalloonHallucination } from '../hallucinations/Balloon.js';
@@ -36,7 +36,7 @@ import { LandlineHallucination } from '../hallucinations/Landline.js';
 import { daysLeftText } from './TransitionScene.js';
 import { NavGrid } from '../world/nav.js';
 import { MONSTER_KINDS, MonsterDirector } from '../systems/MonsterDirector.js';
-import { calmWindow, fearDecayPerSecond, hallucinationRate } from '../systems/formulas.js';
+import { fearDecayPerSecond, hallucinationGap } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
 import { sfx } from '../audio/Sfx.js';
 import { debug } from '../debug/debug.js';
@@ -66,6 +66,8 @@ const LINES = {
   arrival: say('Estou exausto... só quero dormir.'),
   clara: say('Não posso entrar, está trancado.'),
   cantSleep: say('Não consigo dormir agora, estou com medo.'),
+  sleepDark: say('Está tudo escuro... primeiro o gerador.'),
+  lockedDoor: say(LOCKED_DOOR_LINE),
   foundKey: say('Achei.'),
 };
 
@@ -88,7 +90,6 @@ export class HouseScene extends Phaser.Scene {
     this.sleep = null; // sequência de sono em andamento
     this.dead = false; // a cena é reaproveitada a cada noite: zera o estado
     this.arrived = false; // fala de chegada já fechada
-    this.bedroomEvent = { ...BEDROOM_EVENTS[this.clock.day], done: false };
     this.hasKey = false;
     this.frameCtx = { lightsOn: true, blocked: false, playerMoving: false, playerVelocity: new Phaser.Math.Vector2() };
 
@@ -97,10 +98,10 @@ export class HouseScene extends Phaser.Scene {
     this.doors = DOORS.map((def) => new Door(this, def));
     this.bedroomDoor = this.doors.find((d) => d.id === BEDROOM_DOOR_ID);
     this.items = new Items(this, this.clock.night, this.furnitureById);
-    if (this.bedroomEvent.kind === 'lockedDoor') {
+    if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
       // Noites 5–7: o quarto já está trancado; a chave está em algum lugar fora dele
       this.bedroomDoor.lock();
-      this.items.place('key', 1, ['quartoArtur', 'banheiroSuite']);
+      this.items.place('key', 1, BEDROOM_ROOMS);
     }
 
     this.player = new Player(this, SPAWN.x * PPM, SPAWN.y * PPM);
@@ -168,10 +169,12 @@ export class HouseScene extends Phaser.Scene {
 
     this.setupDebugKeys();
 
-    // Chegada: a fala. Depois o jogador vai para o quarto, e o evento garantido começa a noite.
+    // Chegada: a fala. Ao fechar, a noite começa (provisório: na etapa 8 a noite começa
+    // ao ler a lista na geladeira).
     this.time.delayedCall(600, () =>
       this.hud.talk(LINES.arrival).then(() => {
         this.arrived = true;
+        this.startNight();
       }),
     );
 
@@ -334,10 +337,9 @@ export class HouseScene extends Phaser.Scene {
         door.unlock();
         door.setOpen(true);
         sfx.lockClick();
-      } else if (door === this.bedroomDoor && !this.bedroomEvent.done) {
-        this.startBedroomEvent();
       } else {
-        this.hud.talk(say(BEDROOM_EVENTS[5].line));
+        sfx.lockClick(0.5);
+        this.hud.talk(LINES.lockedDoor);
       }
       return;
     }
@@ -359,35 +361,13 @@ export class HouseScene extends Phaser.Scene {
     }
   }
 
-  // ---- Evento garantido a caminho do quarto (GDD 4.8) ---------------------
+  // ---- Começo da noite (GDD 4.6) ----------------------------------------------
 
-  updateBedroomEvent() {
-    if (this.bedroomEvent.done || !this.arrived || this.hud.talking) return;
-    const feet = this.player.feetMeters;
-    const door = this.bedroomDoor.center;
-    const room = roomAt(feet.x, feet.y);
-    const near = Math.hypot(feet.x - door.x, feet.y - door.y) < BALANCE.extra.bedroomApproachDistance;
-    if (near && room?.id !== 'quartoArtur') this.startBedroomEvent();
-  }
-
-  /** A primeira alucinação da noite (+25) — e a noite começa. */
-  startBedroomEvent() {
-    const ev = this.bedroomEvent;
-    ev.done = true;
+  /** A noite começa: relógio, alucinações e sabotagem do gerador. */
+  startNight() {
+    if (this.clock.started) return;
     this.clock.start();
     this.director.enabled = true;
-    if (ev.kind === 'lockedDoor') {
-      // Porta trancada: conta como a primeira alucinação da noite
-      this.director.count += 1;
-      this.fear.add(BALANCE.extra.firstHallucinationFear);
-      sfx.lockClick(0.5);
-      this.hud.talk(say(ev.line));
-    } else {
-      // Noite 2: o vulto passa do outro lado da porta do quarto
-      const opts = ev.kind === 'shadow' ? { door: this.findShadowDoor(this.bedroomDoor) } : {};
-      this.director.start(this.frameCtx, ev.kind, opts);
-      this.time.delayedCall(ev.kind === 'shadow' ? 900 : 500, () => this.hud.talk(say(ev.line)));
-    }
   }
 
   // ---- Alucinações --------------------------------------------------------
@@ -487,6 +467,11 @@ export class HouseScene extends Phaser.Scene {
   // ---- Dormir (GDD 4.7) ---------------------------------------------------
 
   tryToSleep() {
+    // Só com a luz acesa: no escuro a trava não age, e um remédio zeraria o medo (GDD 4.7)
+    if (!this.generator.on) {
+      this.hud.talk(LINES.sleepDark);
+      return;
+    }
     if (this.fear.value > 0) {
       this.hud.talk(LINES.cantSleep);
       return;
@@ -557,7 +542,6 @@ export class HouseScene extends Phaser.Scene {
     this.player.update(dt);
     const feet = this.player.feetMeters;
 
-    this.updateBedroomEvent();
     this.generator.update(nightDt, feet);
     const v = this.player.body.velocity;
     this.frameCtx.lightsOn = this.generator.on;
@@ -618,31 +602,23 @@ export class HouseScene extends Phaser.Scene {
     debug.set('Geral/Atalhos', '1–7 dia · R reinicia · T tempo · N termina a noite');
     debug.set('Geral/Mais atalhos', 'K gerador · +/− medo · H alucinação · J próxima alucinação · G colisões');
 
-    const ev = this.bedroomEvent;
-    debug.set('Noite/Dia', `${this.clock.day}`);
+    const clock = this.clock;
+    debug.set('Noite/Dia', `${clock.day}`);
+    debug.set('Noite/Tempo', clock.started ? `${min}:${sec}  (${clock.speed}×)` : 'parado (a noite não começou)');
     debug.set(
-      'Noite/Evento do quarto',
-      `${ev.kind}${ev.done ? ' (feito)' : this.arrived ? ' (vá até a porta do quarto)' : ''}`,
-    );
-    debug.set('Noite/Tempo', this.clock.started ? `${min}:${sec}  (${this.clock.speed}×)` : 'parado até o evento do quarto');
-    debug.set(
-      'Noite/Fase',
-      this.clock.chaos ? `CAOS (faltam ${(night.chaosDuration - t).toFixed(0)} s)` : 'recuperação',
+      'Noite/Ursos',
+      `${clock.bearsCollected}/${night.bearCount} · trava abaixo de ${night.bearLock}${this.director.locked ? ' (TRAVADO)' : ''}`,
     );
     debug.set('Noite/Medo', `${this.fear.value.toFixed(1)}%  (×${night.fearMultiplier.toFixed(2)})`);
-    debug.set(
-      'Noite/Queda do medo',
-      g.on ? `${fearDecayPerSecond(night, t).toFixed(3)} %/s` : 'parado (escuro)',
-    );
+    debug.set('Noite/Queda do medo', g.on ? `${fearDecayPerSecond(night).toFixed(3)} %/s` : 'parado (escuro)');
     const d = this.director;
-    debug.set('Noite/Alucinação: taxa', `${hallucinationRate(night, t).toFixed(4)} /s`);
+    debug.set('Noite/Alucinação: intervalo', `${hallucinationGap(night, clock.bears).toFixed(1)} s (±20%)`);
     let now = '—';
     if (d.active) now = d.active.name;
-    else if (!d.enabled) now = 'esperando o evento do quarto';
-    else if (d.inCalm) now = `calma (${(d.calmUntil - t).toFixed(1)} s)`;
+    else if (!d.enabled) now = 'a noite não começou';
+    else if (d.nextAt !== null) now = `próxima em ${Math.max(0, d.nextAt - t).toFixed(1)} s`;
     debug.set('Noite/Alucinação: agora', now);
     debug.set('Noite/Alucinações na noite', `${d.count}`);
-    debug.set('Noite/Janela de calma', `${calmWindow(night, t).toFixed(1)} s`);
     debug.set(
       'Noite/Dormir',
       this.sleep
@@ -653,7 +629,7 @@ export class HouseScene extends Phaser.Scene {
     debug.set('Gerador/Estado', g.on ? 'ligado' : `DESLIGADO (${g.lastDropReason})`);
     debug.set('Gerador/Artur', `${g.isFar(feet) ? 'longe' : 'perto'} (${g.distanceTo(feet).toFixed(1)} m)`);
     debug.set('Gerador/Risco', `${g.risk.toFixed(5)} /s  (teto ${night.generatorRiskCap})`);
-    debug.set('Gerador/Quedas', `${g.drops}${this.clock.started && !this.clock.chaos && g.drops === 0 ? ' (queda garantida pendente)' : ''}`);
+    debug.set('Gerador/Quedas', `${g.drops}${clock.started && clock.guaranteedDropDue && g.drops === 0 ? ' (queda garantida pendente)' : ''}`);
 
     debug.set('Casa/Cômodo', room ? room.name : '—');
     debug.set('Casa/Posição', `${feet.x.toFixed(1)} m, ${feet.y.toFixed(1)} m`);
@@ -805,8 +781,8 @@ export class HouseScene extends Phaser.Scene {
       } else if (k === 'k') this.generator.drop('debug');
       else if (k === 'h' || k === 'j') {
         // H: sorteia uma alucinação · J: força os tipos em sequência
-        if (!this.bedroomEvent.done) this.startBedroomEvent();
-        else if (!this.director.active) {
+        this.startNight();
+        if (!this.director.active) {
           if (k === 'h') this.director.start(this.frameCtx);
           else {
             this.director.start(this.frameCtx, HALLUCINATION_KINDS[nextKind]);
@@ -819,7 +795,7 @@ export class HouseScene extends Phaser.Scene {
       else if (k === 'g') this.toggleCollisionDebug();
       else if (k === 'm') {
         // M: força os monstros em sequência (apaga a luz se precisar)
-        if (!this.clock.started) this.startBedroomEvent();
+        this.startNight();
         if (this.generator.on) this.generator.drop('debug');
         this.monsterDebugIndex = ((this.monsterDebugIndex ?? -1) + 1) % MONSTER_KINDS.length;
         this.monsters.endAll();

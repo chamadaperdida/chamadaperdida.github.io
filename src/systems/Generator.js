@@ -1,6 +1,8 @@
 // Gerador (GDD 4.4 e 9.2).
 // - Risco de queda cresce por segundo só com Artur LONGE, até um teto; zera quando cai.
-// - Queda garantida: caos acabou e ainda não caiu nenhuma vez → cai assim que Artur estiver longe.
+// - Queda garantida: passou o prazo da noite e ainda não caiu nenhuma vez → cai assim que
+//   Artur estiver longe.
+// - O risco cresce mais devagar e a chance no sono é menor conforme os ursos (GDD 4.12).
 // - Medo chegando a 100%: cai na hora, mesmo com Artur perto.
 // - Com uma porta trancada, o risco cresce ×1,5 (a tranca entra na etapa 7).
 // - Toda queda soma medo (+4). Religar: segurar F por 3 s perto dele.
@@ -54,13 +56,13 @@ export class Generator {
     const far = this.isFar(feet);
     if (!far) return;
 
-    if (!this.clock.chaos && this.drops === 0) {
+    if (this.clock.guaranteedDropDue && this.drops === 0) {
       this.drop('garantida');
       return;
     }
 
-    const { night, t } = this.clock;
-    this.risk = stepGeneratorRisk(night, this.risk, t, nightDt, this.lockedDoor);
+    const { night, bears } = this.clock;
+    this.risk = stepGeneratorRisk(night, this.risk, bears, nightDt, this.lockedDoor);
     // Risco é uma chance por segundo: converte para a chance neste quadro
     if (Math.random() < 1 - Math.pow(1 - this.risk, nightDt)) this.drop('sabotagem');
   }
@@ -77,7 +79,7 @@ export class Generator {
 
   /** Chance de cair durante a sequência de sono que começa agora (GDD 4.7 e 9.2). */
   get sleepChance() {
-    return generatorSleepChance(this.sleepBase, this.clock.t);
+    return generatorSleepChance(this.sleepBase, this.clock.bears);
   }
 
   /** Sorteia a queda durante o sono. Se cair, a base perde 35 p.p. para as próximas tentativas. */

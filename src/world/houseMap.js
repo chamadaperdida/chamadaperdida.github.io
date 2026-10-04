@@ -1,58 +1,89 @@
-// Mapa da casa (GDD 4.2 e planta-casa.svg).
+// Mapa da casa (GDD 4.2 e planta-casa-v2.svg).
 //
-// Tudo em METROS, com a origem no canto superior esquerdo do quintal.
-// Conversão da planta: metro = (svg_px − origem) / 28, origem SVG = (40, 70).
-// A casa ocupa x 8–39 m e y 0–20 m (31 m × 20 m). Quintal e varanda são externos.
+// Tudo em METROS, com a origem no canto superior esquerdo da garagem.
+// A planta v2 usa 1 quadrado = 1 m: um cômodo que ocupa os quadrados x..x2 vai de x a x2+1.
+// A casa ocupa 48 m × 29 m contando quintal, jardim e varanda (externos).
 //
 // O mapa vira uma grade de células de 0,5 m (1 tile = 16 px). As paredes ficam
 // SOBRE as linhas que dividem os cômodos, com 0,5 m de espessura.
+// Cômodos em L são vários retângulos com o mesmo id: a linha entre eles vira piso.
 
 import { CELL_METERS, FLOORS, T } from './tiles.js';
 
-export const WORLD = { width: 39, height: 23 }; // metros
+export const WORLD = { width: 48, height: 29 }; // metros
 
-// Cômodos e áreas externas: retângulos em metros.
+// Cômodos e áreas externas: retângulos em metros (o mesmo id pode aparecer mais de uma vez).
 export const ROOMS = [
-  { id: 'quartoClara', name: 'Quarto da Clara', x: 8, y: 0, w: 7, h: 6, floor: 'taco' },
-  { id: 'banheiroSocial', name: 'Banheiro social', x: 15, y: 0, w: 4, h: 6, floor: 'bathroom' },
-  { id: 'entrada', name: 'Entrada', x: 19, y: 0, w: 8, h: 6, floor: 'taco' },
-  { id: 'quartoArtur', name: 'Quarto do Artur', x: 27, y: 0, w: 8, h: 6, floor: 'taco' },
-  { id: 'banheiroSuite', name: 'Banheiro da suíte', x: 35, y: 0, w: 4, h: 6, floor: 'bathroom' },
-  { id: 'corredorCima', name: 'Corredor de cima', x: 8, y: 6, w: 21, h: 2, floor: 'corridor' },
-  { id: 'corredorEsquerda', name: 'Corredor da esquerda', x: 8, y: 8, w: 2, h: 12, floor: 'corridor' },
-  { id: 'hall', name: 'Hall', x: 27, y: 8, w: 2, h: 6, floor: 'corridor' },
-  { id: 'sala', name: 'Sala', x: 10, y: 8, w: 17, h: 6, floor: 'taco' },
-  { id: 'cozinha', name: 'Cozinha', x: 10, y: 14, w: 19, h: 6, floor: 'kitchen' },
-  { id: 'escritorio', name: 'Escritório', x: 29, y: 6, w: 10, h: 14, floor: 'taco' },
-  { id: 'quintal', name: 'Quintal', x: 0, y: 12, w: 8, h: 11, floor: 'mud', external: true },
-  { id: 'varanda', name: 'Varanda externa', x: 8, y: 20, w: 31, h: 3, floor: 'concrete', external: true },
+  { id: 'garagem', name: 'Garagem', x: 0, y: 1, w: 9, h: 13, floor: 'concrete' },
+  { id: 'corredorServico', name: 'Corredor de serviço', x: 9, y: 3, w: 2, h: 15, floor: 'corridor' },
+  { id: 'sala', name: 'Sala', x: 11, y: 1, w: 5, h: 5, floor: 'taco' },
+  { id: 'sala', name: 'Sala', x: 11, y: 6, w: 11, h: 8, floor: 'taco' },
+  { id: 'entrada', name: 'Entrada', x: 16, y: 0, w: 6, h: 6, floor: 'taco' },
+  { id: 'corredorQuartos', name: 'Corredor dos quartos', x: 22, y: 2, w: 12, h: 2, floor: 'corridor' },
+  { id: 'corredorQuartos', name: 'Corredor dos quartos', x: 32, y: 4, w: 2, h: 8, floor: 'corridor' },
+  { id: 'corredorQuartos', name: 'Corredor dos quartos', x: 34, y: 10, w: 8, h: 2, floor: 'corridor' },
+  { id: 'quartoArtur', name: 'Quarto do Artur', x: 22, y: 4, w: 7, h: 6, floor: 'taco' },
+  { id: 'suite', name: 'Suíte', x: 29, y: 4, w: 3, h: 6, floor: 'bathroom' },
+  { id: 'banheiroSocial', name: 'Banheiro social', x: 34, y: 1, w: 4, h: 5, floor: 'bathroom' },
+  { id: 'escritorio', name: 'Escritório', x: 38, y: 0, w: 10, h: 10, floor: 'taco' },
+  { id: 'escritorio', name: 'Escritório', x: 34, y: 6, w: 4, h: 4, floor: 'taco' },
+  { id: 'quartoClara', name: 'Quarto da Clara', x: 42, y: 10, w: 6, h: 8, floor: 'taco' },
+  { id: 'salaJantar', name: 'Sala de jantar', x: 22, y: 10, w: 10, h: 8, floor: 'taco' },
+  { id: 'hospedes', name: 'Quarto de hóspedes', x: 32, y: 12, w: 10, h: 8, floor: 'taco' },
+  { id: 'cozinha', name: 'Cozinha', x: 11, y: 14, w: 11, h: 8, floor: 'kitchen' },
+  { id: 'cozinha', name: 'Cozinha', x: 22, y: 18, w: 10, h: 4, floor: 'kitchen' },
+  { id: 'lavanderia', name: 'Lavanderia', x: 11, y: 22, w: 8, h: 4, floor: 'bathroom' },
+  { id: 'despensa', name: 'Despensa', x: 19, y: 22, w: 3, h: 4, floor: 'kitchen' },
+  { id: 'corredorFundos', name: 'Corredor dos fundos', x: 22, y: 22, w: 2, h: 4, floor: 'corridor' },
+  { id: 'deposito', name: 'Depósito', x: 37, y: 22, w: 6, h: 4, floor: 'concrete' },
+  { id: 'quintal', name: 'Quintal', x: 0, y: 14, w: 9, h: 15, floor: 'mud', external: true },
+  { id: 'quintal', name: 'Quintal', x: 9, y: 18, w: 2, h: 11, floor: 'mud', external: true },
+  { id: 'jardim', name: 'Jardim', x: 24, y: 22, w: 13, h: 4, floor: 'mud', external: true },
+  { id: 'jardim', name: 'Jardim', x: 32, y: 20, w: 16, h: 2, floor: 'mud', external: true },
+  { id: 'jardim', name: 'Jardim', x: 42, y: 18, w: 6, h: 2, floor: 'mud', external: true },
+  { id: 'jardim', name: 'Jardim', x: 43, y: 22, w: 5, h: 4, floor: 'mud', external: true },
+  { id: 'varanda', name: 'Varanda externa', x: 11, y: 26, w: 37, h: 3, floor: 'concrete', external: true },
 ];
 
 // Passagens abertas (sem porta) sobre uma linha de parede.
 // axis 'h' = parede horizontal (linha y, de x0 a x1); 'v' = parede vertical (linha x, de y0 a y1).
 export const OPENINGS = [
-  { axis: 'h', y: 8, x0: 8, x1: 10, floor: 'corridor' }, // corredor de cima ↔ corredor da esquerda
-  { axis: 'h', y: 8, x0: 27, x1: 29, floor: 'corridor' }, // corredor de cima ↔ hall
-  { axis: 'v', x: 8, y0: 20, y1: 23, floor: 'mud' }, // quintal ↔ varanda
+  { axis: 'h', y: 6, x0: 16, x1: 22, floor: 'taco' }, // entrada ↔ sala
+  { axis: 'v', x: 22, y0: 11, y1: 14, floor: 'taco' }, // sala ↔ sala de jantar
+  { axis: 'v', x: 11, y0: 26, y1: 29, floor: 'concrete' }, // quintal ↔ varanda
+  { axis: 'h', y: 26, x0: 24, x1: 37, floor: 'concrete' }, // jardim ↔ varanda
+  { axis: 'h', y: 26, x0: 43, x1: 48, floor: 'concrete' }, // jardim ↔ varanda
 ];
 
 // Portas: 1,5 m de largura (3 células), centradas em (x, y) sobre a linha da parede.
-//   kind: 'normal' abre/fecha · 'clara' sempre fechada · 'front' porta da frente (não abre)
+//   kind: 'normal' abre/fecha · 'clara' sempre fechada · 'front' porta da frente / portão (não abre)
 export const DOORS = [
-  { id: 'clara', axis: 'h', x: 11.5, y: 6, kind: 'clara', open: false },
-  { id: 'banheiroSocial', axis: 'h', x: 17, y: 6, kind: 'normal', open: true },
-  { id: 'entrada', axis: 'h', x: 23, y: 6, kind: 'normal', open: true },
-  { id: 'frente', axis: 'h', x: 23, y: 0, kind: 'front', open: false },
-  { id: 'quartoArtur', axis: 'h', x: 28, y: 6, kind: 'normal', open: true },
-  { id: 'suite', axis: 'v', x: 35, y: 3, kind: 'normal', open: true },
-  { id: 'corredorSala', axis: 'h', x: 23, y: 8, kind: 'normal', open: true },
-  { id: 'salaHall', axis: 'v', x: 27, y: 11, kind: 'normal', open: true },
-  { id: 'hallEscritorio', axis: 'v', x: 29, y: 11, kind: 'normal', open: true },
-  { id: 'salaCozinha', axis: 'h', x: 18, y: 14, kind: 'normal', open: true },
-  { id: 'corredorCozinha', axis: 'v', x: 10, y: 17, kind: 'normal', open: true },
-  { id: 'cozinhaEscritorio', axis: 'v', x: 29, y: 17, kind: 'normal', open: true },
-  { id: 'fundos', axis: 'v', x: 8, y: 18, kind: 'normal', open: false },
-  { id: 'escritorioVaranda', axis: 'h', x: 34, y: 20, kind: 'normal', open: false },
+  { id: 'frente', axis: 'h', x: 19, y: 0, kind: 'front', open: false },
+  { id: 'portao', axis: 'h', x: 4.5, y: 1, kind: 'front', open: false },
+  { id: 'entradaCorredor', axis: 'v', x: 22, y: 3, kind: 'normal', open: true },
+  { id: 'quartoArtur', axis: 'h', x: 26, y: 4, kind: 'normal', open: true },
+  { id: 'suite', axis: 'v', x: 29, y: 7, kind: 'normal', open: true },
+  { id: 'banheiroSocial', axis: 'v', x: 34, y: 5, kind: 'normal', open: true },
+  { id: 'escritorio', axis: 'h', x: 36, y: 10, kind: 'normal', open: true },
+  { id: 'clara', axis: 'v', x: 42, y: 11, kind: 'clara', open: false },
+  { id: 'corredorJantar', axis: 'v', x: 32, y: 11, kind: 'normal', open: true },
+  { id: 'corredorHospedes', axis: 'h', x: 38, y: 12, kind: 'normal', open: true },
+  { id: 'salaServico', axis: 'v', x: 11, y: 9, kind: 'normal', open: true },
+  { id: 'garagemServico', axis: 'v', x: 9, y: 5, kind: 'normal', open: true },
+  { id: 'garagemQuintal', axis: 'h', x: 4, y: 14, kind: 'normal', open: false },
+  { id: 'servicoCozinha', axis: 'v', x: 11, y: 16, kind: 'normal', open: true },
+  { id: 'lateral', axis: 'h', x: 10, y: 18, kind: 'normal', open: false },
+  { id: 'salaCozinha', axis: 'h', x: 16, y: 14, kind: 'normal', open: true },
+  { id: 'jantarCozinha', axis: 'h', x: 27, y: 18, kind: 'normal', open: true },
+  { id: 'hospedesCozinha', axis: 'v', x: 32, y: 19, kind: 'normal', open: true },
+  { id: 'cozinhaLavanderia', axis: 'h', x: 15, y: 22, kind: 'normal', open: true },
+  { id: 'despensa', axis: 'h', x: 20.5, y: 22, kind: 'normal', open: true },
+  { id: 'cozinhaFundos', axis: 'h', x: 23, y: 22, kind: 'normal', open: true },
+  { id: 'fundos', axis: 'v', x: 11, y: 24, kind: 'normal', open: false }, // porta dos fundos
+  { id: 'fundosJardim', axis: 'v', x: 24, y: 24, kind: 'normal', open: false },
+  { id: 'fundosVaranda', axis: 'h', x: 23, y: 26, kind: 'normal', open: false },
+  { id: 'hospedesJardim', axis: 'h', x: 37, y: 20, kind: 'normal', open: false },
+  { id: 'deposito', axis: 'h', x: 40, y: 22, kind: 'normal', open: true },
 ];
 
 export const DOOR_WIDTH = 1.5; // metros
@@ -61,57 +92,99 @@ export const DOOR_WIDTH = 1.5; // metros
 // `sprite` é o nome do quadro no atlas props.
 export const FURNITURE = [
   // Quarto do Artur
-  { id: 'cama', sprite: 'bed', x: 30.5, y: 0.25, room: 'quartoArtur' },
-  { id: 'criadoMudo', sprite: 'nightstand', x: 32.1, y: 0.25, room: 'quartoArtur' },
-  { id: 'comoda', sprite: 'dresser', x: 33.4, y: 0.25, room: 'quartoArtur' },
-  // Sala
-  { id: 'telefoneFixo', sprite: 'phone-table', x: 11.2, y: 8.25, room: 'sala' },
-  { id: 'tv', sprite: 'tv', x: 13, y: 8.25, room: 'sala' },
-  { id: 'estante', sprite: 'shelf', x: 16, y: 8.25, room: 'sala' },
-  { id: 'aparador', sprite: 'sideboard', x: 18.8, y: 8.25, room: 'sala' },
-  { id: 'sofa', sprite: 'sofa', x: 12.5, y: 10.6, room: 'sala' },
-  { id: 'mesinhaSala', sprite: 'side-table', x: 15.2, y: 10.7, room: 'sala' },
-  // Cozinha
-  { id: 'geladeira', sprite: 'fridge', x: 11, y: 14.25, room: 'cozinha' },
-  { id: 'pia', sprite: 'kitchen-counter', x: 20, y: 14.25, room: 'cozinha' },
-  { id: 'mesaCozinha', sprite: 'dining-table', x: 15, y: 16.6, room: 'cozinha' },
-  // Corredores e hall
-  { id: 'aparadorCorredor', sprite: 'console-table', x: 13.4, y: 6.25, room: 'corredorCima' },
-  { id: 'mesinhaHall', sprite: 'side-table', x: 27.3, y: 12.9, room: 'hall' },
-  { id: 'mesinhaCorredor', sprite: 'side-table', x: 9.2, y: 13, room: 'corredorEsquerda' },
+  { id: 'cama', sprite: 'bed', x: 22.4, y: 4.25, room: 'quartoArtur' },
+  { id: 'criadoMudo', sprite: 'nightstand', x: 24.0, y: 4.25, room: 'quartoArtur' },
+  { id: 'comoda', sprite: 'dresser', x: 27.3, y: 4.25, room: 'quartoArtur' },
+  { id: 'armarioQuarto', sprite: 'cabinet', x: 27.9, y: 9.05, room: 'quartoArtur' },
+  // Suíte e banheiro social
+  { id: 'piaSuite', sprite: 'bathroom-sink', x: 30.0, y: 4.25, room: 'suite' },
+  { id: 'armarioSuite', sprite: 'cabinet', x: 30.95, y: 4.25, room: 'suite' },
+  { id: 'piaSocial', sprite: 'bathroom-sink', x: 35.5, y: 1.25, room: 'banheiroSocial' },
+  { id: 'prateleiraSocial', sprite: 'bathroom-shelf', x: 36.8, y: 1.25, room: 'banheiroSocial' },
+  { id: 'lixeiraBanheiro', sprite: 'trash-bin', x: 37.35, y: 1.4, room: 'banheiroSocial' },
   // Escritório
-  { id: 'mesa', sprite: 'desk', x: 34.5, y: 6.5, room: 'escritorio' },
-  { id: 'farda', sprite: 'uniform', x: 37, y: 6.25, room: 'escritorio' },
-  { id: 'arquivo', sprite: 'filing-cabinet', x: 29.3, y: 6.25, room: 'escritorio' },
-  { id: 'caixa1', sprite: 'box', x: 38, y: 8, room: 'escritorio' },
-  { id: 'caixa2', sprite: 'box', x: 37.9, y: 8.6, room: 'escritorio' },
-  { id: 'caixa3', sprite: 'box', x: 30, y: 18.9, room: 'escritorio' },
-  // Banheiros
-  { id: 'piaSocial', sprite: 'bathroom-sink', x: 16.75, y: 0.25, room: 'banheiroSocial' },
-  { id: 'prateleiraSocial', sprite: 'bathroom-shelf', x: 18.1, y: 0.25, room: 'banheiroSocial' },
-  { id: 'piaSuite', sprite: 'bathroom-sink', x: 36.5, y: 0.25, room: 'banheiroSuite' },
-  { id: 'armarioSuite', sprite: 'cabinet', x: 37.5, y: 0.25, room: 'banheiroSuite' },
+  { id: 'arquivo', sprite: 'filing-cabinet', x: 38.4, y: 0.25, room: 'escritorio' },
+  { id: 'mesa', sprite: 'desk', x: 42.0, y: 0.4, room: 'escritorio' },
+  { id: 'lixeiraEscritorio', sprite: 'trash-bin', x: 43.6, y: 0.5, room: 'escritorio' },
+  { id: 'farda', sprite: 'uniform', x: 46.6, y: 0.25, room: 'escritorio' },
+  { id: 'caixa1', sprite: 'box', x: 47.0, y: 8.0, room: 'escritorio' },
+  { id: 'caixa2', sprite: 'box', x: 46.9, y: 8.6, room: 'escritorio' },
+  { id: 'caixa3', sprite: 'box', x: 34.4, y: 6.3, room: 'escritorio' },
+  // Corredores
+  { id: 'aparadorCorredor', sprite: 'console-table', x: 29.0, y: 2.25, room: 'corredorQuartos' },
+  { id: 'mesinhaCorredor', sprite: 'side-table', x: 40.0, y: 10.3, room: 'corredorQuartos' },
+  { id: 'mesinhaServico', sprite: 'side-table', x: 9.3, y: 11.5, room: 'corredorServico' },
+  // Sala
+  { id: 'telefoneFixo', sprite: 'phone-table', x: 11.4, y: 1.3, room: 'sala' },
+  { id: 'tv', sprite: 'tv', x: 12.3, y: 1.3, room: 'sala' },
+  { id: 'estante', sprite: 'shelf', x: 14.4, y: 1.3, room: 'sala' },
+  { id: 'sofa', sprite: 'sofa', x: 12.0, y: 3.6, room: 'sala' },
+  { id: 'aparador', sprite: 'sideboard', x: 12.0, y: 12.9, room: 'sala' },
+  { id: 'mesinhaSala', sprite: 'side-table', x: 20.9, y: 7.0, room: 'sala' },
+  // Sala de jantar
+  { id: 'mesaJantar', sprite: 'dining-big', x: 25.5, y: 13.0, room: 'salaJantar' },
+  { id: 'aparadorJantar', sprite: 'sideboard', x: 23.0, y: 10.3, room: 'salaJantar' },
+  // Quarto de hóspedes (caixas da festa)
+  { id: 'camaHospedes', sprite: 'bed', x: 32.5, y: 12.25, room: 'hospedes' },
+  { id: 'mesinhaHospedes', sprite: 'side-table', x: 34.2, y: 12.3, room: 'hospedes' },
+  { id: 'caixaFesta1', sprite: 'box', x: 40.8, y: 12.3, room: 'hospedes' },
+  { id: 'caixaFesta2', sprite: 'box', x: 41.0, y: 12.85, room: 'hospedes' },
+  { id: 'caixaFesta3', sprite: 'box', x: 40.3, y: 18.9, room: 'hospedes' },
+  // Cozinha
+  { id: 'geladeira', sprite: 'fridge', x: 12.0, y: 14.3, room: 'cozinha' },
+  { id: 'pia', sprite: 'kitchen-counter', x: 17.3, y: 14.3, room: 'cozinha' },
+  { id: 'microondas', sprite: 'counter-microwave', x: 18.8, y: 14.3, room: 'cozinha' },
+  { id: 'lixeiraCozinha', sprite: 'trash-bin', x: 19.9, y: 14.4, room: 'cozinha' },
+  { id: 'mesaCozinha', sprite: 'dining-table', x: 13.5, y: 18.0, room: 'cozinha' },
+  // Lavanderia e despensa
+  { id: 'maquina', sprite: 'washer', x: 11.4, y: 22.3, room: 'lavanderia' },
+  { id: 'tanque', sprite: 'laundry-tank', x: 12.3, y: 22.3, room: 'lavanderia' },
+  { id: 'tabua', sprite: 'ironing-board', x: 16.6, y: 22.35, room: 'lavanderia' },
+  { id: 'prateleiraDespensa1', sprite: 'shelf', x: 19.3, y: 24.9, room: 'despensa' },
+  { id: 'prateleiraDespensa2', sprite: 'shelf', x: 20.6, y: 24.9, room: 'despensa' },
+  // Garagem
+  { id: 'bancada', sprite: 'desk', x: 0.4, y: 1.4, room: 'garagem' },
+  { id: 'latao', sprite: 'garbage-can', x: 7.9, y: 1.4, room: 'garagem' },
+  { id: 'caixaGaragem1', sprite: 'box', x: 0.4, y: 12.9, room: 'garagem' },
+  { id: 'caixaGaragem2', sprite: 'box', x: 1.0, y: 12.9, room: 'garagem' },
+  // Depósito (no jardim)
+  { id: 'prateleiraDeposito', sprite: 'shelf', x: 37.4, y: 24.9, room: 'deposito' },
+  { id: 'caixaDeposito', sprite: 'box', x: 41.9, y: 25.0, room: 'deposito' },
   // Quintal
-  { id: 'gerador', sprite: 'generator', x: 3.25, y: 15, room: 'quintal' },
+  { id: 'gerador', sprite: 'generator', x: 1.0, y: 24.5, room: 'quintal' },
+  { id: 'varal', sprite: 'clothesline', x: 5.6, y: 19.5, room: 'quintal' },
+  // Vasos (jardim, varanda)
+  { id: 'vaso1', sprite: 'plant-pot', x: 26.5, y: 23.0, room: 'jardim' },
+  { id: 'vaso2', sprite: 'plant-pot', x: 30.5, y: 24.6, room: 'jardim' },
+  { id: 'vaso3', sprite: 'plant-pot', x: 34.5, y: 20.6, room: 'jardim' },
+  { id: 'vaso4', sprite: 'plant-pot', x: 45.0, y: 18.6, room: 'jardim' },
+  { id: 'vaso5', sprite: 'plant-pot', x: 45.5, y: 24.0, room: 'jardim' },
+  { id: 'vaso6', sprite: 'plant-pot', x: 15.0, y: 26.4, room: 'varanda' },
+  { id: 'vaso7', sprite: 'plant-pot', x: 44.0, y: 27.9, room: 'varanda' },
 ];
 
 // Ponto de interação com a cama (ao lado dela, no quarto do Artur).
-export const BED_POINT = { x: 31.25, y: 2.7 };
+export const BED_POINT = { x: 23.15, y: 6.75 };
 
 // Ponto do gerador para medir distância e segurar F (na frente dele).
-export const GENERATOR_POINT = { x: 4, y: 16.6 };
+export const GENERATOR_POINT = { x: 1.75, y: 26.15 };
 
 // O que pode aparecer em cada cômodo (GDD 4.2, coluna "Pode aparecer").
 export const ROOM_ITEMS = {
-  corredorCima: ['battery', 'key'],
-  banheiroSocial: ['medicine', 'key'],
+  corredorQuartos: ['battery', 'key'],
   quartoArtur: ['medicine', 'battery', 'key'],
-  banheiroSuite: ['medicine', 'key'],
-  hall: ['battery'],
-  sala: ['medicine', 'battery', 'key'],
-  cozinha: ['medicine', 'battery', 'key'],
+  suite: ['medicine', 'key'],
+  banheiroSocial: ['medicine', 'key'],
   escritorio: ['medicine', 'battery', 'key'],
-  corredorEsquerda: ['battery', 'key'],
+  sala: ['medicine', 'battery', 'key'],
+  salaJantar: ['medicine', 'battery', 'key'],
+  hospedes: ['medicine', 'battery', 'key'],
+  cozinha: ['medicine', 'battery', 'key'],
+  despensa: ['battery', 'key'],
+  lavanderia: ['medicine', 'battery', 'key'],
+  corredorServico: ['battery', 'key'],
+  garagem: ['battery', 'key'],
+  deposito: ['battery', 'key'],
 };
 
 // Lugares específicos onde remédios, pilhas e a chave podem aparecer: em cima dos móveis.
@@ -121,31 +194,48 @@ export const ITEM_SPOTS = [
   { on: 'criadoMudo', dx: 13, dy: 9 },
   { on: 'comoda', dx: 8, dy: 6 },
   { on: 'comoda', dx: 31, dy: 6 },
+  { on: 'armarioQuarto', dx: 6, dy: 3 },
+  { on: 'armarioSuite', dx: 6, dy: 3 },
+  { on: 'armarioSuite', dx: 18, dy: 3 },
+  { on: 'prateleiraSocial', dx: 11, dy: 10 },
+  { on: 'prateleiraSocial', dx: 11, dy: 20 },
+  { on: 'arquivo', dx: 8, dy: 4 },
+  { on: 'mesa', dx: 20, dy: 14 },
+  { on: 'mesa', dx: 34, dy: 14 },
+  { on: 'caixa1', dx: 5, dy: 5 },
+  { on: 'caixa3', dx: 10, dy: 5 },
+  { on: 'aparadorCorredor', dx: 16, dy: 6 },
+  { on: 'aparadorCorredor', dx: 26, dy: 6 },
+  { on: 'mesinhaCorredor', dx: 8, dy: 7 },
+  { on: 'mesinhaServico', dx: 8, dy: 7 },
   { on: 'aparador', dx: 9, dy: 7 },
   { on: 'aparador', dx: 38, dy: 7 },
   { on: 'mesinhaSala', dx: 8, dy: 7 },
+  { on: 'mesaJantar', dx: 20, dy: 14 },
+  { on: 'mesaJantar', dx: 60, dy: 14 },
+  { on: 'aparadorJantar', dx: 9, dy: 7 },
+  { on: 'aparadorJantar', dx: 38, dy: 7 },
+  { on: 'mesinhaHospedes', dx: 8, dy: 7 },
+  { on: 'caixaFesta1', dx: 5, dy: 5 },
+  { on: 'caixaFesta3', dx: 10, dy: 5 },
   { on: 'pia', dx: 7, dy: 13 },
   { on: 'pia', dx: 45, dy: 13 },
   { on: 'mesaCozinha', dx: 10, dy: 10 },
-  { on: 'mesaCozinha', dx: 22, dy: 16 },
   { on: 'mesaCozinha', dx: 40, dy: 13 },
-  { on: 'aparadorCorredor', dx: 16, dy: 6 },
-  { on: 'aparadorCorredor', dx: 26, dy: 6 },
-  { on: 'mesinhaHall', dx: 8, dy: 7 },
-  { on: 'mesinhaCorredor', dx: 8, dy: 7 },
-  { on: 'mesa', dx: 20, dy: 14 },
-  { on: 'mesa', dx: 34, dy: 14 },
-  { on: 'arquivo', dx: 8, dy: 4 },
-  { on: 'caixa1', dx: 5, dy: 5 },
-  { on: 'caixa3', dx: 10, dy: 5 },
-  { on: 'prateleiraSocial', dx: 11, dy: 10 },
-  { on: 'prateleiraSocial', dx: 11, dy: 20 },
-  { on: 'armarioSuite', dx: 6, dy: 3 },
-  { on: 'armarioSuite', dx: 18, dy: 3 },
+  { on: 'maquina', dx: 12, dy: 7 },
+  { on: 'tabua', dx: 8, dy: 5 },
+  { on: 'prateleiraDespensa1', dx: 8, dy: 7 },
+  { on: 'prateleiraDespensa1', dx: 22, dy: 7 },
+  { on: 'prateleiraDespensa2', dx: 10, dy: 7 },
+  { on: 'bancada', dx: 20, dy: 14 },
+  { on: 'caixaGaragem1', dx: 5, dy: 5 },
+  { on: 'prateleiraDeposito', dx: 8, dy: 7 },
+  { on: 'prateleiraDeposito', dx: 22, dy: 7 },
+  { on: 'caixaDeposito', dx: 8, dy: 5 },
 ];
 
 // Onde Artur aparece ao chegar em casa (pela porta da frente).
-export const SPAWN = { x: 23, y: 1.5 };
+export const SPAWN = { x: 19, y: 1.3 };
 
 // ---------------------------------------------------------------------------
 // Grade
@@ -156,8 +246,23 @@ export const SPAWN = { x: 23, y: 1.5 };
 export const GRID_W = Math.round(WORLD.width / CELL_METERS) + 1;
 export const GRID_H = Math.round(WORLD.height / CELL_METERS) + 1;
 
+const inside = (r, xm, ym) => xm > r.x && xm < r.x + r.w && ym > r.y && ym < r.y + r.h;
+
+/**
+ * Cômodo num ponto (m). Na linha entre dois retângulos do MESMO cômodo (cômodo em L)
+ * também devolve o cômodo; numa parede entre cômodos diferentes, null.
+ */
 export function roomAt(xm, ym) {
-  return ROOMS.find((r) => xm > r.x && xm < r.x + r.w && ym > r.y && ym < r.y + r.h) ?? null;
+  const strict = ROOMS.find((r) => inside(r, xm, ym));
+  if (strict) return strict;
+  const e = 0.01;
+  const around = [
+    [xm - e, ym - e],
+    [xm + e, ym - e],
+    [xm - e, ym + e],
+    [xm + e, ym + e],
+  ].map(([x, y]) => ROOMS.find((r) => inside(r, x, y)));
+  return around.every((r) => r && r.id === around[0].id) ? around[0] : null;
 }
 
 /** Os dois cômodos de cada lado de uma passagem (porta ou vão) centrada em (x, y). */
@@ -167,7 +272,7 @@ export function roomsAcross(x, y, axis) {
 }
 
 // Zonas de luz: cômodos ligados por vão sem porta acendem juntos (GDD 13.1).
-// Ex.: os três corredores formam uma zona; quintal + varanda, outra.
+// Ex.: entrada + sala + sala de jantar; quintal + jardim + varanda.
 export const LIGHT_ZONE = (() => {
   const zone = new Map(ROOMS.map((r) => [r.id, r.id]));
   const find = (id) => (zone.get(id) === id ? id : find(zone.get(id)));
@@ -241,7 +346,8 @@ export function buildGrid() {
         if (y > o.y0 && y < o.y1) {
           tiles[j][i] = variant(i, j, o.floor);
           kind[j][i] = 'floor';
-          external[j][i] = true;
+          const [a, b] = roomsAcross(o.x, y, 'v');
+          external[j][i] = !!(a?.external && b?.external);
         }
       }
     }
