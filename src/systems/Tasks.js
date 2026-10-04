@@ -464,6 +464,10 @@ export class Tasks {
       if (r.step === 'cesto') {
         out.push(this.#pick('roupa', this.#front('cesto'), 'roupaSuja', () => {
           this.#carry('roupaSuja');
+          // O cesto vai para as mãos: some do quarto (não fica um no chão e outro na mão)
+          const cesto = this.furniture.get('cesto').sprite;
+          cesto.setVisible(false);
+          if (cesto.body) cesto.body.enable = false;
           r.step = 'maquina';
         }));
       } else if (r.step === 'maquina' && this.#carryingType('roupaSuja')) {

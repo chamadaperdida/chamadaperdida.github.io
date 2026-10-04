@@ -371,6 +371,8 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 
 Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos **ursos coletados** na noite (4.6), não do tempo. Qualquer alucinação impede dormir naquele momento (porque o medo sobe).
 
+**Sorteio com memória:** todos os tipos aparecem por igual ao longo da noite (a Luz piscando com Helena continua rara, ~¼ dos outros). Cada tipo acumula a sua vez a cada alucinação; quem sai paga uma vez, e quem está devendo mais tem bem mais chance. Um tipo que não podia acontecer (TV e telefone longe, nenhuma porta para o vulto) entra assim que puder. Nunca o mesmo tipo duas vezes seguidas.
+
 | Alucinação | Como funciona | Reação do jogador |
 |---|---|---|
 | **Balão vermelho** | Aparece na tela e fica parado ali. Enquanto estiver na tela, o medo sobe aos poucos. | Ir até ele e estourar: voz diz "ops" e o medo para de subir. |
@@ -392,8 +394,8 @@ Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos
 
 | Monstro | Comportamento | Como sobreviver |
 |---|---|---|
-| **Invasor** | Perseguições periódicas. Com medo em 100%: perseguição garantida, mais agressiva — correr quase não adianta, mas ainda dá para escapar. | Correr, usar portas e os circuitos da casa. |
-| **Artur distorcido** | Chance de aparecer no escuro e perseguir. Um pouco mais rápido que Artur correndo. Reconhecido pelos **passos pesados**. Quase invisível no escuro: todo preto, **sem nenhuma parte brilhante**. | Apontar a lanterna: ele **se desfaz em cinzas**. |
+| **Invasor** | Perseguições periódicas. Reconhecido pelo **chaveiro tilintando** a cada passo. Com medo em 100%: perseguição garantida, mais agressiva — correr quase não adianta, mas ainda dá para escapar. | Correr, usar portas e os circuitos da casa. |
+| **Artur distorcido** | Chance de aparecer no escuro e perseguir. Um pouco mais rápido que Artur correndo. Reconhecido pelos **passos pesados** e pela **voz do Artur sussurrando**, distorcida (ouvida de mais longe que os passos). Quase invisível no escuro: todo preto, **sem nenhuma parte brilhante**. | Apontar a lanterna: ele **se desfaz em cinzas**. |
 | **Clara** | Do nada, risadas de criança diabólicas. A risada é um **aviso**: há um delay para o jogador parar; depois disso, mexer-se faz ela aparecer e correr atrás dele (um pouco mais rápida que Artur correndo) — fuga impossível. A risada sumir é o aviso de que pode voltar a se mexer. | Ficar parado durante as risadas. |
 | **Helena** | **Presença quase constante no escuro:** sempre que nenhum outro monstro está agindo, ela está em algum lugar perto, onde a lanterna alcança (às vezes exatamente para onde ela aponta), e vai mudando de lugar. Quando outro monstro age, ela some e volta depois. O jogador precisa cuidar da lanterna o tempo todo. Com a luz nela, vai surgindo como espírito; a cabeça vai se erguendo e o **choro aumenta** conforme fica menos transparente. Visível por completo: mata. | Tirar a lanterna dela antes; ela volta a sumir. |
 
@@ -710,7 +712,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 > | Urso coletado | nota de caixinha de música (já existe, básica) |
 > | Fusível | pegar o fusível; encaixe no gerador |
 
-Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
+Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando do Invasor (posicional, a cada passo), sussurro distorcido do Artur distorcido (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
 
 ### 14.3 Vozes
 

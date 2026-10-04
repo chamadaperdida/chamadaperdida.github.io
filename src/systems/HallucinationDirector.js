@@ -8,23 +8,27 @@
 // - Luz apagada: só passos falsos. TV e telefone só com Artur perto deles.
 // - Sempre um intervalo mínimo entre uma alucinação e a próxima (3 s).
 // - Enquanto uma alucinação acontece, o medo não cai sozinho.
+// - Sorteio com memória: cada tipo tem uma "vez" acumulada (sua fatia do total). A cada
+//   sorteio todos acumulam; quem sai paga uma vez. Quem está devendo mais tem bem mais
+//   chance. Assim todos aparecem por igual ao longo da noite (Helena continua rara), e um
+//   tipo que não podia acontecer (TV longe, sem porta para o vulto) entra logo que puder.
 
 import { BALANCE } from '../config/balance.js';
 import { rollHallucinationGap } from './formulas.js';
 
-// Peso no sorteio (Helena é rara)
+// Fatia de cada tipo no total da noite (Helena é rara)
 const WEIGHTS = {
   balloon: 1,
   bloodPool: 1,
   shadow: 1,
   flicker: 1,
   flickerHelena: 0.25,
-  fakeSteps: 0.8,
-  // TV e telefone só entram no sorteio com Artur perto deles; aí ganham peso alto,
-  // senão quase nunca aconteciam
-  tv: 3,
-  landline: 3,
+  fakeSteps: 1,
+  tv: 1,
+  landline: 1,
 };
+const TOTAL_WEIGHT = Object.values(WEIGHTS).reduce((s, w) => s + w, 0);
+const MAX_DEBT = 2.5; // vezes acumuladas, no máximo (evita rajada do mesmo tipo)
 
 export class HallucinationDirector {
   /**
@@ -42,6 +46,9 @@ export class HallucinationDirector {
     this.enabled = false; // liga quando a noite começa
     this.count = 0;
     this.lastKind = null;
+    // Vez acumulada de cada tipo (começa sorteada, para a noite não abrir sempre igual)
+    this.debt = Object.fromEntries(Object.keys(WEIGHTS).map((k) => [k, Math.random() * 0.5 - 0.25]));
+    this.seen = Object.fromEntries(Object.keys(WEIGHTS).map((k) => [k, 0]));
   }
 
   /** Trava ativa? (ursos coletados abaixo da trava da noite) */
@@ -85,22 +92,36 @@ export class HallucinationDirector {
     this.fear.hallucinating = true;
     this.count += 1;
     this.lastKind = chosen;
+    this.seen[chosen] += 1;
+    // Todos acumulam sua fatia; quem saiu paga uma vez
+    for (const [k, w] of Object.entries(WEIGHTS)) this.debt[k] = Math.min(MAX_DEBT, this.debt[k] + w / TOTAL_WEIGHT);
+    this.debt[chosen] -= 1;
+    // O teto não pode "sumir" com vezes: recentra para a soma continuar zero
+    const kinds = Object.keys(this.debt);
+    const mean = kinds.reduce((s, k) => s + this.debt[k], 0) / kinds.length;
+    for (const k of kinds) this.debt[k] -= mean;
     return this.active;
   }
 
   pick(ctx) {
-    const options = Object.entries(WEIGHTS).filter(
-      // Evita repetir o mesmo tipo duas vezes seguidas
-      ([kind]) => kind !== this.lastKind && this.available(kind, ctx),
-    );
-    const total = options.reduce((s, [, w]) => s + w, 0);
-    if (total <= 0) return null;
-    let r = Math.random() * total;
-    for (const [kind, w] of options) {
-      r -= w;
-      if (r <= 0) return kind;
+    // Evita repetir o mesmo tipo duas vezes seguidas
+    const kinds = Object.keys(WEIGHTS).filter((kind) => kind !== this.lastKind && this.available(kind, ctx));
+    if (!kinds.length) return null;
+    // Chance pelo quanto cada um está devendo (ao quadrado: quem deve mais quase sempre sai)
+    const chance = kinds.map((kind) => Math.max(0, this.debt[kind]) ** 2 + 0.0005);
+    let r = Math.random() * chance.reduce((s, c) => s + c, 0);
+    for (let i = 0; i < kinds.length; i++) {
+      r -= chance[i];
+      if (r <= 0) return kinds[i];
     }
-    return options[options.length - 1][0];
+    return kinds[kinds.length - 1];
+  }
+
+  /** Quantas vezes cada tipo saiu na noite (debug). */
+  get seenText() {
+    return Object.entries(this.seen)
+      .map(([k, n]) => `${k} ${n}`)
+      .join(' · ');
   }
 
   finish() {

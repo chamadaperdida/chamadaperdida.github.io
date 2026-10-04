@@ -1,6 +1,6 @@
 // Artur distorcido (GDD 6): aparece no escuro e persegue, um pouco mais rápido que Artur
-// correndo (1,08×). Reconhecido pelos passos pesados; quase invisível no escuro (todo
-// preto, sem nenhuma parte brilhante).
+// correndo (1,08×). Reconhecido pelos passos pesados e pela voz do Artur sussurrando,
+// distorcida; quase invisível no escuro (todo preto, sem nenhuma parte brilhante).
 // Sobreviver: apontar a lanterna nele por 0,6 s contínuos — ele se desfaz em cinzas.
 
 import Phaser from 'phaser';
@@ -33,6 +33,7 @@ export class DistortedArturEvent {
     });
     this.chasing = true;
     ctx.fear.add(BALANCE.fearEvents.chase);
+    this.whisper = ctx.sfx.whisperLoop();
   }
 
   update(dt) {
@@ -46,6 +47,9 @@ export class DistortedArturEvent {
       const { volume, pan } = positional(this.ctx.player.feetMeters, this.chaser.feet, 14);
       this.ctx.sfx.step(0.9 * volume, pan, true);
     }
+    // Sussurro: pela posição, ouvido de mais longe que os passos
+    const w = positional(this.ctx.player.feetMeters, this.chaser.feet, 16);
+    this.whisper.setVolume(0.55 * w.volume, w.pan);
 
     // Lanterna nele: 0,6 s contínuos e ele vira cinzas
     const f = this.chaser.feet;
@@ -61,6 +65,8 @@ export class DistortedArturEvent {
   /** Se desfaz em cinzas (sem rastro: as cinzas caem e somem ali mesmo). */
   crumble() {
     this.dying = true;
+    this.whisper?.stop();
+    this.whisper = null;
     this.chasing = false;
     const s = this.chaser.sprite;
     s.body.setVelocity(0, 0);
@@ -90,6 +96,7 @@ export class DistortedArturEvent {
   }
 
   end() {
+    this.whisper?.stop();
     this.chaser?.destroy();
   }
 }

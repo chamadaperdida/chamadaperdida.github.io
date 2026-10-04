@@ -2,14 +2,17 @@
 // Com medo em 100%: perseguição garantida e mais agressiva (0,90×) — correr quase não
 // adianta, mas ainda dá para escapar. Fugir: correr, usar portas e os circuitos da casa.
 // Desiste se Artur abrir distância (ou depois de um tempo).
+// Som próprio: chaveiro tilintando a cada passo (o distorcido tem passos pesados e sussurro).
 
 import { BALANCE } from '../config/balance.js';
+import { positional } from '../audio/Sfx.js';
 import { Chaser } from './Chaser.js';
 import { MONSTER_ANIMS } from './anims.js';
 
 const GIVE_UP_DISTANCE = 11; // m de caminho reto (aprox.)
 const GIVE_UP_AFTER = 3; // s longe
 const MAX_CHASE = 25; // s (furioso: 40 s)
+const JINGLE_EVERY = 0.44; // s: um chacoalhar do chaveiro a cada passo
 
 export class InvaderEvent {
   constructor(ctx, { furious = false } = {}) {
@@ -20,6 +23,7 @@ export class InvaderEvent {
     this.done = false;
     this.elapsed = 0;
     this.farTime = 0;
+    this.jingleIn = 0;
     const spawn = ctx.findSpawn(8, 14);
     if (!spawn) {
       this.done = true;
@@ -49,6 +53,12 @@ export class InvaderEvent {
     if (this.done) return;
     this.elapsed += dt;
     this.chaser.update(dt);
+    this.jingleIn -= dt;
+    if (this.jingleIn <= 0) {
+      this.jingleIn = JINGLE_EVERY * (this.furious ? 0.8 : 1);
+      const { volume, pan } = positional(this.ctx.player.feetMeters, this.chaser.feet, 16);
+      this.ctx.sfx.keyJingle(0.8 * volume, pan);
+    }
     if (this.chaser.caught) {
       this.ctx.die('invasor');
       return;

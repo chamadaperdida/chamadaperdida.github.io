@@ -320,6 +320,126 @@ class Sfx {
     this.#footstep(this.ctx.currentTime, volume * (heavy ? 1.4 : 1), pan, heavy ? 0.7 : 1);
   }
 
+  /**
+   * Chaveiro tilintando (Invasor, GDD 6): várias chaves batendo umas nas outras, metálico e
+   * agudo. Toca um "chacoalhar" curto; o Invasor chama a cada passo.
+   */
+  keyJingle(volume = 0.5, pan = 0) {
+    if (!this.ready || volume <= 0.01) return;
+    const { gain } = this.#out(volume * 0.5, pan);
+    const at = this.ctx.currentTime;
+    const clinks = 3 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < clinks; i++) {
+      const t = at + i * (0.025 + Math.random() * 0.035);
+      // Metal: parciais inarmônicas agudas, decaimento curto e diferente em cada uma
+      const base = 2600 + Math.random() * 2200;
+      for (const [ratio, level, decay] of [
+        [1, 0.5, 0.12],
+        [1.47, 0.3, 0.08],
+        [2.09, 0.2, 0.05],
+      ]) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = base * ratio;
+        const env = this.ctx.createGain();
+        env.gain.setValueAtTime(0.0001, t);
+        env.gain.exponentialRampToValueAtTime(level, t + 0.002);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + decay);
+        osc.connect(env).connect(gain);
+        osc.start(t);
+        osc.stop(t + decay + 0.02);
+      }
+      // Batida das chaves (ruído bem agudo, curtinho)
+      this.#burst(t, gain, { filter: { type: 'highpass', freq: 5000, q: 0.7 }, attack: 0.0005, decay: 0.012, level: 0.6 });
+    }
+  }
+
+  /**
+   * Sussurro do Artur, distorcido (Artur distorcido, GDD 6). Contínuo: frases sussurradas
+   * (sílabas de ruído com formantes de vogal) com pausas, tom de voz masculina sem voz
+   * (só ar) e uma modulação que deixa tudo "errado". Devolve { setVolume(v, pan), stop() }.
+   */
+  whisperLoop() {
+    if (!this.ready) return this.#silentHandle();
+    const { gain, panner } = this.#out(0);
+    const n = this.#noiseSource();
+    // Formantes de vogais (voz masculina): a cada sílaba, uma vogal diferente
+    const VOWELS = [
+      [730, 1090],
+      [530, 1840],
+      [270, 2290],
+      [570, 840],
+      [300, 870],
+    ];
+    const f1 = this.ctx.createBiquadFilter();
+    f1.type = 'bandpass';
+    f1.Q.value = 6;
+    const f2 = this.ctx.createBiquadFilter();
+    f2.type = 'bandpass';
+    f2.Q.value = 8;
+    // Chiado do "s" e do "f" do sussurro
+    const hiss = this.ctx.createBiquadFilter();
+    hiss.type = 'highpass';
+    hiss.frequency.value = 4500;
+    const syll = this.ctx.createGain();
+    syll.gain.value = 0;
+    const hissGain = this.ctx.createGain();
+    hissGain.gain.value = 0;
+    // Modulação em anel lenta e grave: a voz parece vir "de dentro", deformada
+    const ring = this.ctx.createGain();
+    ring.gain.value = 0.6;
+    const lfo = this.ctx.createOscillator();
+    lfo.frequency.value = 38;
+    const lfoGain = this.ctx.createGain();
+    lfoGain.gain.value = 0.4;
+    lfo.connect(lfoGain).connect(ring.gain);
+    n.connect(f1).connect(syll);
+    n.connect(f2).connect(syll);
+    n.connect(hiss).connect(hissGain);
+    syll.connect(ring);
+    hissGain.connect(ring);
+    // Ganho alto: ruído em filtro estreito perde muita energia
+    const makeup = this.ctx.createGain();
+    makeup.gain.value = 9;
+    ring.connect(makeup).connect(gain);
+    // Eco curto, como num corredor
+    const delay = this.ctx.createDelay();
+    delay.delayTime.value = 0.17;
+    const fb = this.ctx.createGain();
+    fb.gain.value = 0.25;
+    makeup.connect(delay).connect(fb).connect(delay);
+    fb.connect(gain);
+
+    // Frases: 3 a 7 sílabas, pausas de 0,6 a 1,6 s (agendado para ~60 s)
+    const t0 = this.ctx.currentTime + 0.1;
+    let t = 0;
+    while (t < 60) {
+      const count = 3 + Math.floor(Math.random() * 5);
+      for (let k = 0; k < count; k++) {
+        const at = t0 + t;
+        const [a, b] = VOWELS[Math.floor(Math.random() * VOWELS.length)];
+        const shift = 0.9 + Math.random() * 0.2;
+        f1.frequency.setValueAtTime(a * shift, at);
+        f2.frequency.setValueAtTime(b * shift, at);
+        const len = 0.12 + Math.random() * 0.12;
+        syll.gain.setValueAtTime(0, at);
+        syll.gain.linearRampToValueAtTime(1, at + 0.03);
+        syll.gain.linearRampToValueAtTime(0, at + len);
+        // Às vezes uma consoante sibilante antes da vogal
+        if (Math.random() < 0.4) {
+          hissGain.gain.setValueAtTime(0, at - 0.06);
+          hissGain.gain.linearRampToValueAtTime(0.05, at - 0.03);
+          hissGain.gain.linearRampToValueAtTime(0, at);
+        }
+        t += len + 0.03 + Math.random() * 0.05;
+      }
+      t += 0.6 + Math.random() * 1.0;
+    }
+    n.start();
+    lfo.start();
+    return this.#loopHandle(gain, panner, [n, lfo]);
+  }
+
   /** Estalos secos (Clara correndo de quatro). */
   cracks(volume = 0.5, pan = 0) {
     if (!this.ready) return;

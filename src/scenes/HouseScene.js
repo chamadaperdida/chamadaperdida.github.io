@@ -764,6 +764,7 @@ export class HouseScene extends Phaser.Scene {
     else if (d.nextAt !== null) now = `próxima em ${Math.max(0, d.nextAt - t).toFixed(1)} s`;
     debug.set('Noite/Alucinação: agora', now);
     debug.set('Noite/Alucinações na noite', `${d.count}`);
+    debug.set('Noite/Alucinações por tipo', d.seenText);
     debug.set('Noite/Tarefas', this.tasks.listRead ? this.tasks.debugText : 'lista não lida');
     debug.set('Noite/Ursos na casa', `${this.bears.remaining}`);
     debug.set('Noite/Coração', this.heart.debugText);
