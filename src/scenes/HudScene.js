@@ -1,6 +1,6 @@
 // Interface da casa (GDD 11): rosto do Artur, barra de medo (vermelha), estamina (azul),
-// bateria (amarela), aviso de interação [F], progresso de segurar F, caixa de diálogo,
-// lista da rotina (GDD 4.11) e o clarão quente ao pegar um urso (GDD 4.12).
+// bateria (amarela), aviso de interação [F], progresso de segurar F, caixa de diálogo
+// e lista da rotina (GDD 4.11).
 
 import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
@@ -83,21 +83,6 @@ export class HudScene extends Phaser.Scene {
     }
     this.vignette = this.add.image(0, 0, 'chase-vignette').setOrigin(0).setAlpha(0).setDepth(-10);
     this.chaseLevel = 0;
-
-    // Urso coletado: a imagem ganha um tom quente por um instante (GDD 4.12)
-    this.warm = this.add
-      .rectangle(0, 0, width, height, 0xffa850)
-      .setOrigin(0)
-      .setAlpha(0)
-      .setDepth(-5)
-      .setBlendMode(Phaser.BlendModes.ADD);
-  }
-
-  /** Tom quente rápido na tela (some em `seconds`). */
-  warmFlash(seconds) {
-    this.tweens.killTweensOf(this.warm);
-    this.warm.setAlpha(0.22);
-    this.tweens.add({ targets: this.warm, alpha: 0, duration: seconds * 1000, ease: 'Quad.easeIn' });
   }
 
   // ---- Lista da rotina (GDD 4.11) -----------------------------------------

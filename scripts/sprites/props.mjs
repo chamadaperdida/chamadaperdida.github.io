@@ -457,6 +457,68 @@ function clothesline(c, x, y) {
   for (let i = 0; i < 6; i++) c.px(x + 10 + i * 9, y + 9, '#b0a080');
 }
 
+function pantryShelf(c, x, y) {
+  // Prateleira de despensa/depósito com potes e latas, 32×24. Vãos livres onde os
+  // itens podem aparecer: em cima (tampo), prateleira de cima à direita, de baixo à esquerda.
+  c.rect(x, y, 32, 24, '#3a2e22');
+  c.rect(x, y, 32, 2, '#4a3c2c'); // tampo
+  c.rect(x + 2, y + 3, 28, 7, '#1a140e');
+  c.rect(x + 2, y + 12, 28, 7, '#1a140e');
+  // potes e latas
+  c.rect(x + 3, y + 5, 4, 5, '#8a6a3a');
+  c.rect(x + 3, y + 4, 4, 1, '#b0a080');
+  c.rect(x + 8, y + 6, 3, 4, '#6a7a6a');
+  c.rect(x + 12, y + 5, 4, 5, '#a04a3a');
+  c.rect(x + 19, y + 14, 4, 5, '#7a7a70');
+  c.rect(x + 24, y + 13, 5, 6, '#8a6a3a');
+  c.rect(x + 24, y + 13, 5, 1, '#b0a080');
+  c.rect(x, y + 10, 32, 2, '#4a3c2c');
+  c.rect(x, y + 19, 32, 5, '#2a2018');
+}
+
+function workbench(c, x, y) {
+  // Bancada de ferramentas da garagem, 48×24
+  c.rect(x, y, 48, 24, '#3a3028');
+  c.rect(x, y, 48, 12, '#5a4a3a');
+  c.rect(x, y, 48, 1, '#6a5a48');
+  c.rect(x + 3, y + 3, 10, 2, '#7a7a80'); // chave inglesa
+  c.rect(x + 3, y + 5, 2, 3, '#7a7a80');
+  c.rect(x + 15, y + 2, 3, 7, '#8a4a2a'); // martelo
+  c.rect(x + 13, y + 2, 7, 2, '#5a5a60');
+  c.rect(x + 40, y + 3, 5, 6, '#4a5a4a'); // lata de tinta
+  c.rect(x + 40, y + 3, 5, 1, '#6a7a6a');
+  c.rect(x, y + 12, 48, 1, '#2a2018');
+  c.rect(x + 4, y + 13, 3, 11, '#2a2018');
+  c.rect(x + 41, y + 13, 3, 11, '#2a2018');
+}
+
+function freezer(c, x, y) {
+  // Freezer horizontal da lavanderia, 32×20
+  c.rect(x, y, 32, 20, '#b0b2ac');
+  c.rect(x, y, 32, 11, '#c4c6c0'); // tampa
+  c.rect(x + 1, y + 10, 30, 1, '#8a8c86');
+  c.rect(x + 13, y + 11, 6, 2, '#6e706b'); // puxador
+  c.rect(x + 25, y + 15, 3, 2, '#5a8a5a'); // luz de ligado
+  c.rect(x, y + 18, 32, 2, '#7a7c76');
+}
+
+function counterMicrowaveOn(c, x, y) {
+  // Micro-ondas funcionando: janela acesa (âmbar)
+  counterMicrowave(c, x, y);
+  c.rect(x + 6, y + 3, 15, 7, '#c08a3a');
+  c.rect(x + 8, y + 5, 11, 3, '#e0b060');
+  c.rect(x + 12, y + 6, 4, 2, '#7a4a2a'); // prato girando
+}
+
+function washerOn(c, x, y) {
+  // Máquina funcionando: luz do painel acesa e água na tampa
+  washer(c, x, y);
+  c.rect(x + 16, y + 1, 3, 3, '#7ac87a');
+  c.rect(x + 7, y + 10, 10, 9, '#5a7a90');
+  c.rect(x + 9, y + 12, 3, 2, '#9ab8d0');
+  c.rect(x + 13, y + 15, 2, 2, '#9ab8d0');
+}
+
 // ---- Tarefas, ursos e fusível (GDD 4.4, 4.11 e 4.12) ----------------------------
 
 function laundryBasket(c, x, y) {
@@ -756,6 +818,11 @@ const PROPS = [
   ['trash-bin', 8, 10, trashBin, true],
   ['plant-pot', 12, 14, plantPot, true],
   ['clothesline', 64, 24, clothesline, true],
+  ['pantry-shelf', 32, 24, pantryShelf, true],
+  ['workbench', 48, 24, workbench, true],
+  ['freezer', 32, 20, freezer, true],
+  ['counter-microwave-on', 32, 28, counterMicrowaveOn, true],
+  ['washer-on', 24, 24, washerOn, true],
   ['laundry-basket', 14, 10, laundryBasket, true],
   ['plate', 8, 4, plate, true],
   ['trash-bag', 8, 9, trashBag, true],

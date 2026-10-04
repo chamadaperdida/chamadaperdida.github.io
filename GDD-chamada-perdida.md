@@ -211,7 +211,7 @@ Arquivo de referência: `planta-casa-v2.svg` (gerada por `scripts/planta-v2.py`)
 | Quarto de hóspedes | Corredor dos quartos, cozinha, jardim | Caixas da festa da Clara | Remédio, pilha, chave |
 | Cozinha (em L) | Sala, sala de jantar, quarto de hóspedes, corredor de serviço, lavanderia, despensa, corredor dos fundos | **Geladeira (lista da rotina)**, pia, micro-ondas, lixeira | Remédio, pilha, chave |
 | Despensa | Cozinha (beco sem saída) | Prateleiras | Pilha, chave |
-| Lavanderia | Cozinha; quintal (**porta dos fundos**) | Máquina de lavar, tanque, tábua de passar | Remédio, pilha, chave |
+| Lavanderia | Cozinha; quintal (**porta dos fundos**) | Máquina de lavar, tanque, freezer (marmita), tábua de passar | Remédio, pilha, chave |
 | Corredor de serviço | Garagem, sala, cozinha, quintal (porta lateral) | — | Pilha, chave |
 | Corredor dos fundos | Cozinha, jardim, varanda | — | — |
 | Garagem | Corredor de serviço, quintal; portão da rua (não abre) | Latão do lixo, ferramentas | Pilha, chave |
@@ -324,12 +324,13 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - Interações de tarefa que levam tempo (lavar, regar, comer, passar) **não são canceladas** por alucinações; só param se Artur sair de perto ou se a luz cair.
 - O lugar sorteado do celular nunca coincide com outro item (remédio, pilha, chave, fusível).
 - **Precisa de energia:** micro-ondas, máquina de lavar e ferro só funcionam com a luz acesa. Se a luz cai, a tarefa **pausa** e continua quando a luz voltar.
-- **Espera:** algumas etapas rodam sozinhas (micro-ondas, máquina) enquanto o jogador faz outra coisa.
+- **Espera:** algumas etapas rodam sozinhas (micro-ondas, máquina) enquanto o jogador faz outra coisa. Funcionando, o aparelho aparece **ligado** (janela do micro-ondas acesa, máquina com água) e mostra **quanto tempo falta** num mostrador em cima dele; ao terminar, apita e o mostrador pisca 0:00 até o jogador pegar.
+- **Soltar:** o jogador pode soltar o que carrega quando quiser (**Q**) e pegar de volta depois (F).
 - Tarefa feita não se desfaz.
 
 | Tarefa | Como funciona |
 |---|---|
-| **Jantar** | Pegar a marmita na geladeira → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s) |
+| **Jantar** | Pegar a marmita no freezer da lavanderia → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s) |
 | **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um |
 | **Tirar o lixo** | Juntar os sacos das 3 lixeiras (cozinha, banheiro social, escritório) → levar até o latão na garagem |
 | **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal |
@@ -356,7 +357,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - O jogador **não sabe quantos ursos existem nem quantos faltam** (sem contador no HUD).
 - **Nenhum som** ajuda a encontrar um urso.
 - **Visual antes de coletar:** um brilho âmbar **bem fraco** e pequeno em volta do urso — a única coisa de cor quente na paleta fria da casa, mas discreto, sem chamar atenção de longe.
-- **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e, **por um instante curto (~0,6 s)**, a escuridão das bordas da tela recua e a imagem ganha um tom quente, que logo volta ao normal. Uma nota curta de caixinha de música e a respiração do Artur se acalmando. Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
+- **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e toca uma nota curta de caixinha de música. **A tela não muda de cor** (o tom quente na tela inteira foi testado e removido). Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
 - **Efeito no jogo:** tudo o que antes o tempo facilitava agora depende dos ursos — intervalo entre alucinações e trava (4.6), crescimento do risco do gerador e chance de cair durante o sono (4.4 e 9.2). Não mexe direto no medo nem nos monstros.
 
 ---
@@ -493,7 +494,6 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Comer na mesa | 5 s |
 | Máquina de lavar | 90 s |
 | Regador | 3 vasos por enchida |
-| Urso: luz ao coletar | ~0,6 s |
 | Lavar cada prato / estender a roupa / regar cada vaso / fechar cada janela / passar o uniforme (segurar F) | 2 / 3 / 1,5 / 1 / 4 s |
 | Sequência de sono | 8 s |
 
@@ -584,6 +584,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 | Ligar/desligar lanterna | Clique esquerdo |
 | Interagir (cama, TV, telefone, portas, remédio, pilha, chave, fusível, urso, geladeira, tarefas) | F |
 | Religar o gerador | F (segurar) |
+| Soltar o que está carregando | Q |
 | Avançar diálogo | Espaço |
 | Pausa | Esc |
 

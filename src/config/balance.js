@@ -179,7 +179,6 @@ export const BALANCE = {
     reach: 0.9, // distância (m) para coletar
     glowAlpha: 0.06, // brilho âmbar bem fraco
     glowScale: 0.75,
-    flashSeconds: 0.6, // tom quente na tela ao coletar
   },
 
   // ---------------------------------------------------------------------------

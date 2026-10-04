@@ -23,6 +23,7 @@ npm run dev
 | Abrir/fechar porta, pegar itens e ursos, ler a lista na geladeira, tarefas, dormir na cama | F |
 | Tarefas que levam tempo (lavar, regar, fechar janela…) | F (segurar) |
 | Religar o gerador (com um fusível novo) | F (segurar 3 s) |
+| Soltar o que está carregando | Q |
 | Avançar diálogo | Espaço |
 
 ## Estrutura

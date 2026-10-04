@@ -172,6 +172,14 @@ export class HouseScene extends Phaser.Scene {
     };
 
     this.input.keyboard.on('keydown-F', () => this.interact());
+    // Q: soltar o que está carregando (GDD 4.11)
+    this.input.keyboard.on('keydown-Q', () => {
+      if (!this.hud.talking && !this.sleep) this.tasks.dropCarried(this.player.feetMeters);
+    });
+    // O item nas mãos acompanha o Artur depois da física (sem tremer)
+    const placeIcon = () => this.tasks.positionIcon(this.player);
+    this.events.on(Phaser.Scenes.Events.POST_UPDATE, placeIcon);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.POST_UPDATE, placeIcon));
     this.keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.input.on('pointerdown', (pointer) => {
       if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep) this.flashlight.toggle(!this.generator.on);
@@ -352,7 +360,7 @@ export class HouseScene extends Phaser.Scene {
     else if (target.kind === 'door') this.useDoor(target.door);
     else if (target.kind === 'bed') this.tryToSleep();
     else if (target.kind === 'list') this.readList();
-    else if (target.kind === 'bear') this.bears.collect(target.bear, this.hud, sfx);
+    else if (target.kind === 'bear') this.bears.collect(target.bear, sfx);
     else if (target.kind === 'task' && !target.hold) target.use();
     else if (target.kind === 'generator' && !this.hasFuse) this.hud.talk(LINES.noFuse);
     // gerador (com fusível) e tarefas de segurar F: tratados no update
@@ -656,7 +664,7 @@ export class HouseScene extends Phaser.Scene {
     this.fear.update(nightDt, this.generator.on);
     this.flashlight.update(dt);
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
-    this.tasks.update(dt, this.generator.on, this.player);
+    this.tasks.update(dt, this.generator.on, time);
     this.updateFuseGlint(time);
 
     // Monstros (só no escuro) e efeitos de perseguição
@@ -925,7 +933,7 @@ export class HouseScene extends Phaser.Scene {
         this.monsters.endAll();
         this.monsters.start(MONSTER_KINDS[this.monsterDebugIndex]);
       } else if (k === 'i') this.godMode = !this.godMode;
-      else if (k === 'b' && this.bears.list.length) this.bears.collect(this.bears.list[0], this.hud, sfx);
+      else if (k === 'b' && this.bears.list.length) this.bears.collect(this.bears.list[0], sfx);
       else if (k === 'o') this.tasks.completeAll();
     });
   }

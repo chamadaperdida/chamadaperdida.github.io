@@ -6,6 +6,8 @@
 // - No escuro nenhuma tarefa avança: não dá para pegar objetos de tarefa e as interações
 //   param. Micro-ondas, máquina e ferro precisam de luz (os timers pausam).
 // - Tarefa feita não se desfaz.
+// - Artur pode soltar o que carrega quando quiser (Q) e pegar de volta depois.
+// - Micro-ondas e máquina mostram que estão funcionando e quanto tempo falta.
 //
 // Este módulo só guarda o estado e diz o que dá para fazer agora (targets). A cena cuida
 // de mostrar o [F], segurar F e chamar use()/complete().
@@ -39,8 +41,8 @@ const CARRY_ICON = {
 
 // Pratos sujos espalhados (móvel, posição x em px no tampo e y do tampo)
 const PLATES = [
-  { on: 'aparador', dx: 24, dy: 6 },
-  { on: 'mesa', dx: 27, dy: 12 },
+  { on: 'aparador', dx: 32, dy: 7 },
+  { on: 'mesa', dx: 27, dy: 14 },
   { on: 'comoda', dx: 20, dy: 6 },
   { on: 'mesaJantar', dx: 68, dy: 16 },
 ];
@@ -58,6 +60,16 @@ export const WINDOWS = [
 ];
 
 const REACH_IN_FRONT = 0.35; // metros além da borda da frente do móvel
+
+// Onde o item fica nas mãos, por direção (px a partir dos pés); 'up' fica atrás do corpo
+const HANDS = {
+  down: { x: 0, y: -10, behind: false },
+  up: { x: 0, y: -12, behind: true },
+  left: { x: -5, y: -10, behind: false },
+  right: { x: 5, y: -10, behind: false },
+};
+
+const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.ceil(s) % 60)).padStart(2, '0')}`;
 
 export class Tasks {
   /**
@@ -121,6 +133,28 @@ export class Tasks {
     if (this.has('celular')) items.place('phone', 1, [], { anyRoom: true });
 
     this.icon = scene.add.image(0, 0, 'props', 'plate').setOrigin(0.5, 1).setVisible(false);
+
+    // Mostradores de tempo dos aparelhos (aparecem enquanto funcionam)
+    this.displays = {};
+    for (const [key, id] of [
+      ['microwave', 'microondas'],
+      ['washer', 'maquina'],
+    ]) {
+      const s = furniture.get(id).sprite;
+      const text = scene.add
+        .text(s.x + s.width / 2, s.y - 1, '', {
+          fontFamily: 'VT323, monospace',
+          fontSize: '11px',
+          color: '#9ae0a0',
+          backgroundColor: '#0a0c0acc',
+          padding: { x: 2, y: 0 },
+          resolution: 4,
+        })
+        .setOrigin(0.5, 1)
+        .setDepth(s.depth + 2)
+        .setVisible(false);
+      this.displays[key] = { sprite: s, text, off: s.frame.name, on: `${s.frame.name}-on` };
+    }
   }
 
   has(id) {
@@ -218,7 +252,7 @@ export class Tasks {
     if (this.has('jantar') && !this.done.has('jantar')) {
       const j = this.st.jantar;
       if (j.step === 'pegar') {
-        out.push(this.#pick('jantar', this.#front('geladeira', 18), 'marmita', () => {
+        out.push(this.#pick('jantar', this.#front('freezer'), 'marmita', () => {
           this.#carry('marmita');
           j.step = 'esquentar';
         }));
@@ -413,27 +447,47 @@ export class Tasks {
 
   // ---- Quadro a quadro -----------------------------------------------------
 
-  update(dt, lightsOn, player) {
+  update(dt, lightsOn, time) {
+    const j = this.st.jantar;
+    const r = this.st.roupa;
     if (lightsOn) {
-      const j = this.st.jantar;
       if (j.step === 'cozinhando' && (j.timer -= dt) <= 0) {
         j.step = 'pronto';
         this.hooks.sfx.beep(3, 0.2);
       }
-      const r = this.st.roupa;
       if (r.step === 'lavando' && (r.timer -= dt) <= 0) {
         r.step = 'pronta';
         this.hooks.sfx.beep(4, 0.2);
       }
     }
-    // Ícone do que Artur carrega, nas mãos
-    if (this.carrying) {
-      this.icon.setFrame(CARRY_ICON[this.carrying.type]).setVisible(true);
-      this.icon.setPosition(player.x + (player.facing === 'left' ? -3 : 3), player.y - 9).setDepth(player.depth + 1);
-    } else this.icon.setVisible(false);
+    this.#display('microwave', j.step === 'cozinhando', j.step === 'pronto', j.timer, lightsOn, time);
+    this.#display('washer', r.step === 'lavando', r.step === 'pronta', r.timer, lightsOn, time);
   }
 
-  /** A luz caiu: Artur larga o que carrega ali mesmo (GDD 4.11). */
+  /** Aparelho funcionando: sprite "ligado" + tempo que falta. Pronto: 0:00 piscando. Sem luz: apagado. */
+  #display(key, running, ready, timer, lightsOn, time) {
+    const d = this.displays[key];
+    const on = lightsOn && (running || ready);
+    d.sprite.setFrame(lightsOn && running ? d.on : d.off);
+    d.text.setVisible(on && (running || Math.floor(time / 400) % 2 === 0));
+    if (on) d.text.setText(running ? fmt(timer) : '0:00');
+  }
+
+  /** O que Artur carrega fica nas mãos. Chamado depois da física, para não tremer. */
+  positionIcon(player) {
+    if (!this.carrying) {
+      this.icon.setVisible(false);
+      return;
+    }
+    const hand = HANDS[player.facing] ?? HANDS.down;
+    this.icon
+      .setFrame(CARRY_ICON[this.carrying.type])
+      .setVisible(true)
+      .setPosition(player.x + hand.x, player.y + hand.y)
+      .setDepth(player.depth + (hand.behind ? -1 : 1));
+  }
+
+  /** A luz caiu (ou o jogador soltou com Q): Artur larga o que carrega ali mesmo (GDD 4.11). */
   dropCarried(feet) {
     if (!this.carrying) return;
     const sprite = this.scene.add

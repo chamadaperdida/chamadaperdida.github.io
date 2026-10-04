@@ -4,8 +4,8 @@
 // - Ficam no chão, em cômodos diferentes enquanto der (nunca no quarto da Clara).
 // - Coletáveis a qualquer momento, com a luz acesa ou apagada.
 // - Brilho âmbar bem fraco (por cima da escuridão, discreto). Nenhum som ajuda a achar.
-// - Ao coletar: some como uma presença (partículas de luz subindo), tom quente rápido na
-//   tela, nota de caixinha de música. O jogador não sabe quantos faltam.
+// - Ao coletar: some como uma presença (partículas de luz subindo) e uma nota de caixinha
+//   de música. O jogador não sabe quantos faltam.
 // - Efeito no jogo: clock.bearsCollected (intervalo das alucinações, trava, gerador).
 
 import Phaser from 'phaser';
@@ -112,7 +112,7 @@ export class Bears {
     return best;
   }
 
-  collect(bear, hud, sfx) {
+  collect(bear, sfx) {
     this.list = this.list.filter((b) => b !== bear);
     this.clock.bearsCollected += 1;
     const { x, y } = bear.sprite;
@@ -135,7 +135,6 @@ export class Bears {
         onComplete: () => spark.destroy(),
       });
     }
-    hud.warmFlash(BALANCE.bears.flashSeconds);
     sfx.musicBox();
   }
 
