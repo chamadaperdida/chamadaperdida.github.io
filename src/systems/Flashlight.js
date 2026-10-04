@@ -1,11 +1,12 @@
 // Lanterna (GDD 4.10): só no escuro. Clique esquerdo liga/desliga, mira com o mouse.
-// Bateria começa cheia toda noite (90 s de uso contínuo) e só gasta ligada.
+// Bateria começa cheia toda noite e só gasta ligada (duração por noite: balance perNight).
 // Abaixo de 20% a luz falha (pisca sozinha). Vazia: não liga.
 
 import { BALANCE } from '../config/balance.js';
 
 export class Flashlight {
-  constructor() {
+  constructor(batterySeconds) {
+    this.batterySeconds = batterySeconds; // uso contínuo com a bateria cheia
     this.battery = 1; // 0 a 1
     this.on = false;
     this.angle = Math.PI / 2; // para baixo
@@ -43,7 +44,7 @@ export class Flashlight {
       this.flickerOff = false;
       return;
     }
-    this.battery = Math.max(0, this.battery - dt / BALANCE.timings.flashlightBatterySeconds);
+    this.battery = Math.max(0, this.battery - dt / this.batterySeconds);
     if (this.battery === 0) {
       this.on = false;
       return;

@@ -9,7 +9,8 @@
 // - Artur pode soltar o que carrega quando quiser (Q) e pegar de volta depois.
 // - Micro-ondas e máquina mostram que estão funcionando e quanto tempo falta.
 // - Progresso: tarefas com vários itens mostram "(x/n)" na lista da geladeira.
-// - Próximo passo: num aviso rápido na tela sempre que a tarefa avança (hooks.toast).
+// - Próximo passo: legenda pequena e direta enquanto Artur carrega algo (some ao soltar
+//   ou ao concluir a ação).
 //
 // Este módulo só guarda o estado e diz o que dá para fazer agora (targets). A cena cuida
 // de mostrar o [F], segurar F e chamar use()/complete().
@@ -203,7 +204,35 @@ export class Tasks {
     return this.dropped.some((d) => CARRY_TASK[d.carry.type] === id);
   }
 
-  /** Progresso e próximo passo de uma tarefa, em texto curto. */
+  /** Instrução direta para o que está nas mãos (legenda do HUD); '' se as mãos estão livres. */
+  get hint() {
+    const c = this.carrying;
+    if (!c) return this.hasPhone ? 'Carregar no criado-mudo do quarto' : '';
+    switch (c.type) {
+      case 'marmita':
+        return 'Esquentar no micro-ondas';
+      case 'jantar':
+        return 'Comer na mesa de jantar';
+      case 'pratos':
+        return 'Lavar na pia da cozinha';
+      case 'sacos':
+        return 'Levar ao latão da garagem';
+      case 'roupaSuja':
+        return 'Pôr na máquina de lavar';
+      case 'roupaMolhada':
+        return 'Estender no varal do quintal';
+      case 'regador':
+        return c.water > 0 ? 'Regar os vasos' : 'Encher no tanque';
+      case 'uniforme':
+        return 'Passar na tábua da lavanderia';
+      case 'uniformePassado':
+        return 'Guardar no armário do quarto';
+      default:
+        return '';
+    }
+  }
+
+  /** Progresso e próximo passo de uma tarefa, em texto curto (debug). */
   status(id) {
     if (this.done.has(id)) return 'feito';
     if (this.#droppedFor(id) && !this.carrying) return 'pegar de volta o que ficou no chão';
@@ -264,12 +293,6 @@ export class Tasks {
       default:
         return '';
     }
-  }
-
-  /** Avisa na tela o progresso de uma tarefa (depois de cada avanço). */
-  announce(id) {
-    if (!this.has(id) || !this.listRead) return;
-    this.hooks.toast?.(`${TASK_NAMES[id]}: ${this.status(id)}`);
   }
 
   /** Tarefa da coisa que está nas mãos (para avisar depois de pegar de volta). */
@@ -561,12 +584,10 @@ export class Tasks {
       if (j.step === 'cozinhando' && (j.timer -= dt) <= 0) {
         j.step = 'pronto';
         this.hooks.sfx.beep(3, 0.2);
-        this.announce('jantar');
       }
       if (r.step === 'lavando' && (r.timer -= dt) <= 0) {
         r.step = 'pronta';
         this.hooks.sfx.beep(4, 0.2);
-        this.announce('roupa');
       }
     }
     this.#display('microwave', j.step === 'cozinhando', j.step === 'pronto', j.timer, lightsOn, time);

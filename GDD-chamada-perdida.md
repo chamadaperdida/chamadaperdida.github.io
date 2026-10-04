@@ -306,7 +306,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - **Onde ficam os itens:** remédios, pilhas e a chave são **pequenos** e ficam **em cima dos móveis** (mesas, cômoda, criado-mudo, aparadores, bancada da pia, prateleiras, arquivo, caixas), nunca soltos no chão. Há uma lista de lugares específicos em cada móvel; a cada noite o jogo sorteia entre eles, respeitando o que pode aparecer em cada cômodo (tabela 4.2) e preferindo cômodos diferentes.
 - **Remédio:** sorteado entre os lugares possíveis. Quantidade fixa por noite, não acumula. Ao tomar: **glitch rápido na tela** (menos de 1 s: imagem deslocada, cores separadas, linhas cortadas) e o medo cai rápido. Sem custo.
 - **Pilha:** sorteada entre os lugares possíveis. Som característico de encaixe. Recarrega a bateria.
-- **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada. Abaixo de 20%: a luz falha (aviso). Vazia: não liga. **O cone de luz para nas paredes** (não atravessa paredes nem portas fechadas).
+- **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada; a duração cai a cada noite (9.1). Abaixo de 20%: a luz falha (aviso). Vazia: não liga. **O cone de luz para nas paredes** (não atravessa paredes nem portas fechadas).
 - **Fusível:** aparece só quando o gerador cai (4.4).
 - Itens pequenos (remédio, pilha, chave, fusível, urso) podem ser pegos mesmo carregando algo de uma tarefa.
 
@@ -317,7 +317,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - **Ler a lista começa a noite** (4.6). As tarefas **só podem ser feitas depois de ler a lista**; antes disso, interagir com algo de tarefa: *"Primeiro deixa eu ver a lista."*
 - Interagir com a geladeira mostra a lista da noite: tarefas feitas aparecem **riscadas**. A lista **não aparece no HUD**.
 - **Progresso:** na lista, tarefas com vários itens mostram só a contagem: *"Lavar a louça (1/4)"*, *"Tirar o lixo (0/3)"*, *"Regar as plantas (2/5)"*, *"Fechar as janelas (3/6)"*. Sem descrições na folha.
-- **Próximo passo:** toda vez que uma tarefa avança, um **aviso curto** aparece no pé da tela por ~3,5 s (não trava o Artur), com o progresso e o que fazer em seguida (ex.: *"Jantar: comer na mesa da sala de jantar"*, *"Lavar a louça: 1/4 lavados · lavar na pia da cozinha (1 na mão) · faltam 2 pela casa"*).
+- **Próximo passo:** enquanto Artur carrega algo de uma tarefa, uma **legenda bem pequena** no pé da tela diz o que fazer com aquilo, de forma direta (ex.: *"Lavar na pia da cozinha"*, *"Esquentar no micro-ondas"*, *"Comer na mesa de jantar"*). Ela fica lá até o objeto ser **solto** ou a ação ser **feita**. Sem progresso nem contagem na legenda.
 - As tarefas são **do cotidiano** e **não têm relação com as alucinações**. São **fixas por noite**.
 - Dormir exige todas as tarefas da noite feitas (4.7).
 
@@ -450,6 +450,7 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 | Eventos de monstro no escuro (por s) — Invasor, Artur distorcido e Clara; a Helena é presença constante. Dobrado no protótipo (simulação usava 1/40 … 1/12) | 1/20 | 1/14,5 | 1/11,25 | 1/9,25 | 1/7,8 | 1/6,8 | 1/6 |
 | Remédios na casa | 4 | 4 | 4 | 3 | 3 | 3 | 3 |
 | Pilhas na casa | 3 | 3 | 3 | 2 | 2 | 2 | 2 |
+| Lanterna: bateria cheia (s de uso contínuo) | 240 | 210 | 180 | 150 | 130 | 110 | 90 |
 
 ### 9.2 Fórmulas
 
@@ -494,7 +495,7 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Clara: duração da risada | 4 a 6 s |
 | Helena: luz contínua para aparecer por completo | Diminui a cada noite: 2,5 / 2,3 / 2,1 / 1,9 / 1,7 / 1,5 / 1,3 s (some 2× mais rápido) |
 | Artur distorcido: luz contínua para virar cinzas | 0,6 s |
-| Lanterna: bateria cheia | 90 s de uso contínuo |
+| Lanterna: bateria cheia | por noite (9.1): de 240 s na noite 1 a 90 s na noite 7 |
 | Gerador: segurar F | 3 s |
 | Fusível: distância mínima de Artur ao aparecer | 10 m (e fora do cômodo dele) |
 | Micro-ondas (jantar) | 30 s |

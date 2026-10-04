@@ -87,7 +87,7 @@ export class HouseScene extends Phaser.Scene {
     this.clock = new NightClock(data?.day ?? 1);
     this.fear = new Fear(this.clock);
     this.generator = new Generator(this.clock, this.fear, GENERATOR_POINT);
-    this.flashlight = new Flashlight();
+    this.flashlight = new Flashlight(this.clock.night.flashlightBatterySeconds);
     this.director = new HallucinationDirector(
       this.clock,
       this.fear,
@@ -110,7 +110,6 @@ export class HouseScene extends Phaser.Scene {
     this.items = new Items(this, this.clock.night, this.furnitureById);
     this.tasks = new Tasks(this, this.clock.night.tasks, this.furnitureById, this.items, {
       say: (text) => this.hud.talk(say(text)),
-      toast: (text) => this.hud.toast(text),
       sfx,
     });
     if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
@@ -176,9 +175,7 @@ export class HouseScene extends Phaser.Scene {
     // Q: soltar o que está carregando (GDD 4.11)
     this.input.keyboard.on('keydown-Q', () => {
       if (this.hud.talking || this.sleep || !this.tasks.carrying) return;
-      const id = this.tasks.carryingTask;
       this.tasks.dropCarried(this.player.feetMeters);
-      this.tasks.announce(id);
     });
     // O item nas mãos acompanha o Artur depois da física (sem tremer)
     const placeIcon = () => this.tasks.positionIcon(this.player);
@@ -375,18 +372,10 @@ export class HouseScene extends Phaser.Scene {
     // gerador (com fusível) e tarefas de segurar F: tratados no update
   }
 
-  /** Usa um objeto de tarefa e avisa o progresso (se algo mudou). */
+  /** Usa um objeto de tarefa. */
   useTask(target) {
-    // 'pegar' = pegar de volta algo que ficou no chão: a tarefa é a do que veio para a mão
-    const pickBack = target.task === 'pegar';
-    const before = pickBack ? null : this.tasks.status(target.task);
-    const carried = this.tasks.carrying;
     if (target.complete) target.complete();
     else target.use();
-    const id = pickBack ? this.tasks.carryingTask : target.task;
-    if (id && (pickBack || this.tasks.status(id) !== before || this.tasks.carrying !== carried)) {
-      this.tasks.announce(id);
-    }
   }
 
   // ---- Lista da rotina e começo da noite (GDD 4.6 e 4.11) -----------------
@@ -486,7 +475,6 @@ export class HouseScene extends Phaser.Scene {
       this.hud.talk(LINES.foundFuse);
     } else if (item.type === 'phone') {
       this.tasks.hasPhone = true;
-      this.tasks.announce('celular');
     }
   }
 
@@ -689,6 +677,7 @@ export class HouseScene extends Phaser.Scene {
     this.flashlight.update(dt);
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
     this.tasks.update(dt, this.generator.on, time);
+    this.hud.setHint(this.sleep || this.dead ? '' : this.tasks.hint);
     this.updateFuseGlint(time);
     this.bears.update(dt, this.chest, this.lighting);
 

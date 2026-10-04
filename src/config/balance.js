@@ -70,6 +70,8 @@ export const BALANCE = {
     // rápida a cada noite (decidido no protótipo; o GDD começou com 2,5 s fixos).
     helenaRevealSeconds: [2.5, 2.3, 2.1, 1.9, 1.7, 1.5, 1.3],
     batteryCount: [3, 3, 3, 2, 2, 2, 2],
+    // Lanterna: segundos de uso contínuo com a bateria cheia (cai a cada noite)
+    flashlightBatterySeconds: [240, 210, 180, 150, 130, 110, 90],
   },
 
   // ---------------------------------------------------------------------------
@@ -154,7 +156,6 @@ export const BALANCE = {
     helenaRevealSeconds: 2.5, // luz contínua para Helena aparecer por completo
     helenaFadeSpeedMultiplier: 2, // some 2× mais rápido
     distortedArturAshSeconds: 0.6, // luz contínua para virar cinzas
-    flashlightBatterySeconds: 90, // bateria cheia = 90 s de uso contínuo
     flashlightLowBatteryWarning: 0.2, // abaixo de 20%: a luz falha
     generatorHoldSeconds: 3, // segurar F para religar
     sleepSequenceSeconds: 8,

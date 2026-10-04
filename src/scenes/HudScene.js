@@ -66,18 +66,19 @@ export class HudScene extends Phaser.Scene {
     this.dialogue = new DialogueBox(this);
     this.buildList();
 
-    // Aviso rápido de progresso das tarefas: não trava o Artur, some sozinho
-    this.toastText = this.add
-      .text(this.scale.width / 2, this.scale.height - 168, '', {
+    // Legenda do próximo passo (o que fazer com o que está nas mãos): pequena, fica até soltar
+    // ou concluir a ação
+    this.hintText = this.add
+      .text(this.scale.width / 2, this.scale.height - 150, '', {
         fontFamily: FONT,
-        fontSize: '24px',
-        color: '#e8e2cf',
-        backgroundColor: '#000000aa',
-        padding: { x: 10, y: 2 },
+        fontSize: '18px',
+        color: '#cfc9b6',
+        backgroundColor: '#00000088',
+        padding: { x: 6, y: 1 },
       })
       .setOrigin(0.5, 1)
       .setDepth(900)
-      .setAlpha(0);
+      .setVisible(false);
 
     // Escurecer a tela (sequência de sono)
     const { width, height } = this.scale;
@@ -140,11 +141,10 @@ export class HudScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-F', close);
   }
 
-  /** Aviso rápido no pé da tela (progresso de uma tarefa). */
-  toast(text, seconds = 3.5) {
-    this.tweens.killTweensOf(this.toastText);
-    this.toastText.setText(text).setAlpha(1);
-    this.tweens.add({ targets: this.toastText, alpha: 0, delay: seconds * 1000, duration: 500 });
+  /** Legenda do próximo passo ('' esconde). Não aparece com a lista aberta. */
+  setHint(text) {
+    if (this.hintText.text !== text) this.hintText.setText(text);
+    this.hintText.setVisible(!!text && !this.listOpen);
   }
 
   /** Fecha a lista sem avisar ninguém (cena reiniciada, morte). */
@@ -197,8 +197,7 @@ export class HudScene extends Phaser.Scene {
         .setOrigin(1, 1),
     );
     this.list.setVisible(true);
-    this.tweens.killTweensOf(this.toastText);
-    this.toastText.setAlpha(0);
+    this.hintText.setVisible(false);
     this.listOpen = true;
     this.listOpenedFrame = this.game.loop.frame;
     return new Promise((resolve) => {
