@@ -284,7 +284,7 @@ Arquivo de referência: `planta-casa-v2.svg` (gerada por `scripts/planta-v2.py`)
 
 > **Decisão atualizada:** a alucinação obrigatória a caminho do quarto (noites 1–4, com +25 de medo) foi **removida**. Ela existia para dar interação; agora as tarefas e os ursos cumprem esse papel.
 
-Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está em algum lugar da casa (nunca dentro do quarto). Na primeira vez que Artur tenta abrir: *"A porta está trancada... onde eu coloquei a chave?"*
+Nas noites 5–7, **ao ler a lista** (começo da noite), o evento da tranca (4.9) acontece na hora com a porta do quarto do Artur: som de tranca, o chaveiro anda pela casa e larga a chave em algum lugar (nunca dentro do quarto nem da suíte). Antes de ler a lista o quarto está aberto e não há chave na casa. Na primeira vez que Artur tenta abrir: *"A porta está trancada... onde eu coloquei a chave?"*
 
 ### 4.9 Portas e chave
 
@@ -342,10 +342,10 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 | **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um (cada prato limpo fica empilhado no canto da bancada) |
 | **Tirar o lixo** | Juntar os sacos das 3 lixeiras (cozinha, banheiro social, escritório) → levar até o latão na garagem |
 | **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal (a roupa fica estendida no varal) |
-| **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher. Vaso regado fica com a terra escura e molhada |
+| **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher. **Os 5 vasos da tarefa estão murchos** (folhas amarelas caídas, terra clara rachada); todos os outros vasos da casa estão vivos. Vaso regado fica vivo, com a terra escura e molhada |
 | **Fechar as janelas** | Fechar as 6 janelas da casa (4.2) |
 | **Passar o uniforme** | Pegar o uniforme no armário do quarto → tábua na lavanderia (ferro, precisa de luz) → pendurar no armário do quarto |
-| **Carregar o celular** | Achar o celular (lugar sorteado entre os lugares de itens; está **no silencioso**, então não toca nem faz som) → levar ao carregador no criado-mudo do quarto (fica lá, com a luzinha verde de carregando) |
+| **Carregar o celular** | Achar o celular (lugar sorteado entre os lugares de itens, **nunca no quarto do Artur nem na suíte**; está **no silencioso**, então não toca nem faz som) → levar ao carregador no criado-mudo do quarto (fica lá, com a luzinha verde de carregando) |
 
 | Noite | Tarefas | Total |
 |---|---|---|

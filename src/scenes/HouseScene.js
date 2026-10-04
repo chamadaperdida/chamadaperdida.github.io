@@ -141,11 +141,7 @@ export class HouseScene extends Phaser.Scene {
       generatorPoint: GENERATOR_POINT,
     });
     this.lockedDoorTold = new Set(); // portas em que Artur já disse a fala da porta trancada
-    if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
-      // Noites 5–7: o quarto já está trancado; a chave está em algum lugar fora dele
-      this.lockEvent.preLock(this.bedroomDoor, BEDROOM_ROOMS);
-      this.items.place('key', 1, BEDROOM_ROOMS);
-    }
+
     this.bears = new Bears(this, this.clock, this.nav, this.furnitureRects, this.bedSprite);
     this.monsters = new MonsterDirector(this.createMonsterCtx(), this.clock, this.fear);
     this.godMode = false; // debug: monstros não matam
@@ -506,6 +502,15 @@ export class HouseScene extends Phaser.Scene {
     if (this.clock.started) return;
     this.clock.start();
     this.director.enabled = true;
+    // Noites 5–7 (GDD 4.8): ao ler a lista, o quarto do Artur é trancado na hora e o chaveiro
+    // leva a chave para algum lugar da casa
+    const inBedroom = BEDROOM_ROOMS.includes(roomAt(this.player.feetMeters.x, this.player.feetMeters.y)?.id);
+    if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY && !inBedroom && !this.lockEvent.trigger(this.bedroomDoor)) {
+      this.bedroomDoor.lock(); // (sem caminho para o chaveiro: tranca e larga a chave direto)
+      this.lockEvent.door = this.bedroomDoor;
+      this.lockEvent.lockedRooms = [...BEDROOM_ROOMS];
+      this.items.place('key', 1, BEDROOM_ROOMS);
+    }
     this.bears.spawn(this.clock.night.bearCount);
   }
 

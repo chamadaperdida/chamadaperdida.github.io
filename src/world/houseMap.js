@@ -93,11 +93,11 @@ export const DOOR_WIDTH = 1.5; // metros
 // `layer`: decoração sem colisão — 'floor' (tapetes) ou 'wall' (quadros, na face da parede).
 export const FURNITURE = [
   // Quarto do Artur
-  { id: 'cama', sprite: 'bed', x: 22.4, y: 4.25, room: 'quartoArtur' },
-  { id: 'criadoMudo', sprite: 'nightstand', x: 24.0, y: 4.25, room: 'quartoArtur' },
-  { id: 'comoda', sprite: 'dresser', x: 26.78, y: 4.25, room: 'quartoArtur' },
-  { id: 'armarioQuarto', sprite: 'cabinet', x: 28.0, y: 4.25, room: 'quartoArtur' },
-  { id: 'cesto', sprite: 'laundry-basket', x: 24.6, y: 4.6, room: 'quartoArtur' },
+  { id: 'cama', sprite: 'bed', x: 22.27, y: 4.25, room: 'quartoArtur' },
+  { id: 'criadoMudo', sprite: 'nightstand', x: 23.85, y: 4.25, room: 'quartoArtur' },
+  { id: 'comoda', sprite: 'dresser', x: 26.8, y: 4.25, room: 'quartoArtur' },
+  { id: 'armarioQuarto', sprite: 'cabinet', x: 24.43, y: 4.25, room: 'quartoArtur' },
+  { id: 'cesto', sprite: 'laundry-basket', x: 22.35, y: 8.3, room: 'quartoArtur' },
   // Suíte e banheiro social
   { id: 'piaSuite', sprite: 'bathroom-sink', x: 30.0, y: 4.25, room: 'suite' },
   { id: 'armarioSuite', sprite: 'cabinet', x: 30.95, y: 4.25, room: 'suite' },
@@ -145,8 +145,8 @@ export const FURNITURE = [
   { id: 'freezer', sprite: 'freezer', x: 13.2, y: 22.3, room: 'lavanderia' },
   { id: 'tabua', sprite: 'ironing-board', x: 16.6, y: 22.35, room: 'lavanderia' },
   // Prateleiras na parede de cima, de frente para o cômodo (estreitas, uma de cada lado da porta)
-  { id: 'prateleiraDespensa1', sprite: 'pantry-shelf-narrow', x: 19.05, y: 22.3, room: 'despensa' },
-  { id: 'prateleiraDespensa2', sprite: 'pantry-shelf-narrow', x: 21.3, y: 22.3, room: 'despensa' },
+  { id: 'prateleiraDespensa1', sprite: 'pantry-shelf-narrow', x: 19.27, y: 22.3, room: 'despensa' },
+  { id: 'prateleiraDespensa2', sprite: 'pantry-shelf-narrow', x: 21.29, y: 22.3, room: 'despensa' },
   // Garagem
   { id: 'bancada', sprite: 'workbench', x: 0.4, y: 1.4, room: 'garagem' },
   { id: 'latao', sprite: 'garbage-can', x: 7.9, y: 1.4, room: 'garagem' },
@@ -214,7 +214,7 @@ export const FURNITURE = [
   { id: 'cadeiraCozinha2', sprite: 'chair', x: 15.05, y: 18.3, room: 'cozinha' },
   { id: 'armarioCozinha', sprite: 'pantry-shelf', x: 29.5, y: 18.3, room: 'cozinha' },
   // Lavanderia
-  { id: 'prateleiraLavanderia', sprite: 'pantry-shelf', x: 17.85, y: 22.3, room: 'lavanderia' },
+  { id: 'prateleiraLavanderia', sprite: 'pantry-shelf', x: 17.68, y: 22.3, room: 'lavanderia' },
   // Garagem
   { id: 'carro', sprite: 'car-tarp', x: 3.6, y: 4.5, room: 'garagem' },
   // Mais peças nos cômodos grandes
@@ -237,7 +237,7 @@ export const FURNITURE = [
 ];
 
 // Ponto de interação com a cama (ao lado dela, no quarto do Artur).
-export const BED_POINT = { x: 23.15, y: 6.75 };
+export const BED_POINT = { x: 23.05, y: 6.75 };
 
 // Ponto do gerador para medir distância e segurar F (na frente dele).
 export const GENERATOR_POINT = { x: 1.75, y: 26.15 };
@@ -298,9 +298,9 @@ export const ITEM_SPOTS = [
   { on: 'tabua', dx: 8, dy: 5 },
   { on: 'prateleiraLavanderia', dx: 23, dy: 11 },
   { on: 'prateleiraLavanderia', dx: 9, dy: 21 },
-  { on: 'prateleiraDespensa1', dx: 14, dy: 11 },
+  { on: 'prateleiraDespensa1', dx: 7, dy: 11 },
   { on: 'prateleiraDespensa1', dx: 6, dy: 21 },
-  { on: 'prateleiraDespensa2', dx: 14, dy: 11 },
+  { on: 'prateleiraDespensa2', dx: 7, dy: 11 },
   { on: 'bancada', dx: 30, dy: 11 },
   { on: 'caixaGaragem1', dx: 5, dy: 5 },
   { on: 'prateleiraDeposito', dx: 23, dy: 11 },

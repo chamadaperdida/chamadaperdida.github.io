@@ -436,21 +436,42 @@ function trashBin(c, x, y) {
   c.rect(x + 2, y + 3, 1, 6, '#2a2a2e');
 }
 
-function plantPot(c, x, y) {
-  // Vaso com planta morrendo, 12×14
+function potBase(c, x, y, soil) {
   c.rect(x + 2, y + 8, 8, 6, '#7a4a32');
   c.rect(x + 1, y + 8, 10, 2, '#8a5a3e');
-  c.rect(x + 5, y + 2, 2, 6, '#4a5a32');
-  c.rect(x + 2, y + 3, 3, 2, '#5a6a3a');
-  c.rect(x + 7, y + 1, 3, 2, '#6a6a3a');
-  c.rect(x + 1, y + 5, 2, 2, '#5a5432'); // folha seca
-  c.px(x + 9, y + 5, '#6a5a32');
+  c.rect(x + 2, y + 8, 8, 1, soil); // terra
+}
+
+function plantPot(c, x, y) {
+  // Vaso com planta viva (sem sede), 12×14: folhas verdes, abertas para cima
+  potBase(c, x, y, '#4a3424');
+  c.rect(x + 5, y + 2, 2, 6, '#3e5a2e');
+  c.rect(x + 2, y + 2, 3, 2, '#4e7038');
+  c.rect(x + 7, y + 1, 3, 2, '#4e7038');
+  c.rect(x + 1, y + 4, 3, 2, '#44663a');
+  c.rect(x + 8, y + 4, 3, 2, '#44663a');
+  c.rect(x + 4, y, 3, 2, '#5a7a40');
+}
+
+function plantPotDry(c, x, y) {
+  // Vaso com sede (precisa regar), 12×14: folhas murchas caídas, amarelas e marrons,
+  // terra clara e rachada. Bem diferente das vivas, para achar de longe.
+  potBase(c, x, y, '#9a7a56');
+  c.px(x + 4, y + 8, '#6a4a32'); // rachadura
+  c.px(x + 7, y + 8, '#6a4a32');
+  c.rect(x + 5, y + 3, 2, 5, '#6a6034');
+  c.rect(x + 2, y + 5, 3, 1, '#8a7a3a'); // folhas tombadas
+  c.rect(x + 1, y + 6, 2, 2, '#8a7a3a');
+  c.rect(x + 7, y + 5, 3, 1, '#9a6a32');
+  c.rect(x + 9, y + 6, 2, 2, '#9a6a32');
+  c.rect(x + 4, y + 2, 3, 1, '#7a6a34');
+  c.px(x + 10, y + 9, '#9a6a32'); // folha seca caída
 }
 
 function plantPotWet(c, x, y) {
-  // Vaso regado (tarefa feita): terra escura e molhada, gotas nas folhas, 12×14
+  // Vaso regado (tarefa feita): planta viva, terra escura e molhada, gotas, 12×14
   plantPot(c, x, y);
-  c.rect(x + 2, y + 8, 8, 1, '#3a281c');
+  c.rect(x + 2, y + 8, 8, 1, '#2a1c12');
   c.px(x + 3, y + 10, '#5a3a28'); // água escorrendo no vaso
   c.px(x + 8, y + 11, '#5a3a28');
   c.px(x + 3, y + 3, '#8aa0b0');
@@ -533,18 +554,15 @@ function pantryShelf(c, x, y) {
 }
 
 function pantryShelfNarrow(c, x, y) {
-  // Prateleira estreita da despensa (cabe ao lado da porta), 20×24. Mesmos nichos da
-  // larga: vão livre na de cima à direita e na de baixo à esquerda.
-  c.rect(x, y, 20, 24, '#3a2e22');
-  c.rect(x, y, 20, 2, '#4a3c2c'); // tampo
-  c.rect(x + 2, y + 2, 16, 9, '#1a140e');
-  c.rect(x + 2, y + 13, 16, 8, '#1a140e');
-  c.rect(x + 3, y + 6, 4, 5, '#8a6a3a'); // pote
-  c.rect(x + 3, y + 5, 4, 1, '#b0a080');
-  c.rect(x + 8, y + 7, 3, 4, '#a04a3a'); // lata
-  c.rect(x + 12, y + 16, 4, 5, '#7a7a70'); // lata
-  c.rect(x, y + 11, 20, 2, '#4a3c2c');
-  c.rect(x, y + 21, 20, 3, '#2a2018');
+  // Estante fina da despensa (cabe nos 0,5 m entre a porta e a parede), 12×24. Nichos de
+  // 8 px de largura, livres para um item cada (as latas ficam no tampo).
+  c.rect(x, y, 12, 24, '#3a2e22');
+  c.rect(x, y, 12, 2, '#4a3c2c'); // tampo
+  c.rect(x + 7, y, 3, 2, '#a04a3a'); // lata no tampo
+  c.rect(x + 2, y + 2, 8, 9, '#1a140e');
+  c.rect(x + 2, y + 13, 8, 8, '#1a140e');
+  c.rect(x, y + 11, 12, 2, '#4a3c2c');
+  c.rect(x, y + 21, 12, 3, '#2a2018');
 }
 
 function workbench(c, x, y) {
@@ -1071,6 +1089,7 @@ const PROPS = [
   ['trash-bin', 8, 10, trashBin, true],
   ['plant-pot', 12, 14, plantPot, true],
   ['plant-pot-wet', 12, 14, plantPotWet, true],
+  ['plant-pot-dry', 12, 14, plantPotDry, true],
   ['clothesline', 64, 24, clothesline, true],
   ['clothesline-full', 64, 24, clotheslineFull, true],
   ['rug-red', 96, 64, rug(96, 64, '#5a2a26', '#3a1a18', '#7a4a3a')],
@@ -1095,7 +1114,7 @@ const PROPS = [
   ['swing', 28, 30, swing, true],
   ['towel', 10, 12, towel],
   ['pantry-shelf', 32, 24, pantryShelf, true],
-  ['pantry-shelf-narrow', 20, 24, pantryShelfNarrow, true],
+  ['pantry-shelf-narrow', 12, 24, pantryShelfNarrow, true],
   ['workbench', 48, 24, workbench, true],
   ['freezer', 32, 20, freezer, true],
   ['counter-microwave-on', 32, 28, counterMicrowaveOn, true],

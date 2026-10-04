@@ -5,8 +5,9 @@
 // - Uma porta FORA DA VISÃO é trancada (som de tranca, posicional). Em seguida o tilintar
 //   de um chaveiro anda pela casa (é o Invasor, mas nada aparece e o medo não sobe). Quando
 //   o som para, a chave foi largada num lugar fora da visão.
-// - Só uma porta trancada por vez (nas noites 5–7, o quarto já começa trancado e o evento
-//   só acontece depois de destrancá-lo).
+// - Só uma porta trancada por vez.
+// - Noites 5–7 (GDD 4.8): ao ler a lista, o evento acontece na hora com a porta do quarto do
+//   Artur (mesmo som e chaveiro); os sorteados só depois de destrancá-lo.
 // - A porta escolhida sempre separa algum pedaço da casa (senão trancar não muda nada), e
 //   nunca deixa Artur sem caminho até o gerador. A chave nunca cai no pedaço trancado.
 // - A chave não muda de lugar depois de largada (nem se a luz cair).
@@ -38,13 +39,6 @@ export class LockEvent {
     this.walker = null; // o chaveiro andando pela casa
   }
 
-  /** Nas noites 5–7: o quarto já começa trancado (a chave é colocada por quem chama). */
-  preLock(door, rooms) {
-    door.lock();
-    this.door = door;
-    this.lockedRooms = [...rooms];
-  }
-
   /** Artur destrancou a porta com a chave. */
   onUnlock(door) {
     if (door !== this.door) return;
@@ -74,10 +68,13 @@ export class LockEvent {
     if (Math.random() < chance) this.trigger();
   }
 
-  /** Tranca uma porta agora (o debug chama direto). Devolve false se nenhuma serve. */
-  trigger() {
+  /**
+   * Tranca uma porta agora. `forced`: esta porta, mesmo na tela (o quarto nas noites 5–7).
+   * Devolve false se nenhuma serve.
+   */
+  trigger(forced = null) {
     if (this.door || this.walker) return false;
-    const plan = this.#choose();
+    const plan = this.#choose(forced);
     if (!plan) return false;
     const { door, cutRooms, start, key, path } = plan;
     door.lock();
@@ -97,17 +94,17 @@ export class LockEvent {
 
   // ---- Escolha da porta e do lugar da chave ----------------------------------
 
-  #choose() {
+  #choose(forced) {
     const { nav, doors, feet, onScreen, roomAt, generatorPoint } = this.ctx;
     const from = feet();
     const before = nav.distancesFrom(from, 5000);
     const genKey = this.#cellKey(generatorPoint);
     const options = [];
-    for (const door of doors) {
+    for (const door of forced ? [forced] : doors) {
       if (door.kind !== 'normal' || door.locked) continue;
-      // Fora da visão (com folga) e sem ninguém no vão
+      // Fora da visão (com folga)
       const r = door.rect;
-      if (onScreen(r.centerX, r.centerY, 40)) continue;
+      if (!forced && onScreen(r.centerX, r.centerY, 40)) continue;
       // Simula a porta trancada e vê o que fica do outro lado
       const saved = door.isOpen;
       door.isOpen = false;

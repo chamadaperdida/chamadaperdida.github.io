@@ -146,7 +146,10 @@ export class Tasks {
         this.st.lixo.bags.push({ on, sprite, taken: false });
       }
     }
-    if (this.has('celular')) items.place('phone', 1, [], { anyRoom: true });
+    // Regar: só os vasos da tarefa ficam com sede (murchos); os outros estão vivos
+    if (this.has('regar')) for (const pot of POTS) furniture.get(pot).sprite.setFrame('plant-pot-dry');
+    // Celular: nunca no quarto do Artur (nem na suíte), senão já estaria ao lado do carregador
+    if (this.has('celular')) items.place('phone', 1, ['quartoArtur', 'suite'], { anyRoom: true });
 
     this.icon = scene.add.image(0, 0, 'props', 'plate').setOrigin(0.5, 1).setVisible(false);
 
@@ -588,7 +591,13 @@ export class Tasks {
 
     if (this.listRead) return out;
     // Antes de ler a lista: os objetos respondem só com a fala
-    return out.map((t) => ({ ...t, hold: undefined, use: () => this.hooks.say('Primeiro deixa eu ver a lista.') }));
+    // (sem `complete`: as tarefas de segurar F seriam concluídas direto com um toque)
+    return out.map((t) => ({
+      ...t,
+      hold: undefined,
+      complete: undefined,
+      use: () => this.hooks.say('Primeiro deixa eu ver a lista.'),
+    }));
   }
 
   // ---- Quadro a quadro -----------------------------------------------------
