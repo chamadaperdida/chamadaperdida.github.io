@@ -65,6 +65,24 @@ export class Items {
     return picked.length;
   }
 
+  /**
+   * Lugares livres onde `type` pode aparecer, sem ocupar nenhum (para quem escolhe o lugar
+   * antes, como a chave do evento da tranca). Cada um vem com `reach` (m).
+   */
+  candidates(type, excludeRooms = []) {
+    return this.free
+      .filter((s) => s.types.includes(type) && !excludeRooms.includes(s.room))
+      .map((s) => ({ spot: s, reach: this.#reachPoint(s) }));
+  }
+
+  /** Coloca `type` num lugar livre escolhido (de candidates). Devolve o item. */
+  placeAt(type, spot) {
+    this.free = this.free.filter((s) => s !== spot);
+    const item = this.#create(type, spot);
+    this.list.push(item);
+    return item;
+  }
+
   /** Ponto de alcance (m) de um lugar, sem criar o item. */
   #reachPoint(spot) {
     const { sprite: base } = this.furniture.get(spot.on);

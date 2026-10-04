@@ -27,6 +27,7 @@ import { Items } from '../systems/Items.js';
 import { Tasks } from '../systems/Tasks.js';
 import { Bears } from '../systems/Bears.js';
 import { Heart } from '../systems/Heart.js';
+import { LockEvent } from '../systems/LockEvent.js';
 import { HALLUCINATION_KINDS, HallucinationDirector } from '../systems/HallucinationDirector.js';
 import { BEDROOM_DOOR_ID, BEDROOM_LOCKED_FROM_DAY, BEDROOM_ROOMS, LOCKED_DOOR_LINE } from '../systems/BedroomEvent.js';
 import { FlickerHallucination } from '../hallucinations/Flicker.js';
@@ -75,6 +76,7 @@ const LINES = {
   cantSleep: say('Não consigo dormir agora, estou com medo.'),
   sleepDark: say('Está tudo escuro... primeiro o gerador.'),
   lockedDoor: say(LOCKED_DOOR_LINE),
+  stillLocked: say('Trancada. Preciso achar a chave.'),
   foundKey: say('Achei.'),
 };
 
@@ -112,11 +114,6 @@ export class HouseScene extends Phaser.Scene {
       say: (text) => this.hud.talk(say(text)),
       sfx,
     });
-    if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
-      // Noites 5–7: o quarto já está trancado; a chave está em algum lugar fora dele
-      this.bedroomDoor.lock();
-      this.items.place('key', 1, BEDROOM_ROOMS);
-    }
 
     this.player = new Player(this, SPAWN.x * PPM, SPAWN.y * PPM);
     this.physics.add.collider(this.player, this.wallLayer);
@@ -128,6 +125,27 @@ export class HouseScene extends Phaser.Scene {
 
     this.lighting = new Lighting(this, { kind: this.grid.kind, bounds: this.bounds, doors: this.doors });
     this.nav = new NavGrid(this.grid.kind, this.furnitureRects, this.lighting.doorByCell);
+    // Evento da tranca (GDD 4.9); nas noites 5–7 o quarto já começa trancado (GDD 4.8)
+    this.lockEvent = new LockEvent({
+      clock: this.clock,
+      nav: this.nav,
+      doors: this.doors,
+      items: this.items,
+      sfx,
+      feet: () => this.player.feetMeters,
+      onScreen: (px, py, margin = 0) => {
+        const v = this.cameras.main.worldView;
+        return px > v.x - margin && px < v.right + margin && py > v.y - margin && py < v.bottom + margin;
+      },
+      roomAt,
+      generatorPoint: GENERATOR_POINT,
+    });
+    this.lockedDoorTold = new Set(); // portas em que Artur já disse a fala da porta trancada
+    if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
+      // Noites 5–7: o quarto já está trancado; a chave está em algum lugar fora dele
+      this.lockEvent.preLock(this.bedroomDoor, BEDROOM_ROOMS);
+      this.items.place('key', 1, BEDROOM_ROOMS);
+    }
     this.bears = new Bears(this, this.clock, this.nav, this.furnitureRects, this.bedSprite);
     this.monsters = new MonsterDirector(this.createMonsterCtx(), this.clock, this.fear);
     this.godMode = false; // debug: monstros não matam
@@ -402,7 +420,7 @@ export class HouseScene extends Phaser.Scene {
     const feet = this.player.feetMeters;
     const here = roomAt(feet.x, feet.y) ?? this.lighting.currentRoom;
     // Nunca num cômodo trancado (o quarto nas noites 5–7, ou o da tranca)
-    const locked = this.bedroomDoor.locked ? [...BEDROOM_ROOMS] : [];
+    const locked = [...this.lockEvent.lockedRooms];
     const exclude = [...locked, ...(here ? [here.id] : [])];
     const far = (p) => Math.hypot(p.x - feet.x, p.y - feet.y) >= BALANCE.extra.fuseMinDistance;
     // Sem lugar válido: relaxa a distância, depois o cômodo (a noite nunca trava)
@@ -441,9 +459,12 @@ export class HouseScene extends Phaser.Scene {
         door.unlock();
         door.setOpen(true);
         sfx.lockClick();
+        this.lockEvent.onUnlock(door);
       } else {
         sfx.lockClick(0.5);
-        this.hud.talk(LINES.lockedDoor);
+        // A fala inteira na primeira vez em cada porta; depois, curta
+        this.hud.talk(this.lockedDoorTold.has(door.id) ? LINES.stillLocked : LINES.lockedDoor);
+        this.lockedDoorTold.add(door.id);
       }
       return;
     }
@@ -555,7 +576,7 @@ export class HouseScene extends Phaser.Scene {
       const k = this.grid.kind[Math.round(y / CELL_METERS)]?.[Math.round(x / CELL_METERS)];
       if (k !== 'floor') return false;
       const room = roomAt(x, y);
-      if (!room || room.id === 'quartoClara') return false;
+      if (!room || room.id === 'quartoClara' || this.lockEvent.lockedRooms.includes(room.id)) return false;
       if (sameRoom && room.id !== here?.id) return false;
       const px = x * PPM;
       const py = y * PPM;
@@ -677,6 +698,8 @@ export class HouseScene extends Phaser.Scene {
     this.flashlight.update(dt);
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
     this.tasks.update(dt, this.generator.on, time);
+    this.lockEvent.update(dt, this.generator.on);
+    this.generator.lockedDoor = !!this.lockEvent.door;
     this.hud.setHint(this.sleep || this.dead ? '' : this.tasks.hint);
     this.updateFuseGlint(time);
     this.bears.update(dt, this.chest, this.lighting);
@@ -745,7 +768,7 @@ export class HouseScene extends Phaser.Scene {
     debug.set('Geral/FPS', Math.round(this.game.loop.actualFps));
     debug.set('Geral/Atalhos', '1–7 dia · R reinicia · T tempo · N termina a noite');
     debug.set('Geral/Mais atalhos', 'K gerador · +/− medo · H alucinação · J próxima alucinação · G colisões');
-    debug.set('Geral/Atalhos novos', 'B pega um urso · O completa as tarefas');
+    debug.set('Geral/Atalhos novos', 'B pega um urso · O completa as tarefas · L força a tranca');
 
     const clock = this.clock;
     debug.set('Noite/Dia', `${clock.day}`);
@@ -768,6 +791,7 @@ export class HouseScene extends Phaser.Scene {
     debug.set('Noite/Tarefas', this.tasks.listRead ? this.tasks.debugText : 'lista não lida');
     debug.set('Noite/Ursos na casa', `${this.bears.remaining}`);
     debug.set('Noite/Coração', this.heart.debugText);
+    debug.set('Casa/Tranca', this.lockEvent.debugText);
     debug.set(
       'Noite/Dormir',
       this.sleep
@@ -952,6 +976,11 @@ export class HouseScene extends Phaser.Scene {
       } else if (k === 'i') this.godMode = !this.godMode;
       else if (k === 'b' && this.bears.list.length) this.bears.collect(this.bears.list[0], sfx);
       else if (k === 'o') this.tasks.completeAll();
+      else if (k === 'l') {
+        // L: força o evento da tranca agora (se der: luz acesa, nenhuma porta trancada)
+        this.startNight();
+        if (this.generator.on) this.lockEvent.trigger();
+      }
     });
   }
 

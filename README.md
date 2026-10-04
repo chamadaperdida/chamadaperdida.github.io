@@ -46,6 +46,7 @@ npm run dev
 - Mostra medo, fase da noite, risco e quedas do gerador, lanterna, itens e as fórmulas da noite.
 - **1–7** começa a noite daquele dia · **R** reinicia a noite · **T** acelera o relógio da noite (1×, 10×, 60×)
 - **K** derruba o gerador · **+ / −** sobe/desce o medo · **H** sorteia uma alucinação · **J** força cada tipo em sequência · **M** força cada monstro em sequência (apaga a luz) · **I** imortal · **N** termina a noite · **G** mostra as caixas de colisão
+- **B** pega um urso · **O** completa as tarefas · **L** força o evento da tranca (com luz acesa e nenhuma porta trancada)
 
 ## Progresso (GDD, Apêndice C)
 
@@ -55,9 +56,11 @@ npm run dev
 - [x] 4. Dormir e curva da noite
 - [x] 5. Alucinações
 - [x] 6. Monstros
-- [ ] 7. Portas e chave
-- [ ] 8. Delegacia
-- [ ] 9. Fluxo completo
-- [ ] 10. Final
-- [ ] 11. Áudio e vozes
-- [ ] 12. Arte final e polimento
+- [x] 7. Revisão das etapas 2–6 (casa nova)
+- [x] 8. Sistemas novos (lista e tarefas, ursos, fusível)
+- [x] 9. Portas e chave
+- [ ] 10. Delegacia
+- [ ] 11. Fluxo completo
+- [ ] 12. Final
+- [ ] 13. Áudio
+- [ ] 14. Arte final e polimento

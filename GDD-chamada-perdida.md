@@ -299,7 +299,12 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
   - A chave não muda de lugar depois de colocada (inclusive se a luz cair).
   - Porta trancada bloqueia os monstros também.
   - Pode trancar qualquer cômodo, inclusive o quarto do Artur.
+  - A porta escolhida sempre **separa algum pedaço da casa** (uma porta com caminho alternativo não muda nada) e **nunca deixa Artur sem caminho até o gerador**. Na prática, tranca os becos sem saída: quarto do Artur (com a suíte), suíte, banheiro social, escritório, despensa, depósito.
+  - O chaveiro anda no passo de Artur andando, pelo caminho, do lado de cá da porta até um lugar de item **fora do cômodo do Artur e a pelo menos 8 m dele** (6 a 30 m de caminho). Chegando, o som para; se o lugar estiver na tela, a chave só cai quando sair (no máximo 20 s).
+  - Se a luz cair com o chaveiro andando, a chave cai na hora, em silêncio, no lugar para onde ia.
   - Ao pegar: Artur diz *"Achei."* Ao usar: som de destrancar.
+  - Tentando abrir sem a chave: a fala inteira (4.8) na primeira vez em cada porta; depois, *"Trancada. Preciso achar a chave."*
+  - Com uma porta trancada, o risco do gerador cresce ×1,5 (4.4).
 
 ### 4.10 Itens
 
@@ -461,7 +466,7 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 - **Risco do gerador** (por segundo, só com Artur longe): a cada segundo soma `incremento · (1 − 0,7 · k/N)`, limitado ao teto. Zera quando o gerador cai. (`k/N` = fração dos ursos da noite já coletados.)
 - **Gerador na hora de dormir:** `base · (1 − 0,6 · k/N)`. Cada vez que cair durante o sono, a base perde **35 pontos percentuais** (mínimo 0).
 - Os fatores 0,7 e 0,6 são iniciais — calibrar na nova simulação.
-- **Evento da tranca:** primeira tentativa entre 60 e 400 s; chances 80% → 30% → 10%; intervalo de 120 a 300 s entre tentativas.
+- **Evento da tranca:** primeira tentativa entre 60 e 400 s; chances 80% → 30% → 10%; intervalo de 120 a 300 s entre tentativas. Com a luz apagada na hora da tentativa, ela espera a luz voltar. Nas noites 5–7 não acontece enquanto o quarto estiver trancado (só uma porta trancada por vez).
 
 ### 9.3 Quanto cada alucinação soma no medo (antes do multiplicador)
 
@@ -758,6 +763,7 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Porta da delegacia antes da hora (sugestão) | "Ainda não terminou o turno." |
 | Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
+| Porta trancada (de novo) | "Trancada. Preciso achar a chave." |
 | Achou a chave | "Achei." |
 
 ---
