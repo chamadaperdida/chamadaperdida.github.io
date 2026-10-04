@@ -333,14 +333,14 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 
 | Tarefa | Como funciona |
 |---|---|
-| **Jantar** | Pegar a marmita no freezer da lavanderia → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s) |
-| **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um |
+| **Jantar** | Pegar a marmita no freezer da lavanderia → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s). Não sobra prato na mesa (para não confundir com a louça) |
+| **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um (cada prato limpo fica empilhado no canto da bancada) |
 | **Tirar o lixo** | Juntar os sacos das 3 lixeiras (cozinha, banheiro social, escritório) → levar até o latão na garagem |
 | **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal (a roupa fica estendida no varal) |
-| **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher |
+| **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher. Vaso regado fica com a terra escura e molhada |
 | **Fechar as janelas** | Fechar as 6 janelas da casa (4.2) |
 | **Passar o uniforme** | Pegar o uniforme no armário do quarto → tábua na lavanderia (ferro, precisa de luz) → pendurar no armário do quarto |
-| **Carregar o celular** | Achar o celular (lugar sorteado entre os lugares de itens; está **no silencioso**, então não toca nem faz som) → levar ao carregador no criado-mudo do quarto |
+| **Carregar o celular** | Achar o celular (lugar sorteado entre os lugares de itens; está **no silencioso**, então não toca nem faz som) → levar ao carregador no criado-mudo do quarto (fica lá, com a luzinha verde de carregando) |
 
 | Noite | Tarefas | Total |
 |---|---|---|

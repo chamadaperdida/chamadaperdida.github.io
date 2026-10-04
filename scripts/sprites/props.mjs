@@ -446,6 +446,16 @@ function plantPot(c, x, y) {
   c.px(x + 9, y + 5, '#6a5a32');
 }
 
+function plantPotWet(c, x, y) {
+  // Vaso regado (tarefa feita): terra escura e molhada, gotas nas folhas, 12×14
+  plantPot(c, x, y);
+  c.rect(x + 2, y + 8, 8, 1, '#3a281c');
+  c.px(x + 3, y + 10, '#5a3a28'); // água escorrendo no vaso
+  c.px(x + 8, y + 11, '#5a3a28');
+  c.px(x + 3, y + 3, '#8aa0b0');
+  c.px(x + 8, y + 1, '#8aa0b0');
+}
+
 function clothesline(c, x, y) {
   // Varal coberto: telhadinho e varal com prendedores, 64×24
   c.rect(x, y, 64, 5, '#2b2f33');
@@ -814,6 +824,15 @@ function cellphone(c, x, y) {
   c.rect(x + 1, y + 1, 2, 3, '#26303a');
 }
 
+function cellphoneCharging(c, x, y) {
+  // Celular carregando no criado-mudo (tarefa feita): luzinha verde e o fio, 6×7
+  c.rect(x, y, 4, 6, '#1a1a1e');
+  c.rect(x + 1, y + 1, 2, 3, '#26303a');
+  c.px(x + 3, y, '#4ac860'); // luz de carregando
+  c.rect(x + 1, y + 6, 2, 1, '#d8d4c8'); // fio
+  c.rect(x + 3, y + 6, 3, 1, '#d8d4c8');
+}
+
 function fuse(c, x, y) {
   // Fusível de cartucho, 6×3
   c.rect(x, y, 1, 3, '#a8a8a0');
@@ -1033,6 +1052,7 @@ const PROPS = [
   ['garbage-can', 16, 20, garbageCan, true],
   ['trash-bin', 8, 10, trashBin, true],
   ['plant-pot', 12, 14, plantPot, true],
+  ['plant-pot-wet', 12, 14, plantPotWet, true],
   ['clothesline', 64, 24, clothesline, true],
   ['clothesline-full', 64, 24, clotheslineFull, true],
   ['rug-red', 96, 64, rug(96, 64, '#5a2a26', '#3a1a18', '#7a4a3a')],
@@ -1071,6 +1091,7 @@ const PROPS = [
   ['lunchbox', 9, 5, (c, x, y) => lunchbox(c, x, y, false), true],
   ['dinner', 9, 5, (c, x, y) => lunchbox(c, x, y, true), true],
   ['phone', 4, 6, cellphone, true],
+  ['phone-charging', 6, 7, cellphoneCharging, true],
   ['fuse', 6, 3, fuse, true],
   ['routine-list', 8, 10, routineList],
   ['window-open', 32, 10, (c, x, y) => windowFrame(c, x, y, true)],

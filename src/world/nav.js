@@ -11,6 +11,11 @@ const DIRS = [
   [0, -1],
 ];
 const CLOSED_DOOR_COST = 4; // prefere caminhos com portas abertas
+// Meia caixa do corpo dos monstros (px, com folga): uma célula só é livre se essa caixa,
+// centrada nela, não encosta em nenhum móvel (o ponto sozinho deixava passar células
+// meio cobertas, e o monstro empacava no canto do móvel)
+const BODY_HALF_W = 7;
+const BODY_HALF_H = 5;
 
 export class NavGrid {
   /**
@@ -27,7 +32,10 @@ export class NavGrid {
         if (k !== 'floor' && k !== 'door') return false;
         const px = i * CELL_METERS * PPM;
         const py = j * CELL_METERS * PPM;
-        return !furnitureRects.some((r) => r.contains(px, py));
+        return !furnitureRects.some(
+          (r) =>
+            px + BODY_HALF_W > r.x && px - BODY_HALF_W < r.right && py + BODY_HALF_H > r.y && py - BODY_HALF_H < r.bottom,
+        );
       }),
     );
   }

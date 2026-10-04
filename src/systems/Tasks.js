@@ -428,6 +428,12 @@ export class Tasks {
           complete: () => {
             this.carrying.count -= 1;
             l.washed += 1;
+            // Prato limpo empilhado no canto da bancada da pia
+            const pia = this.furniture.get('pia').sprite;
+            this.scene.add
+              .image(pia.x + 7, pia.y + 7 - (l.washed - 1) * 2, 'props', 'plate')
+              .setOrigin(0.5, 1)
+              .setDepth(pia.depth + 1 + l.washed);
             if (this.carrying.count <= 0) this.carrying = null;
             if (l.washed >= l.plates.length) this.#finish('louca');
           },
@@ -513,6 +519,7 @@ export class Tasks {
             hold: cfg.waterPotSeconds,
             complete: () => {
               g.watered.add(pot);
+              this.furniture.get(pot).sprite.setFrame('plant-pot-wet');
               can.water -= 1;
               if (g.watered.size >= POTS.length) {
                 this.carrying = null;
@@ -571,6 +578,9 @@ export class Tasks {
       out.push(this.#target('celular', this.#front('criadoMudo'), {
         use: () => {
           this.hasPhone = false;
+          // Fica carregando no criado-mudo
+          const cm = this.furniture.get('criadoMudo').sprite;
+          this.scene.add.image(cm.x + 13, cm.y + 9, 'props', 'phone-charging').setOrigin(0.5, 1).setDepth(cm.depth + 1);
           this.#finish('celular');
         },
       }));

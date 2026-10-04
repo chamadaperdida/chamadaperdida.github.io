@@ -8,6 +8,10 @@ import { PPM } from '../world/tiles.js';
 
 const REPATH_EVERY = 0.35; // s
 const CATCH_DISTANCE = 0.45; // m
+// Rede de segurança: se mesmo assim empacar (ex.: Artur derrubou algo no caminho),
+// atravessa o obstáculo por um instante em vez de ficar parado empurrando
+const STUCK_SECONDS = 0.5;
+const GHOST_SECONDS = 0.45;
 
 export class Chaser {
   /**
@@ -28,7 +32,8 @@ export class Chaser {
     s.setOrigin(0.5, 1);
     s.body.setSize(bodySize[0], bodySize[1]);
     s.body.setOffset((s.width - bodySize[0]) / 2, s.height - bodySize[1]);
-    ctx.colliders.forEach((c) => ctx.scene.physics.add.collider(s, c));
+    this.colliders = ctx.colliders.map((c) => ctx.scene.physics.add.collider(s, c));
+    this.ghost = 0;
     this.sprite = s;
     this.bodySize = bodySize;
     this.path = null;
@@ -101,10 +106,20 @@ export class Chaser {
       s.setFlipX(false);
     }
 
-    // Preso em algum canto: recalcula logo
+    // Preso em algum canto (querendo andar e não saindo do lugar): recalcula o caminho e
+    // atravessa o obstáculo por um instante
+    if (this.ghost > 0) {
+      this.ghost -= dt;
+      if (this.ghost <= 0) this.colliders.forEach((c) => (c.active = true));
+    }
     const moved = Math.hypot(s.x - this.lastPos.x, s.y - this.lastPos.y);
-    this.stuck = moved < 0.2 ? this.stuck + dt : 0;
-    if (this.stuck > 0.5) {
+    this.stuck = moved < this.speed * PPM * dt * 0.3 ? this.stuck + dt : 0;
+    if (this.stuck > STUCK_SECONDS) {
+      // Só atravessa seguindo um caminho de verdade (nunca indo reto contra uma parede)
+      if (this.path?.length) {
+        this.ghost = GHOST_SECONDS;
+        this.colliders.forEach((c) => (c.active = false));
+      }
       this.path = null;
       this.stuck = 0;
     }
@@ -125,6 +140,7 @@ export class Chaser {
   }
 
   destroy() {
+    this.colliders.forEach((c) => c.destroy());
     this.sprite.destroy();
   }
 }
