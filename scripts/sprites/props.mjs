@@ -337,13 +337,14 @@ function consoleTable(c, x, y) {
 }
 
 function bathroomShelf(c, x, y) {
-  // Prateleira de banheiro, 16×22
+  // Prateleira de banheiro, 16×22. Dois nichos de 9 px: os itens (até 7 px) ficam
+  // inteiros dentro, apoiados nas tábuas (topo das tábuas em y+10 e y+20)
   c.rect(x, y, 16, 22, '#3e4446');
-  c.rect(x + 1, y + 1, 14, 8, '#2a2e30');
-  c.rect(x + 1, y + 11, 14, 8, '#2a2e30');
-  c.rect(x, y + 9, 16, 2, '#5d6669');
-  c.rect(x, y + 19, 16, 3, '#5d6669');
-  c.rect(x + 2, y + 13, 3, 6, '#7a8a90'); // frasco vazio
+  c.rect(x + 1, y + 1, 14, 9, '#2a2e30');
+  c.rect(x + 1, y + 12, 14, 8, '#2a2e30');
+  c.rect(x, y + 10, 16, 2, '#5d6669');
+  c.rect(x, y + 20, 16, 2, '#5d6669');
+  c.rect(x + 2, y + 14, 3, 6, '#7a8a90'); // frasco vazio
 }
 
 function filingCabinet(c, x, y) {
@@ -514,19 +515,36 @@ function pantryShelf(c, x, y) {
   // Prateleira de despensa/depósito com potes e latas, 32×24. Vãos livres onde os
   // itens podem aparecer: em cima (tampo), prateleira de cima à direita, de baixo à esquerda.
   c.rect(x, y, 32, 24, '#3a2e22');
+  // Nichos de 9 e 8 px: os itens (até 7 px) ficam inteiros dentro, apoiados nas tábuas
+  // (topo das tábuas em y+11 e y+21)
   c.rect(x, y, 32, 2, '#4a3c2c'); // tampo
-  c.rect(x + 2, y + 3, 28, 7, '#1a140e');
-  c.rect(x + 2, y + 12, 28, 7, '#1a140e');
+  c.rect(x + 2, y + 2, 28, 9, '#1a140e');
+  c.rect(x + 2, y + 13, 28, 8, '#1a140e');
   // potes e latas
-  c.rect(x + 3, y + 5, 4, 5, '#8a6a3a');
-  c.rect(x + 3, y + 4, 4, 1, '#b0a080');
-  c.rect(x + 8, y + 6, 3, 4, '#6a7a6a');
-  c.rect(x + 12, y + 5, 4, 5, '#a04a3a');
-  c.rect(x + 19, y + 14, 4, 5, '#7a7a70');
-  c.rect(x + 24, y + 13, 5, 6, '#8a6a3a');
-  c.rect(x + 24, y + 13, 5, 1, '#b0a080');
-  c.rect(x, y + 10, 32, 2, '#4a3c2c');
-  c.rect(x, y + 19, 32, 5, '#2a2018');
+  c.rect(x + 3, y + 6, 4, 5, '#8a6a3a');
+  c.rect(x + 3, y + 5, 4, 1, '#b0a080');
+  c.rect(x + 8, y + 7, 3, 4, '#6a7a6a');
+  c.rect(x + 12, y + 6, 4, 5, '#a04a3a');
+  c.rect(x + 19, y + 16, 4, 5, '#7a7a70');
+  c.rect(x + 24, y + 15, 5, 6, '#8a6a3a');
+  c.rect(x + 24, y + 15, 5, 1, '#b0a080');
+  c.rect(x, y + 11, 32, 2, '#4a3c2c');
+  c.rect(x, y + 21, 32, 3, '#2a2018');
+}
+
+function pantryShelfNarrow(c, x, y) {
+  // Prateleira estreita da despensa (cabe ao lado da porta), 20×24. Mesmos nichos da
+  // larga: vão livre na de cima à direita e na de baixo à esquerda.
+  c.rect(x, y, 20, 24, '#3a2e22');
+  c.rect(x, y, 20, 2, '#4a3c2c'); // tampo
+  c.rect(x + 2, y + 2, 16, 9, '#1a140e');
+  c.rect(x + 2, y + 13, 16, 8, '#1a140e');
+  c.rect(x + 3, y + 6, 4, 5, '#8a6a3a'); // pote
+  c.rect(x + 3, y + 5, 4, 1, '#b0a080');
+  c.rect(x + 8, y + 7, 3, 4, '#a04a3a'); // lata
+  c.rect(x + 12, y + 16, 4, 5, '#7a7a70'); // lata
+  c.rect(x, y + 11, 20, 2, '#4a3c2c');
+  c.rect(x, y + 21, 20, 3, '#2a2018');
 }
 
 function workbench(c, x, y) {
@@ -1077,6 +1095,7 @@ const PROPS = [
   ['swing', 28, 30, swing, true],
   ['towel', 10, 12, towel],
   ['pantry-shelf', 32, 24, pantryShelf, true],
+  ['pantry-shelf-narrow', 20, 24, pantryShelfNarrow, true],
   ['workbench', 48, 24, workbench, true],
   ['freezer', 32, 20, freezer, true],
   ['counter-microwave-on', 32, 28, counterMicrowaveOn, true],

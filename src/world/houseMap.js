@@ -144,15 +144,16 @@ export const FURNITURE = [
   { id: 'tanque', sprite: 'laundry-tank', x: 12.3, y: 22.3, room: 'lavanderia' },
   { id: 'freezer', sprite: 'freezer', x: 13.2, y: 22.3, room: 'lavanderia' },
   { id: 'tabua', sprite: 'ironing-board', x: 16.6, y: 22.35, room: 'lavanderia' },
-  { id: 'prateleiraDespensa1', sprite: 'pantry-shelf', x: 19.3, y: 24.9, room: 'despensa' },
-  { id: 'prateleiraDespensa2', sprite: 'pantry-shelf', x: 20.6, y: 24.9, room: 'despensa' },
+  // Prateleiras na parede de cima, de frente para o cômodo (estreitas, uma de cada lado da porta)
+  { id: 'prateleiraDespensa1', sprite: 'pantry-shelf-narrow', x: 19.05, y: 22.3, room: 'despensa' },
+  { id: 'prateleiraDespensa2', sprite: 'pantry-shelf-narrow', x: 21.3, y: 22.3, room: 'despensa' },
   // Garagem
   { id: 'bancada', sprite: 'workbench', x: 0.4, y: 1.4, room: 'garagem' },
   { id: 'latao', sprite: 'garbage-can', x: 7.9, y: 1.4, room: 'garagem' },
-  { id: 'caixaGaragem1', sprite: 'box', x: 0.4, y: 12.9, room: 'garagem' },
-  { id: 'caixaGaragem2', sprite: 'box', x: 1.0, y: 12.9, room: 'garagem' },
+  { id: 'caixaGaragem1', sprite: 'box', x: 0.4, y: 12.3, room: 'garagem' },
+  { id: 'caixaGaragem2', sprite: 'box', x: 1.0, y: 12.3, room: 'garagem' },
   // Depósito (no jardim)
-  { id: 'prateleiraDeposito', sprite: 'pantry-shelf', x: 37.4, y: 24.9, room: 'deposito' },
+  { id: 'prateleiraDeposito', sprite: 'pantry-shelf', x: 37.3, y: 22.3, room: 'deposito' },
   { id: 'caixaDeposito', sprite: 'box', x: 41.9, y: 25.0, room: 'deposito' },
   // Quintal
   { id: 'gerador', sprite: 'generator', x: 1.0, y: 24.5, room: 'quintal' },
@@ -213,7 +214,7 @@ export const FURNITURE = [
   { id: 'cadeiraCozinha2', sprite: 'chair', x: 15.05, y: 18.3, room: 'cozinha' },
   { id: 'armarioCozinha', sprite: 'pantry-shelf', x: 29.5, y: 18.3, room: 'cozinha' },
   // Lavanderia
-  { id: 'prateleiraLavanderia', sprite: 'pantry-shelf', x: 17.8, y: 24.9, room: 'lavanderia' },
+  { id: 'prateleiraLavanderia', sprite: 'pantry-shelf', x: 17.85, y: 22.3, room: 'lavanderia' },
   // Garagem
   { id: 'carro', sprite: 'car-tarp', x: 3.6, y: 4.5, room: 'garagem' },
   // Mais peças nos cômodos grandes
@@ -295,13 +296,15 @@ export const ITEM_SPOTS = [
   { on: 'mesaCozinha', dx: 12, dy: 12 },
   { on: 'mesaCozinha', dx: 40, dy: 15 },
   { on: 'tabua', dx: 8, dy: 5 },
-  { on: 'prateleiraDespensa1', dx: 23, dy: 10 },
-  { on: 'prateleiraDespensa1', dx: 9, dy: 19 },
-  { on: 'prateleiraDespensa2', dx: 23, dy: 10 },
+  { on: 'prateleiraLavanderia', dx: 23, dy: 11 },
+  { on: 'prateleiraLavanderia', dx: 9, dy: 21 },
+  { on: 'prateleiraDespensa1', dx: 14, dy: 11 },
+  { on: 'prateleiraDespensa1', dx: 6, dy: 21 },
+  { on: 'prateleiraDespensa2', dx: 14, dy: 11 },
   { on: 'bancada', dx: 30, dy: 11 },
   { on: 'caixaGaragem1', dx: 5, dy: 5 },
-  { on: 'prateleiraDeposito', dx: 23, dy: 10 },
-  { on: 'prateleiraDeposito', dx: 9, dy: 19 },
+  { on: 'prateleiraDeposito', dx: 23, dy: 11 },
+  { on: 'prateleiraDeposito', dx: 9, dy: 21 },
   { on: 'caixaDeposito', dx: 8, dy: 5 },
 ];
 
