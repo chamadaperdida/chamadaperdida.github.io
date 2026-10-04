@@ -195,79 +195,95 @@ Só nas alucinações (nunca nas reais):
 
 ### 4.2 Mapa
 
-Arquivo de referência: `planta-casa.svg`. Casa térrea (**sem segundo andar**), cerca de 31 m × 20 m.
+Arquivo de referência: `planta-casa-v2.svg` (a planta antiga, `planta-casa.svg`, é a que o protótipo usa até a casa nova ser construída). Casa térrea (**sem segundo andar**), cerca de 48 m × 29 m contando quintal, jardim e varanda. A planta evita a casa "quadradinha": corredor em Z, cômodos em L, contorno irregular e vários circuitos.
 
 | Cômodo | Conexões | Objetos fixos | Pode aparecer |
 |---|---|---|---|
-| Entrada | Porta da frente; corredor de cima | — | — |
-| Corredor de cima | Entrada, quarto da Clara, banheiro social, quarto do Artur, corredor da esquerda, hall | Relógio de parede (usado no final) | Pilha, chave |
-| Quarto da Clara | Corredor de cima | — | — **(porta sempre fechada)** |
-| Banheiro social | Corredor de cima (beco sem saída) | Pia, espelho | Remédio, chave |
-| Quarto do Artur | Corredor de cima; banheiro da suíte | **Cama** | Remédio, pilha, chave |
-| Banheiro da suíte | Quarto do Artur (beco sem saída) | Espelho, armário | Remédio, chave |
-| Hall | Corredor de cima, sala, escritório | — | Pilha |
-| Sala | Corredor de cima (em frente à entrada), hall, cozinha | **TV, telefone fixo** | Remédio, pilha, chave |
-| Cozinha | Sala, corredor da esquerda, escritório | Geladeira, pia | Remédio, pilha, chave |
-| Escritório | Hall, cozinha, varanda externa | Coisas da época de policial | Remédio, pilha, chave |
-| Corredor da esquerda | Corredor de cima, cozinha, quintal (porta dos fundos) | — | Pilha, chave |
-| Quintal (externo) | Corredor da esquerda, varanda | **Gerador** | — |
-| Varanda externa (externo, chuva) | Quintal, escritório | — | — |
+| Entrada | Porta da frente (não abre); sala (vão aberto); corredor dos quartos | — | — |
+| Corredor dos quartos (em Z) | Entrada, quarto do Artur, banheiro social, escritório, sala de jantar, quarto de hóspedes; **termina no quarto da Clara** | Relógio de parede (usado no final) | Pilha, chave |
+| Quarto da Clara | Fim do corredor dos quartos | — | — **(porta sempre fechada)** |
+| Quarto do Artur | Corredor dos quartos; suíte | **Cama**, criado-mudo (carregador do celular), armário (uniforme), cesto de roupa | Remédio, pilha, chave |
+| Suíte | Quarto do Artur (beco sem saída) | Espelho, armário | Remédio, chave |
+| Banheiro social | Corredor dos quartos (beco sem saída) | Pia, espelho, lixeira | Remédio, chave |
+| Escritório (em L) | Corredor dos quartos | Coisas da época de policial, lixeira | Remédio, pilha, chave |
+| Sala (em L) | Entrada e sala de jantar (vãos abertos), corredor de serviço, cozinha | **TV, telefone fixo**, sofá, vaso | Remédio, pilha, chave |
+| Sala de jantar | Sala (vão aberto), corredor dos quartos, cozinha | Mesa do jantar | Remédio, pilha, chave |
+| Quarto de hóspedes | Corredor dos quartos, cozinha, jardim | Caixas da festa da Clara | Remédio, pilha, chave |
+| Cozinha (em L) | Sala, sala de jantar, quarto de hóspedes, corredor de serviço, lavanderia, despensa, corredor dos fundos | **Geladeira (lista da rotina)**, pia, micro-ondas, lixeira | Remédio, pilha, chave |
+| Despensa | Cozinha (beco sem saída) | Prateleiras | Pilha, chave |
+| Lavanderia | Cozinha; quintal (**porta dos fundos**) | Máquina de lavar, tanque, tábua de passar | Remédio, pilha, chave |
+| Corredor de serviço | Garagem, sala, cozinha, quintal (porta lateral) | — | Pilha, chave |
+| Corredor dos fundos | Cozinha, jardim, varanda | — | — |
+| Garagem | Corredor de serviço, quintal; portão da rua (não abre) | Latão do lixo, ferramentas | Pilha, chave |
+| Quintal (externo, em L) | Garagem, corredor de serviço, lavanderia, varanda | **Gerador**, varal coberto | — |
+| Jardim (externo, chuva) | Corredor dos fundos, quarto de hóspedes, depósito, varanda | Vasos | — |
+| Depósito (casinha no jardim) | Jardim (beco sem saída) | Prateleiras | Pilha, chave |
+| Varanda externa (externo, chuva) | Quintal, jardim, corredor dos fundos | Vasos | — |
 
 - Cada cômodo tem iluminação ligada ao gerador.
 - Quarto da Clara: ao interagir, Artur diz *"Não posso entrar, está trancado."*
-- Circuitos fechados (sala–cozinha–corredores–escritório) permitem fugir em perseguições.
-- O gerador tem duas rotas: pela cozinha/corredor da esquerda ou pela varanda externa.
+- **Janelas (6):** sala, banheiro social, escritório, cozinha, quarto de hóspedes, lavanderia (usadas na tarefa "Fechar as janelas", 4.11).
+- Circuitos para fugir em perseguições: entrada → corredor → sala de jantar → sala; cozinha → lavanderia → quintal → garagem → corredor de serviço; quarto de hóspedes → jardim → corredor dos fundos → cozinha.
+- O gerador tem quatro rotas: porta dos fundos (lavanderia), porta lateral (corredor de serviço), garagem e varanda.
 
 ### 4.3 As duas fases da noite
 
-- **Luz acesa = recuperação.** Só acontecem alucinações (assustam, não matam). É quando o jogador baixa o medo, pega remédio e pilha, acha chaves e tenta dormir.
-- **Luz apagada = sobrevivência.** Alucinações param (exceto passos falsos). Monstros caçam. Objetivo: chegar ao gerador e religar.
+- **Luz acesa = rotina e recuperação.** Só acontecem alucinações (assustam, não matam). É quando o jogador faz as tarefas da lista (4.11), procura os ursos (4.12), baixa o medo, pega remédio e pilha, acha chaves e tenta dormir.
+- **Luz apagada = sobrevivência.** Alucinações param (exceto passos falsos). Monstros caçam. Objetivo: achar o fusível (4.4), chegar ao gerador e religar. Os ursos também podem ser coletados no escuro.
 
 ### 4.4 Gerador
 
-- Fica no quintal. Religar: **segurar F** por alguns segundos com barra de progresso; soltar perde o progresso.
+- Fica no quintal. Religar: **colocar um fusível novo** e **segurar F** por alguns segundos com barra de progresso; soltar perde o progresso.
+- **Fusível:** **toda queda queima o fusível.** No momento da queda, um fusível novo aparece num lugar sorteado da casa:
+  - entre os lugares de itens (4.10) **livres**, **fora do cômodo onde Artur está**, a pelo menos 10 m dele e nunca num cômodo trancado;
+  - **sem marcador e sem som** — o jogador procura sem saber onde está;
+  - no escuro, o fusível só dá um **brilho fraco** quando o feixe da lanterna passa por ele. Mesmo sem bateria, dá para pegá-lo se Artur passar do lado (fica bem mais difícil, mas a noite nunca trava);
+  - pegar: *"Achei um fusível."* Chegar ao gerador sem fusível: *"Queimou o fusível... tem que ter outro em algum lugar."*
+  - Vale para todas as quedas, inclusive medo 100% e queda durante o sono.
 - **Sabotagem:** só acontece quando Artur está **longe** do gerador.
-- **Chance de cair:** cresce com o tempo e **zera** quando o gerador cai. A velocidade de crescimento diminui ao longo da noite, e a chance tem um **teto** (nunca vira certeza).
-- **Queda garantida:** se o caos da noite terminou e o gerador ainda não caiu nenhuma vez, ele cai assim que Artur estiver longe.
+- **Chance de cair:** cresce com o tempo e **zera** quando o gerador cai. A velocidade de crescimento **diminui conforme o jogador coleta ursos** (não com o tempo), e a chance tem um **teto** (nunca vira certeza).
+- **Queda garantida:** se o prazo da queda garantida (9.1) passou e o gerador ainda não caiu nenhuma vez, ele cai assim que Artur estiver longe.
 - **Medo chegando a 100%:** o gerador cai **na hora**, mesmo com Artur perto. Se o medo continuar em 100%, o gerador pode ser religado normalmente (ele só cai de novo se o medo baixar e voltar a 100%).
 - Enquanto houver uma porta trancada, a chance cresce mais rápido (×1,5).
 - Toda queda faz o medo subir um pouco e toca o som característico do gerador falhando.
 
 ### 4.5 Medo
 
-- Começa em **0%** em toda noite. Ao chegar, Artur diz: *"Estou exausto... só quero dormir."*
-- **Cai:** com luz acesa e sem alucinação acontecendo; ou com remédio.
+- Começa em **0%** em toda noite. Ao chegar, Artur diz: *"Estou exausto... Deixa eu ver a lista e vou dormir."*
+- **Cai:** com luz acesa e sem alucinação acontecendo (velocidade fixa por noite, 9.1 — não melhora com o tempo); ou com remédio.
 - **No escuro:** fica estagnado. Só sobe com eventos e só cai com remédio.
 - **Sobe:** alucinações, perseguições, queda do gerador, ações erradas.
 - A dificuldade do dia aumenta **quanto** cada evento soma.
 - **100%:** gerador cai na hora + perseguição garantida do Invasor furioso + eventos podem acontecer ao mesmo tempo.
 
-### 4.6 Caos e recuperação (curva da noite)
+### 4.6 Curva da noite: os ursos no lugar do tempo
 
-- **A noite começa no evento garantido a caminho do quarto (4.8).** Antes dele não há alucinações, o relógio da noite (caos, curva) fica parado e o gerador não sofre sabotagem. Esse evento é a **primeira alucinação da noite** e dá **+25 de medo** de uma vez, no lugar do valor da tabela 9.3.
-- **Fase de caos** (do início até X segundos, X definido por noite): não há janelas de calma; alucinações frequentes. Se o medo estiver **baixo (abaixo de 5%)** nessa fase, uma alucinação é disparada na hora. O jogo nunca trava o medo artificialmente — garante eventos.
+> **Decisão atualizada:** não existe mais fase de caos, janela de calma nem alucinações ficando mais raras com o tempo. **Quem deixa a noite mais calma é o jogador, coletando ursos (4.12).** O tempo não ajuda; só expõe o jogador a mais quedas do gerador.
+
+- **A noite começa quando Artur lê a lista na geladeira (4.11).** Antes disso não há alucinações, ursos, tarefas, sabotagem do gerador nem contagem do prazo da queda garantida.
+- **Intervalo entre alucinações** (do fim de uma ao começo da próxima) depende **só dos ursos coletados** na noite (fórmula em 9.2):
+  - **nenhum urso:** intervalo curtíssimo — impossível zerar o medo;
+  - **mais ursos:** intervalos cada vez maiores;
+  - **todos os ursos:** intervalo máximo da noite. Mesmo com todos, a dificuldade continua **proporcional à noite** (noite 7 com todos os ursos é mais difícil que noite 1 com todos).
+- **Trava:** enquanto o jogador tiver coletado **menos ursos que a trava da noite** (9.1), se o medo cair abaixo de **5%** uma alucinação dispara na hora. Isso garante que, com poucos ursos, a noite não pode ser vencida (nem com remédio).
+- **Acima da trava:** dormir fica **possível, mas improvável** com poucos ursos — zerar o medo leva tanto tempo que o jogador atravessa vários apagões. Quanto mais ursos, mais rápido.
 - Sempre há um intervalo mínimo de **3 s** entre o fim de uma alucinação e a próxima.
-- **Fase de recuperação** (depois de X): após cada alucinação há uma **janela de calma** garantida (nenhuma nova alucinação). As janelas crescem ao longo da noite até um tamanho terminal definido pela noite.
-- Ao longo da noite: alucinações ficam menos frequentes (nunca param) e o medo cai mais rápido, aproximando-se de um piso de dificuldade definido por noite.
 
 ### 4.7 Dormir
 
 - Artur precisa estar no **quarto** e interagir com a **cama**.
+- Precisa das **tarefas obrigatórias da noite feitas** (4.11) **e** do **medo zerado**.
+- Se faltar tarefa: *"Ainda falta coisa da lista."*
 - Se o medo não estiver zerado: *"Não consigo dormir agora, estou com medo."*
 - Sequência: tela escurece aos poucos → vários sussurros simultâneos aumentando → **silêncio instantâneo** → noite termina.
-- Durante a sequência, **nenhuma alucinação interrompe**. Só o gerador pode cair (chance própria: base sobe com o dia, diminui com o tempo da noite, cai um valor fixo alto toda vez que acontece).
+- **Só dá para dormir com a luz acesa.** No escuro: *"Está tudo escuro... primeiro o gerador."* (Sem isso, um remédio no escuro — onde a trava não age — zeraria o medo mesmo sem ursos.)
+- Durante a sequência, **nenhuma alucinação interrompe**. Só o gerador pode cair (chance própria: base sobe com o dia, **diminui com os ursos coletados**, cai um valor fixo alto toda vez que acontece). Se cair, o sono é interrompido.
 
-### 4.8 Evento garantido a caminho do quarto
+### 4.8 Quarto trancado (noites 5–7)
 
-Na primeira vez que Artur se aproxima do quarto na noite (a menos de 3,5 m da porta). **É a primeira alucinação da noite (+25 de medo) e é quando a noite começa** (seção 4.6). Nas noites 5–7 a porta do quarto já começa trancada e a chave está em algum lugar da casa (nunca dentro do quarto):
+> **Decisão atualizada:** a alucinação obrigatória a caminho do quarto (noites 1–4, com +25 de medo) foi **removida**. Ela existia para dar interação; agora as tarefas e os ursos cumprem esse papel.
 
-| Noite | Evento | Fala do Artur |
-|---|---|---|
-| 1 | Balão | "Ué... quem deixou isso aqui?" |
-| 2 | Vulto | "Tem alguém aí?" |
-| 3 | Passos | "Que barulho foi esse?" |
-| 4 | Luz piscando (sem Helena) | "De novo essa luz..." |
-| 5–7 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
+Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está em algum lugar da casa (nunca dentro do quarto). Na primeira vez que Artur tenta abrir: *"A porta está trancada... onde eu coloquei a chave?"*
 
 ### 4.9 Portas e chave
 
@@ -290,12 +306,63 @@ Na primeira vez que Artur se aproxima do quarto na noite (a menos de 3,5 m da po
 - **Remédio:** sorteado entre os lugares possíveis. Quantidade fixa por noite, não acumula. Ao tomar: **glitch rápido na tela** (menos de 1 s: imagem deslocada, cores separadas, linhas cortadas) e o medo cai rápido. Sem custo.
 - **Pilha:** sorteada entre os lugares possíveis. Som característico de encaixe. Recarrega a bateria.
 - **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada. Abaixo de 20%: a luz falha (aviso). Vazia: não liga. **O cone de luz para nas paredes** (não atravessa paredes nem portas fechadas).
+- **Fusível:** aparece só quando o gerador cai (4.4).
+- Itens pequenos (remédio, pilha, chave, fusível, urso) podem ser pegos mesmo carregando algo de uma tarefa.
+
+### 4.11 Tarefas obrigatórias (lista da rotina)
+
+- Na **geladeira** há uma folha presa com um **ímã feito pela Clara**, com o título *"Rotina antes de dormir"* e as tarefas. **Sem nome, assinatura ou qualquer pista de quem escreveu.**
+  - *Intenção (só para o design, nunca aparece no jogo): a lista é da psicóloga do bilhete do Marcos no dia 2.*
+- **Ler a lista começa a noite** (4.6). As tarefas **só podem ser feitas depois de ler a lista**; antes disso, interagir com algo de tarefa: *"Primeiro deixa eu ver a lista."*
+- Interagir com a geladeira mostra a lista da noite: tarefas feitas aparecem **riscadas**. A lista **não aparece no HUD**.
+- As tarefas são **do cotidiano** e **não têm relação com as alucinações**. São **fixas por noite**.
+- Dormir exige todas as tarefas da noite feitas (4.7).
+
+**Regras das tarefas**
+- **Carregar:** com as mãos ocupadas (pilha de pratos, sacos de lixo, cesto, roupa molhada, regador, uniforme, marmita), Artur **não corre**. Se a luz cair, ele **larga o que carrega ali mesmo** (uma mão fica com a lanterna); dá para voltar e pegar quando a luz voltar. **No escuro não dá para pegar objetos de tarefa.**
+- Interações de tarefa que levam tempo (lavar, regar, comer, passar) **não são canceladas** por alucinações; só param se Artur sair de perto ou se a luz cair.
+- O lugar sorteado do celular nunca coincide com outro item (remédio, pilha, chave, fusível).
+- **Precisa de energia:** micro-ondas, máquina de lavar e ferro só funcionam com a luz acesa. Se a luz cai, a tarefa **pausa** e continua quando a luz voltar.
+- **Espera:** algumas etapas rodam sozinhas (micro-ondas, máquina) enquanto o jogador faz outra coisa.
+- Tarefa feita não se desfaz.
+
+| Tarefa | Como funciona |
+|---|---|
+| **Jantar** | Pegar a marmita na geladeira → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s) |
+| **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um |
+| **Tirar o lixo** | Juntar os sacos das 3 lixeiras (cozinha, banheiro social, escritório) → levar até o latão na garagem |
+| **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal |
+| **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher |
+| **Fechar as janelas** | Fechar as 6 janelas da casa (4.2) |
+| **Passar o uniforme** | Pegar o uniforme no armário do quarto → tábua na lavanderia (ferro, precisa de luz) → pendurar no armário do quarto |
+| **Carregar o celular** | Achar o celular (lugar sorteado entre os lugares de itens; está **no silencioso**, então não toca nem faz som) → levar ao carregador no criado-mudo do quarto |
+
+| Noite | Tarefas | Total |
+|---|---|---|
+| 1 | Jantar · Lavar a louça | 2 |
+| 2 | Tirar o lixo · Carregar o celular | 2 |
+| 3 | Jantar · Lavar a roupa · Lavar a louça | 3 |
+| 4 | Regar as plantas · Fechar as janelas · Tirar o lixo | 3 |
+| 5 | Jantar · Passar o uniforme · Lavar a louça · Fechar as janelas | 4 + chave do quarto |
+| 6 | Lavar a roupa · Regar as plantas · Tirar o lixo · Carregar o celular | 4 + chave do quarto |
+| 7 | Jantar · Lavar a roupa · Passar o uniforme · Fechar as janelas · Carregar o celular | 5 + chave do quarto |
+
+### 4.12 Ursos de pelúcia
+
+- Ursos de pelúcia da Clara aparecem pela casa. São **simbólicos**: não são objetos físicos nem vão para inventário — ao coletar, o urso **some como uma presença**.
+- **Quantidade fixa por noite** (9.1). Os ursos **só aparecem quando a noite começa** (ao ler a lista) — antes disso a casa é segura e não dá para coletar nada sem risco. Posições sorteadas entre lugares próprios para ursos, preferindo cômodos diferentes (nunca no quarto da Clara).
+- Podem ser coletados **a qualquer momento**, com a luz acesa ou apagada. Coletar: interagir (F) perto.
+- O jogador **não sabe quantos ursos existem nem quantos faltam** (sem contador no HUD).
+- **Nenhum som** ajuda a encontrar um urso.
+- **Visual antes de coletar:** um brilho âmbar **bem fraco** — a única coisa de cor quente na paleta fria da casa, mas discreto, sem chamar atenção de longe.
+- **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e, **por um instante curto (~0,6 s)**, a escuridão das bordas da tela recua e a imagem ganha um tom quente, que logo volta ao normal. Uma nota curta de caixinha de música e a respiração do Artur se acalmando. Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
+- **Efeito no jogo:** tudo o que antes o tempo facilitava agora depende dos ursos — intervalo entre alucinações e trava (4.6), crescimento do risco do gerador e chance de cair durante o sono (4.4 e 9.2). Não mexe direto no medo nem nos monstros.
 
 ---
 
 ## 5. Alucinações (só com luz acesa)
 
-Inevitáveis, sempre aumentam o medo, mais frequentes no começo da noite e diminuindo, **nunca param**. Qualquer alucinação impede dormir naquele momento (porque o medo sobe).
+Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos **ursos coletados** na noite (4.6), não do tempo. Qualquer alucinação impede dormir naquele momento (porque o medo sobe).
 
 | Alucinação | Como funciona | Reação do jogador |
 |---|---|---|
@@ -349,8 +416,8 @@ A cada dia aumentam:
 - frequência dos eventos paranormais e dos monstros;
 - quanto cada evento soma no medo;
 - chance do gerador cair (durante a noite e na hora de dormir);
-- duração do caos obrigatório;
-- e diminuem as janelas de calma e a facilidade de baixar o medo.
+- quantidade de tarefas obrigatórias e de ursos;
+- e diminuem os intervalos entre alucinações (inclusive com todos os ursos) e a facilidade de baixar o medo.
 
 ## 9. Balanceamento (valores iniciais)
 
@@ -360,13 +427,14 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 
 | Parâmetro | D1 | D2 | D3 | D4 | D5 | D6 | D7 |
 |---|---|---|---|---|---|---|---|
-| Duração do caos (s) | 90 | 110 | 130 | 150 | 170 | 190 | 210 |
-| Taxa de alucinação no início (por s) | 0,100 | 0,107 | 0,114 | 0,121 | 0,129 | 0,136 | 0,143 |
-| Taxa mínima de alucinação (por s) | 0,025 | 0,028 | 0,031 | 0,033 | 0,036 | 0,039 | 0,042 |
-| Janela de calma terminal (s) | 45 | 42,5 | 40 | 37,5 | 35 | 32,5 | 30 |
+| Ursos na casa | 4 | 4 | 5 | 5 | 6 | 6 | 7 |
+| Trava: medo < 5% dispara alucinação enquanto ursos coletados forem menos que | 2 | 2 | 2 | 3 | 3 | 3 | 3 |
+| Intervalo entre alucinações sem nenhum urso (s) | 9 | 8,5 | 8 | 7,5 | 7 | 6,5 | 6 |
+| Intervalo entre alucinações com todos os ursos (s) | 50 | 47 | 44 | 41 | 38 | 35 | 32 |
+| Tarefas obrigatórias (4.11) | 2 | 2 | 3 | 3 | 4 | 4 | 5 |
+| Prazo da queda garantida do gerador (s) | 90 | 110 | 130 | 150 | 170 | 190 | 210 |
 | Multiplicador de medo | 1,00 | 1,03 | 1,07 | 1,10 | 1,13 | 1,17 | 1,20 |
-| Queda do medo no início (%/s) | 0,30 | 0,28 | 0,27 | 0,25 | 0,23 | 0,22 | 0,20 |
-| Queda do medo terminal (%/s) | 0,90 | 0,84 | 0,78 | 0,73 | 0,67 | 0,61 | 0,55 |
+| Queda do medo (%/s, fixa na noite) | 0,90 | 0,84 | 0,78 | 0,73 | 0,67 | 0,61 | 0,55 |
 | Gerador: incremento do risco (por s) | 0,00012 | 0,00013 | 0,00015 | 0,00016 | 0,00017 | 0,00019 | 0,00020 |
 | Gerador: teto do risco (por s) | 0,0060 | 0,0067 | 0,0073 | 0,0080 | 0,0087 | 0,0093 | 0,0100 |
 | Gerador na hora de dormir: chance base | 45% | 50% | 55% | 60% | 65% | 70% | 75% |
@@ -376,16 +444,16 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 
 ### 9.2 Fórmulas
 
-- **Taxa de alucinação** em `t`: `min + (inicio − min) · e^(−t/180)`.
-- **Janela de calma** (só depois do caos): `calma_terminal · (1 − e^(−(t − caos)/120))`.
-- **Queda do medo** (luz acesa, sem alucinação): `terminal − (terminal − inicio) · e^(−t/150)` por segundo.
-- **Risco do gerador** (por segundo, só com Artur longe): a cada segundo soma `incremento · e^(−t/300)`, limitado ao teto. Zera quando o gerador cai.
-- **Gerador na hora de dormir:** `base · e^(−t/420)`. Cada vez que cair durante o sono, a base perde **35 pontos percentuais** (mínimo 0).
+- **Intervalo entre alucinações** com `k` de `N` ursos coletados: `sem + (todos − sem) · (k/N)^1,6`, com variação de ±20% a cada sorteio (nunca sem limite). Valores iniciais — calibrar com simulação e no modo debug, com o alvo: abaixo da trava, impossível; logo acima, vários minutos para zerar o medo; com todos, cerca de 1 minuto (mais na noite 7).
+- **Queda do medo** (luz acesa, sem alucinação): valor fixo da noite (9.1).
+- **Risco do gerador** (por segundo, só com Artur longe): a cada segundo soma `incremento · (1 − 0,7 · k/N)`, limitado ao teto. Zera quando o gerador cai. (`k/N` = fração dos ursos da noite já coletados.)
+- **Gerador na hora de dormir:** `base · (1 − 0,6 · k/N)`. Cada vez que cair durante o sono, a base perde **35 pontos percentuais** (mínimo 0).
+- Os fatores 0,7 e 0,6 são iniciais — calibrar na nova simulação.
 - **Evento da tranca:** primeira tentativa entre 60 e 400 s; chances 80% → 30% → 10%; intervalo de 120 a 300 s entre tentativas.
 
 ### 9.3 Quanto cada alucinação soma no medo (antes do multiplicador)
 
-> **Ajuste do protótipo:** todos os valores desta tabela são multiplicados por **2** (`hallucinationFearScale` no `config/balance`). A primeira alucinação da noite (evento do quarto, 4.8) dá +25 no lugar do valor da tabela.
+> **Ajuste do protótipo:** todos os valores desta tabela são multiplicados por **2** (`hallucinationFearScale` no `config/balance`).
 
 | Alucinação | Reação certa | Reação errada / demorada |
 |---|---|---|
@@ -419,9 +487,17 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Artur distorcido: luz contínua para virar cinzas | 0,6 s |
 | Lanterna: bateria cheia | 90 s de uso contínuo |
 | Gerador: segurar F | 3 s |
+| Fusível: distância mínima de Artur ao aparecer | 10 m (e fora do cômodo dele) |
+| Micro-ondas (jantar) | 30 s |
+| Comer na mesa | 5 s |
+| Máquina de lavar | 90 s |
+| Regador | 3 vasos por enchida |
+| Urso: luz ao coletar | ~0,6 s |
 | Sequência de sono | 8 s |
 
 ### 9.5 Resultado da simulação (chance de vencer a noite)
+
+> **Desatualizado:** esta simulação é do sistema antigo (caos e janelas de calma). Refazer com ursos, tarefas e fusível.
 
 | Noite | Jogador bom | Jogador médio | Jogador ruim | Duração média (bom) |
 |---|---|---|---|---|
@@ -435,7 +511,7 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 
 Quedas de gerador por noite: ~1,5 (D1) a ~2,5 (D7). Nenhuma noite trava sem possibilidade de dormir.
 
-**Recomendação:** incluir um **modo debug** (tecla oculta) que mostra medo, risco do gerador, janela de calma e timers na tela, para ajustar jogando.
+**Recomendação:** incluir um **modo debug** (tecla oculta) que mostra medo, risco do gerador, ursos coletados, intervalo até a próxima alucinação e timers na tela, para ajustar jogando.
 
 ---
 
@@ -473,6 +549,7 @@ Quedas de gerador por noite: ~1,5 (D1) a ~2,5 (D7). Nenhuma noite trava sem poss
 
 - **Barra de estamina:** fina, menor, **azul**, abaixo do medo.
 - **Barra de bateria:** fina, menor, **amarela**, abaixo da estamina.
+- **Sem** lista de tarefas no HUD (só na geladeira, 4.11) e **sem** contador de ursos (4.12).
 
 ### 11.1 Caixa de diálogo
 
@@ -499,7 +576,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 | Correr | Shift (segurar) |
 | Mirar a lanterna | Mouse |
 | Ligar/desligar lanterna | Clique esquerdo |
-| Interagir (cama, TV, telefone, portas, remédio, pilha, chave) | F |
+| Interagir (cama, TV, telefone, portas, remédio, pilha, chave, fusível, urso, geladeira, tarefas) | F |
 | Religar o gerador | F (segurar) |
 | Avançar diálogo | Espaço |
 | Pausa | Esc |
@@ -521,7 +598,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 - Pixel art, paleta escura e dessaturada (azuis-acinzentados, marrons, preto), com **vermelho** como cor de destaque (textos, balão, sangue, barra de medo).
 - Iluminação dinâmica: com luz acesa, cômodos com luz amarelada e fraca; no escuro, só o cone da lanterna (com bordas suaves e poeira no feixe, parando nas paredes).
 - **Só o cômodo onde Artur está fica iluminado.** Os outros cômodos que aparecem na tela ficam bem mais escuros (quase pretos), com a luz vazando pelas portas abertas. O cômodo vizinho só se revela quando Artur entra nele.
-- A transição de luz só acontece em **portas**. Áreas ligadas por vão sem porta acendem juntas: os três corredores (de cima, da esquerda e hall) são uma área só, e o quintal com a varanda externa também.
+- A transição de luz só acontece em **portas**. Áreas ligadas por vão sem porta acendem juntas: entrada, sala e sala de jantar são uma área só; quintal, jardim e varanda externa também.
 - Chuva visível nas áreas externas e nas janelas; relâmpagos raros iluminam a casa por um instante.
 - Leve granulado e vinheta em toda a tela.
 
@@ -545,7 +622,11 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 - Casa antiga e grande, com piso de taco, papel de parede desbotado e móveis cobertos de poeira — Artur parou de cuidar dela.
 - **Sala:** sofá velho, TV de tubo, estante, telefone fixo numa mesinha.
-- **Cozinha:** louça acumulada na pia, geladeira com desenhos de criança presos.
+- **Cozinha:** louça acumulada na pia, geladeira com desenhos de criança presos e a lista da rotina presa com um ímã feito pela Clara.
+- **Sala de jantar:** mesa grande, cadeiras demais para uma pessoa só.
+- **Quarto de hóspedes:** caixas da festa da Clara, nunca abertas.
+- **Lavanderia e garagem:** máquina velha, tanque, tábua de passar; latão do lixo, ferramentas, carro coberto por lona.
+- **Jardim:** vasos de planta morrendo na chuva, depósito de madeira.
 - **Quarto do Artur:** cama desarrumada, frascos de remédio vazios no criado-mudo.
 - **Quarto da Clara:** porta fechada com adesivos infantis desbotados.
 - **Escritório:** mesa com pastas, farda antiga pendurada, caixas.
@@ -595,7 +676,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 ### 14.2 Efeitos (lista para produzir)
 
-Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão.
+Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
 
 ### 14.3 Vozes
 
@@ -630,13 +711,17 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 
 | Momento | Fala |
 |---|---|
-| Chegando em casa | "Estou exausto... só quero dormir." |
+| Chegando em casa | "Estou exausto... Deixa eu ver a lista e vou dormir." |
+| Tentando dormir com tarefa pendente | "Ainda falta coisa da lista." |
+| Tentando dormir no escuro | "Está tudo escuro... primeiro o gerador." |
+| Mexendo em tarefa antes de ler a lista | "Primeiro deixa eu ver a lista." |
 | Tentando dormir com medo | "Não consigo dormir agora, estou com medo." |
+| Gerador sem fusível | "Queimou o fusível... tem que ter outro em algum lugar." |
+| Achou o fusível | "Achei um fusível." |
 | Porta da delegacia antes da hora (sugestão) | "Ainda não terminou o turno." |
 | Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
 | Achou a chave | "Achei." |
-| Eventos garantidos (noites 1–4) | Ver seção 4.8 |
 
 ---
 
@@ -848,9 +933,11 @@ Cada etapa termina com o jogo rodando e publicado no GitHub Pages para teste.
 4. **Dormir e curva da noite:** cama, sequência de sono, caos, janelas de calma, gerador no sono.
 5. **Alucinações:** todas da seção 5, com reações do jogador.
 6. **Monstros:** Invasor, Artur distorcido, Clara, Helena, perseguições, simultaneidade, jumpscares e sequência de morte.
-7. **Portas e chave:** evento da tranca com som posicional, eventos garantidos a caminho do quarto.
-8. **Delegacia:** cena, objetos, bilhetes, ligações com legenda, pistas das alucinações.
-9. **Fluxo completo:** tela inicial, transições, save, pausa, dificuldade por dia.
-10. **Final:** madrugada do dia 7, reportagem, créditos, tela do CVV.
-11. **Áudio:** ambiente, efeitos e as vozes dos momentos específicos (seção 14.3).
-12. **Arte final e polimento:** sprites definitivos, jumpscares detalhados, ajuste de balanceamento.
+7. **Revisão das etapas 2–6** (o GDD mudou depois delas): casa nova (4.2), queda do medo fixa, fim do caos, das janelas de calma e da alucinação obrigatória do quarto, regras novas de dormir (4.7), gerador com prazo de queda garantida, alucinações e monstros conferidos na casa nova.
+8. **Sistemas novos:** lista da rotina e tarefas (4.11), ursos (4.6 e 4.12), fusível (4.4), nova simulação (9.5).
+9. **Portas e chave:** evento da tranca com som posicional, quarto trancado nas noites 5–7 (4.8).
+10. **Delegacia:** cena, objetos, bilhetes, ligações com legenda, pistas das alucinações.
+11. **Fluxo completo:** tela inicial, transições, save, pausa, dificuldade por dia.
+12. **Final:** madrugada do dia 7, reportagem, créditos, tela do CVV.
+13. **Áudio:** ambiente, efeitos e as vozes dos momentos específicos (seção 14.3).
+14. **Arte final e polimento:** sprites definitivos, jumpscares detalhados, ajuste de balanceamento.
