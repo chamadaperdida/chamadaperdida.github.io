@@ -1,6 +1,6 @@
 // Interface da casa (GDD 11): rosto do Artur, barra de medo (vermelha), estamina (azul),
-// bateria (amarela), aviso de interação [F], progresso de segurar F, caixa de diálogo
-// e lista da rotina (GDD 4.11).
+// bateria (amarela), aviso de interação [F], progresso de segurar F, caixa de diálogo,
+// lista da rotina e aviso rápido de progresso das tarefas (GDD 4.11).
 
 import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
@@ -65,6 +65,19 @@ export class HudScene extends Phaser.Scene {
     this.dialogue = new DialogueBox(this);
     this.buildList();
 
+    // Aviso rápido de progresso das tarefas: não trava o Artur, some sozinho
+    this.toastText = this.add
+      .text(this.scale.width / 2, this.scale.height - 168, '', {
+        fontFamily: FONT,
+        fontSize: '24px',
+        color: '#e8e2cf',
+        backgroundColor: '#000000aa',
+        padding: { x: 10, y: 2 },
+      })
+      .setOrigin(0.5, 1)
+      .setDepth(900)
+      .setAlpha(0);
+
     // Escurecer a tela (sequência de sono)
     const { width, height } = this.scale;
     this.fade = this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0).setAlpha(0).setDepth(3000);
@@ -104,6 +117,13 @@ export class HudScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-F', close);
   }
 
+  /** Aviso rápido no pé da tela (progresso de uma tarefa). */
+  toast(text, seconds = 3.5) {
+    this.tweens.killTweensOf(this.toastText);
+    this.toastText.setText(text).setAlpha(1);
+    this.tweens.add({ targets: this.toastText, alpha: 0, delay: seconds * 1000, duration: 500 });
+  }
+
   /** Fecha a lista sem avisar ninguém (cena reiniciada, morte). */
   hideList() {
     this.listOpen = false;
@@ -115,8 +135,8 @@ export class HudScene extends Phaser.Scene {
   showList(title, lines) {
     this.list.removeAll(true);
     const { width, height } = this.scale;
-    const w = 380;
-    const h = 96 + lines.length * 34;
+    const w = 620;
+    const h = 96 + lines.reduce((sum, l) => sum + (l.status ? 58 : 34), 0);
     const x = (width - w) / 2;
     const y = (height - h) / 2;
     const paper = this.add.graphics();
@@ -127,8 +147,8 @@ export class HudScene extends Phaser.Scene {
     this.list.add(
       this.add.text(x + 26, y + 18, title, { fontFamily: FONT, fontSize: '32px', color: '#2a2a30' }),
     );
-    lines.forEach((line, i) => {
-      const ty = y + 66 + i * 34;
+    let ty = y + 66;
+    lines.forEach((line) => {
       const t = this.add.text(x + 40, ty, `- ${line.text}`, {
         fontFamily: FONT,
         fontSize: '28px',
@@ -140,6 +160,13 @@ export class HudScene extends Phaser.Scene {
         strike.lineStyle(2, 0x3a3a40, 1).lineBetween(x + 34, ty + 16, x + 46 + t.width, ty + 14);
         this.list.add(strike);
       }
+      if (line.status) {
+        // Progresso e próximo passo, menor, embaixo do nome
+        this.list.add(
+          this.add.text(x + 62, ty + 27, line.status, { fontFamily: FONT, fontSize: '22px', color: '#6a5a4a' }),
+        );
+      }
+      ty += line.status ? 58 : 34;
     });
     this.list.add(
       this.add
@@ -147,6 +174,8 @@ export class HudScene extends Phaser.Scene {
         .setOrigin(1, 1),
     );
     this.list.setVisible(true);
+    this.tweens.killTweensOf(this.toastText);
+    this.toastText.setAlpha(0);
     this.listOpen = true;
     this.listOpenedFrame = this.game.loop.frame;
     return new Promise((resolve) => {

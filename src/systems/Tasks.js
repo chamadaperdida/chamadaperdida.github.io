@@ -8,6 +8,8 @@
 // - Tarefa feita não se desfaz.
 // - Artur pode soltar o que carrega quando quiser (Q) e pegar de volta depois.
 // - Micro-ondas e máquina mostram que estão funcionando e quanto tempo falta.
+// - Progresso e próximo passo: na lista da geladeira (embaixo de cada tarefa) e num aviso
+//   rápido na tela sempre que a tarefa avança (hooks.toast).
 //
 // Este módulo só guarda o estado e diz o que dá para fazer agora (targets). A cena cuida
 // de mostrar o [F], segurar F e chamar use()/complete().
@@ -24,6 +26,19 @@ export const TASK_NAMES = {
   janelas: 'Fechar as janelas',
   uniforme: 'Passar o uniforme',
   celular: 'Carregar o celular',
+};
+
+// O que Artur carrega → de qual tarefa é
+const CARRY_TASK = {
+  marmita: 'jantar',
+  jantar: 'jantar',
+  pratos: 'louca',
+  sacos: 'lixo',
+  roupaSuja: 'roupa',
+  roupaMolhada: 'roupa',
+  regador: 'regar',
+  uniforme: 'uniforme',
+  uniformePassado: 'uniforme',
 };
 
 // O que Artur carrega → ícone (quadro do atlas props)
@@ -165,9 +180,92 @@ export class Tasks {
     return this.ids.every((id) => this.done.has(id));
   }
 
-  /** Linhas da folha da geladeira. */
+  /** Linhas da folha da geladeira: nome, feita?, progresso e próximo passo. */
   get lines() {
-    return this.ids.map((id) => ({ text: TASK_NAMES[id], done: this.done.has(id) }));
+    return this.ids.map((id) => ({
+      text: TASK_NAMES[id],
+      done: this.done.has(id),
+      status: this.done.has(id) ? '' : this.status(id),
+    }));
+  }
+
+  /** Algo desta tarefa ficou no chão (soltou com Q ou a luz caiu)? */
+  #droppedFor(id) {
+    return this.dropped.some((d) => CARRY_TASK[d.carry.type] === id);
+  }
+
+  /** Progresso e próximo passo de uma tarefa, em texto curto. */
+  status(id) {
+    if (this.done.has(id)) return 'feito';
+    if (this.#droppedFor(id) && !this.carrying) return 'pegar de volta o que ficou no chão';
+    const c = this.carrying;
+    switch (id) {
+      case 'jantar': {
+        const j = this.st.jantar;
+        return {
+          pegar: 'pegar a marmita no freezer da lavanderia',
+          esquentar: 'esquentar no micro-ondas da cozinha',
+          cozinhando: `esquentando no micro-ondas (${fmt(j.timer)})`,
+          pronto: 'pegar o prato no micro-ondas',
+          comer: 'comer na mesa da sala de jantar',
+        }[j.step];
+      }
+      case 'louca': {
+        const l = this.st.louca;
+        const left = l.plates.filter((p) => !p.taken).length;
+        const more = left ? ` · faltam ${left} pela casa` : '';
+        const next = c?.type === 'pratos' ? `lavar na pia da cozinha (${c.count} na mão)${more}` : `achar os pratos pela casa (faltam ${left})`;
+        return `${l.washed}/${l.plates.length} lavados · ${next}`;
+      }
+      case 'lixo': {
+        const x = this.st.lixo;
+        const left = x.bags.filter((b) => !b.taken).length;
+        const more = left ? ` · faltam ${left} nas lixeiras` : '';
+        const next = c?.type === 'sacos' ? `levar ao latão da garagem (${c.count} na mão)${more}` : `pegar os sacos das lixeiras: cozinha, banheiro e escritório (faltam ${left})`;
+        return `${x.deposited}/${x.bags.length} no latão · ${next}`;
+      }
+      case 'roupa': {
+        const r = this.st.roupa;
+        return {
+          cesto: 'pegar o cesto no quarto',
+          maquina: 'pôr na máquina da lavanderia',
+          lavando: `lavando na máquina (${fmt(r.timer)})`,
+          pronta: 'tirar a roupa da máquina',
+          varal: 'estender no varal do quintal',
+        }[r.step];
+      }
+      case 'regar': {
+        const n = this.st.regar.watered.size;
+        let next = 'pegar o regador no tanque da lavanderia';
+        if (c?.type === 'regador') next = c.water > 0 ? `regar os vasos: sala, jardim e varanda (água para ${c.water})` : 'encher o regador no tanque';
+        return `${n}/${POTS.length} vasos · ${next}`;
+      }
+      case 'janelas': {
+        const w = this.st.janelas.windows;
+        return `${w.filter((o) => o.closed).length}/${w.length} fechadas`;
+      }
+      case 'uniforme':
+        return {
+          pegar: 'pegar o uniforme no armário do quarto',
+          passar: 'passar na tábua da lavanderia',
+          guardar: 'guardar no armário do quarto',
+        }[this.st.uniforme.step];
+      case 'celular':
+        return this.hasPhone ? 'pôr para carregar no criado-mudo do quarto' : 'achar o celular (está no silencioso)';
+      default:
+        return '';
+    }
+  }
+
+  /** Avisa na tela o progresso de uma tarefa (depois de cada avanço). */
+  announce(id) {
+    if (!this.has(id) || !this.listRead) return;
+    this.hooks.toast?.(`${TASK_NAMES[id]}: ${this.status(id)}`);
+  }
+
+  /** Tarefa da coisa que está nas mãos (para avisar depois de pegar de volta). */
+  get carryingTask() {
+    return this.carrying ? CARRY_TASK[this.carrying.type] : null;
   }
 
   get handsFree() {
@@ -454,10 +552,12 @@ export class Tasks {
       if (j.step === 'cozinhando' && (j.timer -= dt) <= 0) {
         j.step = 'pronto';
         this.hooks.sfx.beep(3, 0.2);
+        this.announce('jantar');
       }
       if (r.step === 'lavando' && (r.timer -= dt) <= 0) {
         r.step = 'pronta';
         this.hooks.sfx.beep(4, 0.2);
+        this.announce('roupa');
       }
     }
     this.#display('microwave', j.step === 'cozinhando', j.step === 'pronto', j.timer, lightsOn, time);

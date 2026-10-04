@@ -221,6 +221,7 @@ Arquivo de referência: `planta-casa-v2.svg` (gerada por `scripts/planta-v2.py`)
 | Varanda externa (externo, chuva) | Quintal, jardim, corredor dos fundos | Vasos | — |
 
 - Cada cômodo tem iluminação ligada ao gerador.
+- Além dos objetos da tabela, a casa tem mobília e decoração (tapetes, quadros, poltronas, abajures, cadeiras, banheiros completos, fogão, guarda-roupa, cristaleira, carro coberto na garagem, balanço e banco no jardim). Tapetes e quadros não têm colisão.
 - Quarto da Clara: ao interagir, Artur diz *"Não posso entrar, está trancado."*
 - **Janelas (6):** sala, banheiro social, escritório, cozinha, quarto de hóspedes, lavanderia (usadas na tarefa "Fechar as janelas", 4.11).
 - Circuitos para fugir em perseguições: entrada → corredor → sala de jantar → sala; cozinha → lavanderia → quintal → garagem → corredor de serviço; quarto de hóspedes → jardim → corredor dos fundos → cozinha.
@@ -315,6 +316,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
   - *Intenção (só para o design, nunca aparece no jogo): a lista é da psicóloga do bilhete do Marcos no dia 2.*
 - **Ler a lista começa a noite** (4.6). As tarefas **só podem ser feitas depois de ler a lista**; antes disso, interagir com algo de tarefa: *"Primeiro deixa eu ver a lista."*
 - Interagir com a geladeira mostra a lista da noite: tarefas feitas aparecem **riscadas**. A lista **não aparece no HUD**.
+- **Progresso e próximo passo:** embaixo de cada tarefa pendente, a lista mostra quanto falta e o que fazer em seguida (ex.: *"1/4 lavados · lavar na pia da cozinha (1 na mão) · faltam 2 pela casa"*, *"comer na mesa da sala de jantar"*). Toda vez que uma tarefa avança, um **aviso curto** com essa mesma linha aparece no pé da tela por ~3,5 s (não trava o Artur).
 - As tarefas são **do cotidiano** e **não têm relação com as alucinações**. São **fixas por noite**.
 - Dormir exige todas as tarefas da noite feitas (4.7).
 
@@ -356,7 +358,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - Podem ser coletados **a qualquer momento**, com a luz acesa ou apagada. Coletar: interagir (F) perto.
 - O jogador **não sabe quantos ursos existem nem quantos faltam** (sem contador no HUD).
 - **Nenhum som** ajuda a encontrar um urso.
-- **Visual antes de coletar:** um brilho âmbar **bem fraco** e pequeno em volta do urso — a única coisa de cor quente na paleta fria da casa, mas discreto, sem chamar atenção de longe.
+- **Visual antes de coletar:** um brilho âmbar **bem fraco** e pequeno em volta do urso — a única coisa de cor quente na paleta fria da casa, mas discreto. Só aparece com **linha de visão** do Artur até o urso (paredes e portas fechadas escondem) e a menos de ~7 m, mais fraco quanto mais longe.
 - **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e toca uma nota curta de caixinha de música. **A tela não muda de cor** (o tom quente na tela inteira foi testado e removido). Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
 - **Efeito no jogo:** tudo o que antes o tempo facilitava agora depende dos ursos — intervalo entre alucinações e trava (4.6), crescimento do risco do gerador e chance de cair durante o sono (4.4 e 9.2). Não mexe direto no medo nem nos monstros.
 
@@ -683,6 +685,25 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 ### 14.2 Efeitos (lista para produzir)
 
+> **Sons das tarefas, ursos e fusível — prioridade alta (etapa 13).** Cada ação abaixo precisa do seu som, para o jogador perceber sem olhar a tela:
+>
+> | Momento | Som |
+> |---|---|
+> | Ler a lista | papel sendo pego / solto na geladeira |
+> | Freezer | tampa abrindo e fechando, plástico da marmita |
+> | Micro-ondas | porta, zumbido contínuo enquanto esquenta, apito ao terminar (o apito já existe, básico), porta abrindo |
+> | Comer | talher no prato, cadeira arrastando |
+> | Pratos | pratos batendo ao pegar/empilhar; água da torneira e esfregar enquanto lava |
+> | Lixo | saco plástico ao pegar; tampa do latão |
+> | Roupa | cesto de vime; máquina ligando, girando (loop) e apito ao terminar (já existe, básico); roupa molhada; prendedor no varal |
+> | Regador | água enchendo no tanque; água caindo no vaso |
+> | Janelas | janela correndo e trinco |
+> | Uniforme | armário abrindo; ferro chiando (vapor) |
+> | Celular | pegar o celular; plugue do carregador |
+> | Soltar item (Q) / pegar de volta | objeto no chão, conforme o que é |
+> | Urso coletado | nota de caixinha de música (já existe, básica) |
+> | Fusível | pegar o fusível; encaixe no gerador |
+
 Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
 
 ### 14.3 Vozes
@@ -948,5 +969,5 @@ Cada etapa termina com o jogo rodando e publicado no GitHub Pages para teste.
 10. **Delegacia:** cena, objetos, bilhetes, ligações com legenda, pistas das alucinações.
 11. **Fluxo completo:** tela inicial, transições, save, pausa, dificuldade por dia.
 12. **Final:** madrugada do dia 7, reportagem, créditos, tela do CVV.
-13. **Áudio:** ambiente, efeitos e as vozes dos momentos específicos (seção 14.3).
+13. **Áudio:** ambiente, efeitos (incluindo **todos os sons das tarefas, ursos e fusível da tabela em 14.2 — prioridade alta**) e as vozes dos momentos específicos (seção 14.3).
 14. **Arte final e polimento:** sprites definitivos, jumpscares detalhados, ajuste de balanceamento.

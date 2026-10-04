@@ -90,6 +90,7 @@ export const DOOR_WIDTH = 1.5; // metros
 
 // Móveis com colisão. (x, y) = canto superior esquerdo em metros.
 // `sprite` é o nome do quadro no atlas props.
+// `layer`: decoração sem colisão — 'floor' (tapetes) ou 'wall' (quadros, na face da parede).
 export const FURNITURE = [
   // Quarto do Artur
   { id: 'cama', sprite: 'bed', x: 22.4, y: 4.25, room: 'quartoArtur' },
@@ -164,6 +165,74 @@ export const FURNITURE = [
   { id: 'vaso5', sprite: 'plant-pot', x: 45.5, y: 24.0, room: 'jardim' },
   { id: 'vaso6', sprite: 'plant-pot', x: 15.0, y: 26.4, room: 'varanda' },
   { id: 'vaso7', sprite: 'plant-pot', x: 44.0, y: 27.9, room: 'varanda' },
+
+  // ---- Mobília e decoração (casa menos vazia) ----
+  // Entrada
+  { id: 'cabideiro', sprite: 'coat-rack', x: 16.4, y: 0.3, room: 'entrada' },
+  { id: 'bancoEntrada', sprite: 'shoe-bench', x: 20.6, y: 0.35, room: 'entrada' },
+  { id: 'tapeteEntrada', sprite: 'rug-blue', x: 18.0, y: 3.3, room: 'entrada', layer: 'floor' },
+  // Sala
+  { id: 'tapeteTv', sprite: 'rug-red', x: 11.8, y: 2.4, room: 'sala', layer: 'floor' },
+  { id: 'poltronaTv', sprite: 'armchair', x: 15.0, y: 3.0, room: 'sala' },
+  { id: 'tapeteSala', sprite: 'rug-brown', x: 13.2, y: 8.3, room: 'sala', layer: 'floor' },
+  { id: 'abajurSala', sprite: 'floor-lamp', x: 13.1, y: 8.0, room: 'sala' },
+  { id: 'poltronaSala1', sprite: 'armchair', x: 13.6, y: 8.9, room: 'sala' },
+  { id: 'mesaCentro', sprite: 'coffee-table', x: 14.55, y: 9.25, room: 'sala' },
+  { id: 'poltronaSala2', sprite: 'armchair', x: 15.75, y: 8.9, room: 'sala' },
+  // Corredor dos quartos
+  { id: 'passadeira', sprite: 'runner', x: 23.0, y: 2.7, room: 'corredorQuartos', layer: 'floor' },
+  { id: 'quadro1', sprite: 'frame-a', x: 24.0, y: 1.8, room: 'corredorQuartos', layer: 'wall' },
+  { id: 'quadro2', sprite: 'frame-b', x: 27.4, y: 1.8, room: 'corredorQuartos', layer: 'wall' },
+  { id: 'quadro3', sprite: 'frame-a', x: 31.4, y: 1.8, room: 'corredorQuartos', layer: 'wall' },
+  { id: 'quadro4', sprite: 'frame-b', x: 38.4, y: 9.8, room: 'corredorQuartos', layer: 'wall' },
+  // Quarto do Artur
+  { id: 'tapeteQuarto', sprite: 'rug-blue', x: 24.0, y: 6.5, room: 'quartoArtur', layer: 'floor' },
+  { id: 'cadeiraQuarto', sprite: 'chair', x: 27.9, y: 8.8, room: 'quartoArtur' },
+  // Banheiros
+  { id: 'boxSuite', sprite: 'shower', x: 30.9, y: 6.3, room: 'suite' },
+  { id: 'vasoSanitarioSuite', sprite: 'toilet', x: 31.2, y: 8.9, room: 'suite' },
+  { id: 'vasoSanitarioSocial', sprite: 'toilet', x: 37.2, y: 4.9, room: 'banheiroSocial' },
+  { id: 'toalhaSocial', sprite: 'towel', x: 34.6, y: 0.75, room: 'banheiroSocial', layer: 'wall' },
+  // Escritório
+  { id: 'estanteEscritorio', sprite: 'shelf', x: 39.0, y: 0.25, room: 'escritorio' },
+  { id: 'tapeteEscritorio', sprite: 'rug-brown', x: 41.0, y: 1.6, room: 'escritorio', layer: 'floor' },
+  { id: 'cadeiraEscritorio', sprite: 'chair', x: 43.6, y: 1.4, room: 'escritorio' },
+  { id: 'poltronaEscritorio', sprite: 'armchair', x: 45.5, y: 5.0, room: 'escritorio' },
+  { id: 'abajurEscritorio', sprite: 'floor-lamp', x: 46.4, y: 4.4, room: 'escritorio' },
+  // Sala de jantar
+  { id: 'tapeteJantar', sprite: 'rug-red', x: 25.25, y: 12.6, room: 'salaJantar', layer: 'floor' },
+  { id: 'cristaleira', sprite: 'china-cabinet', x: 29.5, y: 10.3, room: 'salaJantar' },
+  // Quarto de hóspedes
+  { id: 'guardaRoupa', sprite: 'wardrobe', x: 39.0, y: 12.25, room: 'hospedes' },
+  { id: 'tapeteHospedes', sprite: 'rug-blue', x: 33.0, y: 15.5, room: 'hospedes', layer: 'floor' },
+  { id: 'caixaFesta4', sprite: 'box', x: 35.5, y: 15.8, room: 'hospedes' },
+  { id: 'caixaFesta5', sprite: 'box', x: 36.05, y: 15.9, room: 'hospedes' },
+  // Cozinha
+  { id: 'fogao', sprite: 'stove', x: 20.3, y: 14.3, room: 'cozinha' },
+  { id: 'cadeiraCozinha1', sprite: 'chair', x: 13.05, y: 18.3, room: 'cozinha' },
+  { id: 'cadeiraCozinha2', sprite: 'chair', x: 15.05, y: 18.3, room: 'cozinha' },
+  { id: 'armarioCozinha', sprite: 'pantry-shelf', x: 29.5, y: 18.3, room: 'cozinha' },
+  // Lavanderia
+  { id: 'prateleiraLavanderia', sprite: 'pantry-shelf', x: 17.8, y: 24.9, room: 'lavanderia' },
+  // Garagem
+  { id: 'carro', sprite: 'car-tarp', x: 3.6, y: 4.5, room: 'garagem' },
+  // Mais peças nos cômodos grandes
+  { id: 'sofaSala2', sprite: 'sofa', x: 17.8, y: 11.2, room: 'sala' },
+  { id: 'tapeteSala2', sprite: 'rug-red', x: 17.3, y: 10.0, room: 'sala', layer: 'floor' },
+  { id: 'vasoCantoSala', sprite: 'plant-pot', x: 21.2, y: 13.2, room: 'sala' },
+  { id: 'vasoJantar1', sprite: 'plant-pot', x: 22.4, y: 17.2, room: 'salaJantar' },
+  { id: 'vasoJantar2', sprite: 'plant-pot', x: 31.2, y: 17.2, room: 'salaJantar' },
+  { id: 'tapeteEscritorio2', sprite: 'rug-red', x: 40.0, y: 4.6, room: 'escritorio', layer: 'floor' },
+  { id: 'caixa4', sprite: 'box', x: 38.6, y: 8.6, room: 'escritorio' },
+  { id: 'caixa5', sprite: 'box', x: 39.15, y: 8.7, room: 'escritorio' },
+  { id: 'arquivo2', sprite: 'filing-cabinet', x: 34.4, y: 8.9, room: 'escritorio' },
+  { id: 'cadeiraHospedes', sprite: 'chair', x: 34.6, y: 17.6, room: 'hospedes' },
+  { id: 'vasoHospedes', sprite: 'plant-pot', x: 41.2, y: 18.9, room: 'hospedes' },
+  { id: 'vasoCozinha', sprite: 'plant-pot', x: 31.2, y: 21.0, room: 'cozinha' },
+  { id: 'prateleiraGaragem', sprite: 'pantry-shelf', x: 5.6, y: 1.4, room: 'garagem' },
+  // Jardim
+  { id: 'balanco', sprite: 'swing', x: 28.3, y: 22.4, room: 'jardim' },
+  { id: 'bancoJardim', sprite: 'garden-bench', x: 33.0, y: 22.6, room: 'jardim' },
 ];
 
 // Ponto de interação com a cama (ao lado dela, no quarto do Artur).
@@ -214,6 +283,7 @@ export const ITEM_SPOTS = [
   { on: 'aparador', dx: 7, dy: 7 },
   { on: 'aparador', dx: 41, dy: 7 },
   { on: 'mesinhaSala', dx: 8, dy: 7 },
+  { on: 'mesaCentro', dx: 16, dy: 7 },
   { on: 'mesaJantar', dx: 16, dy: 18 },
   { on: 'mesaJantar', dx: 56, dy: 18 },
   { on: 'aparadorJantar', dx: 7, dy: 7 },

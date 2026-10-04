@@ -3,7 +3,8 @@
 // - Só aparecem quando a noite começa (ao ler a lista). Quantidade fixa por noite.
 // - Ficam no chão, em cômodos diferentes enquanto der (nunca no quarto da Clara).
 // - Coletáveis a qualquer momento, com a luz acesa ou apagada.
-// - Brilho âmbar bem fraco (por cima da escuridão, discreto). Nenhum som ajuda a achar.
+// - Brilho âmbar bem fraco (por cima da escuridão, discreto), só visível com linha de visão
+//   (paredes e portas fechadas escondem) e perto. Nenhum som ajuda a achar.
 // - Ao coletar: some como uma presença (partículas de luz subindo) e uma nota de caixinha
 //   de música. O jogador não sabe quantos faltam.
 // - Efeito no jogo: clock.bearsCollected (intervalo das alucinações, trava, gerador).
@@ -92,10 +93,29 @@ export class Bears {
     const glow = this.scene.add
       .image(x, y - 6, 'props', 'glow')
       .setDepth(ABOVE_DARKNESS)
-      .setAlpha(BALANCE.bears.glowAlpha)
+      .setAlpha(0)
       .setScale(BALANCE.bears.glowScale)
       .setBlendMode(Phaser.BlendModes.ADD);
     return { x: p.x, y: p.y, sprite, glow };
+  }
+
+  /**
+   * Brilho só com linha de visão do Artur até o urso, e mais fraco com a distância.
+   * Sem isso, o brilho (por cima da escuridão) aparecia através das paredes.
+   */
+  update(dt, chest, lighting) {
+    const { glowAlpha, glowRange } = BALANCE.bears;
+    for (const b of this.list) {
+      const dx = b.x - chest.x;
+      const dy = b.y - 0.2 - chest.y;
+      const d = Math.hypot(dx, dy);
+      let target = 0;
+      if (d < glowRange && lighting.castRay(chest.x, chest.y, Math.atan2(dy, dx), d) >= d - 0.35) {
+        target = glowAlpha * (1 - d / glowRange);
+      }
+      const a = b.glow.alpha;
+      b.glow.setAlpha(a + Phaser.Math.Clamp(target - a, -dt * 0.3, dt * 0.3));
+    }
   }
 
   /** Urso ao alcance dos pés, ou null. */

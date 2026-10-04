@@ -110,6 +110,7 @@ export class HouseScene extends Phaser.Scene {
     this.items = new Items(this, this.clock.night, this.furnitureById);
     this.tasks = new Tasks(this, this.clock.night.tasks, this.furnitureById, this.items, {
       say: (text) => this.hud.talk(say(text)),
+      toast: (text) => this.hud.toast(text),
       sfx,
     });
     if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
@@ -174,7 +175,10 @@ export class HouseScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-F', () => this.interact());
     // Q: soltar o que está carregando (GDD 4.11)
     this.input.keyboard.on('keydown-Q', () => {
-      if (!this.hud.talking && !this.sleep) this.tasks.dropCarried(this.player.feetMeters);
+      if (this.hud.talking || this.sleep || !this.tasks.carrying) return;
+      const id = this.tasks.carryingTask;
+      this.tasks.dropCarried(this.player.feetMeters);
+      this.tasks.announce(id);
     });
     // O item nas mãos acompanha o Artur depois da física (sem tremer)
     const placeIcon = () => this.tasks.positionIcon(this.player);
@@ -239,6 +243,11 @@ export class HouseScene extends Phaser.Scene {
       const { width: w, height: h } = sprite;
       sprite.setDepth(sprite.y + h - 4);
       this.furnitureById.set(item.id, { sprite, def: item });
+      // Decoração sem colisão: tapetes no chão, quadros e toalhas na parede
+      if (item.layer) {
+        sprite.setDepth(item.layer === 'floor' ? -900 : -800);
+        continue;
+      }
       if (item.id === 'gerador') this.generatorSprite = sprite;
       if (item.id === 'cama') this.bedSprite = sprite;
       // Colisão no móvel inteiro (menos o contorno de 1 px)
@@ -361,9 +370,23 @@ export class HouseScene extends Phaser.Scene {
     else if (target.kind === 'bed') this.tryToSleep();
     else if (target.kind === 'list') this.readList();
     else if (target.kind === 'bear') this.bears.collect(target.bear, sfx);
-    else if (target.kind === 'task' && !target.hold) target.use();
+    else if (target.kind === 'task' && !target.hold) this.useTask(target);
     else if (target.kind === 'generator' && !this.hasFuse) this.hud.talk(LINES.noFuse);
     // gerador (com fusível) e tarefas de segurar F: tratados no update
+  }
+
+  /** Usa um objeto de tarefa e avisa o progresso (se algo mudou). */
+  useTask(target) {
+    // 'pegar' = pegar de volta algo que ficou no chão: a tarefa é a do que veio para a mão
+    const pickBack = target.task === 'pegar';
+    const before = pickBack ? null : this.tasks.status(target.task);
+    const carried = this.tasks.carrying;
+    if (target.complete) target.complete();
+    else target.use();
+    const id = pickBack ? this.tasks.carryingTask : target.task;
+    if (id && (pickBack || this.tasks.status(id) !== before || this.tasks.carrying !== carried)) {
+      this.tasks.announce(id);
+    }
   }
 
   // ---- Lista da rotina e começo da noite (GDD 4.6 e 4.11) -----------------
@@ -463,6 +486,7 @@ export class HouseScene extends Phaser.Scene {
       this.hud.talk(LINES.foundFuse);
     } else if (item.type === 'phone') {
       this.tasks.hasPhone = true;
+      this.tasks.announce('celular');
     }
   }
 
@@ -666,6 +690,7 @@ export class HouseScene extends Phaser.Scene {
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
     this.tasks.update(dt, this.generator.on, time);
     this.updateFuseGlint(time);
+    this.bears.update(dt, this.chest, this.lighting);
 
     // Monstros (só no escuro) e efeitos de perseguição
     this.monsters.update(dt, nightDt, {
@@ -690,7 +715,7 @@ export class HouseScene extends Phaser.Scene {
       taskProgress = Math.min(1, this.taskHold.progress);
       if (this.taskHold.progress >= 1) {
         this.taskHold = null;
-        holdTask.complete();
+        this.useTask(holdTask);
       }
     } else this.taskHold = null;
 

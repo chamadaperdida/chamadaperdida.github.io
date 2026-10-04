@@ -519,6 +519,179 @@ function washerOn(c, x, y) {
   c.rect(x + 13, y + 15, 2, 2, '#9ab8d0');
 }
 
+// ---- Mobília extra (casa menos vazia) --------------------------------------------
+
+function rug(w, h, base, border, pattern) {
+  // Tapete gasto (no chão, sem colisão)
+  return (c, x, y) => {
+    c.rect(x, y, w, h, border);
+    c.rect(x + 2, y + 2, w - 4, h - 4, base);
+    for (let yy = 4; yy < h - 4; yy += 4) {
+      for (let xx = 4 + (yy % 8 === 0 ? 2 : 0); xx < w - 4; xx += 6) c.px(x + xx, y + yy, pattern);
+    }
+    c.rect(x + 3, y + 3, w - 6, 1, pattern);
+    c.rect(x + 3, y + h - 4, w - 6, 1, pattern);
+    c.rect(x + Math.floor(w * 0.6), y + 5, 6, 3, border); // mancha
+  };
+}
+
+function wallFrame(c, x, y, tone) {
+  // Quadro na parede, 12×9
+  c.rect(x, y, 12, 9, '#4a3624');
+  c.rect(x + 1, y + 1, 10, 7, tone);
+  c.rect(x + 2, y + 5, 8, 2, '#3a4a3a');
+  c.px(x + 8, y + 2, '#b0a070');
+}
+
+function armchair(c, x, y) {
+  // Poltrona velha, 22×22
+  c.rect(x, y, 22, 22, '#3d302a');
+  c.rect(x + 2, y, 18, 8, '#4a3b34'); // encosto
+  c.rect(x + 4, y + 8, 14, 9, '#54443c'); // assento
+  c.rect(x, y + 6, 4, 14, '#352923');
+  c.rect(x + 18, y + 6, 4, 14, '#352923');
+  c.rect(x + 7, y + 10, 5, 3, '#4a3b34');
+  c.rect(x + 2, y + 20, 3, 2, '#1e1814');
+  c.rect(x + 17, y + 20, 3, 2, '#1e1814');
+}
+
+function floorLamp(c, x, y) {
+  // Abajur de pé (apagado), 10×30
+  c.rect(x + 1, y, 8, 7, '#8a7a5a');
+  c.rect(x, y + 6, 10, 2, '#6a5a40');
+  c.rect(x + 4, y + 8, 2, 19, '#2a2622');
+  c.rect(x + 2, y + 27, 6, 3, '#2a2622');
+}
+
+function chair(c, x, y) {
+  // Cadeira de madeira, 12×16
+  c.rect(x + 1, y, 10, 6, WOOD_DARK); // encosto
+  c.rect(x + 2, y + 1, 8, 1, WOOD);
+  c.rect(x, y + 6, 12, 5, WOOD);
+  c.rect(x, y + 6, 12, 1, WOOD_LIGHT);
+  c.rect(x + 1, y + 11, 2, 5, WOOD_DARK);
+  c.rect(x + 9, y + 11, 2, 5, WOOD_DARK);
+}
+
+function coffeeTable(c, x, y) {
+  // Mesa de centro, 32×14
+  c.rect(x, y, 32, 8, WOOD);
+  c.rect(x, y, 32, 1, WOOD_LIGHT);
+  c.rect(x, y + 8, 32, 2, WOOD_DARK);
+  c.rect(x + 2, y + 10, 2, 4, WOOD_DARK);
+  c.rect(x + 28, y + 10, 2, 4, WOOD_DARK);
+  c.rect(x + 5, y + 2, 7, 4, '#a8a090'); // jornal velho
+  c.rect(x + 20, y + 2, 4, 4, '#6a6a70'); // caneca
+}
+
+function coatRack(c, x, y) {
+  // Cabideiro com casaco, 12×30
+  c.rect(x + 5, y + 2, 2, 26, WOOD_DARK);
+  c.rect(x + 2, y + 2, 8, 2, WOOD_DARK);
+  c.rect(x + 2, y + 4, 6, 12, '#3a3a44'); // casaco
+  c.rect(x + 3, y + 28, 6, 2, WOOD_DARK);
+}
+
+function shoeBench(c, x, y) {
+  // Banco da entrada com sapatos, 32×14
+  c.rect(x, y, 32, 6, WOOD);
+  c.rect(x, y, 32, 1, WOOD_LIGHT);
+  c.rect(x, y + 6, 32, 8, '#1a130d');
+  c.rect(x + 3, y + 9, 6, 3, '#2a2420');
+  c.rect(x + 11, y + 10, 6, 3, '#4a3a2a');
+  c.rect(x + 21, y + 9, 7, 3, '#2a2420');
+}
+
+function toilet(c, x, y) {
+  // Vaso sanitário, 14×18
+  c.rect(x + 1, y, 12, 6, '#c8ccc8'); // caixa
+  c.rect(x + 1, y, 12, 1, '#e0e4e0');
+  c.rect(x + 2, y + 6, 10, 10, '#c8ccc8');
+  c.rect(x + 4, y + 8, 6, 6, '#8a9294');
+  c.rect(x + 3, y + 16, 8, 2, '#9aa2a4');
+}
+
+function shower(c, x, y) {
+  // Box com chuveiro, 26×26
+  c.rect(x, y, 26, 26, '#6a7a80');
+  c.rect(x + 2, y + 2, 22, 22, '#8a9aa0');
+  c.rect(x + 11, y + 11, 4, 4, '#4a5458'); // ralo
+  c.rect(x + 11, y + 2, 4, 3, '#b0b8bc'); // chuveiro
+  c.rect(x + 24, y, 2, 26, '#a0b0b8'); // vidro
+  c.px(x + 6, y + 18, '#5a6a70');
+}
+
+function stove(c, x, y) {
+  // Fogão velho, 28×28
+  c.rect(x, y, 28, 28, '#9a9c96');
+  c.rect(x, y, 28, 14, '#b2b4ae');
+  for (const [dx, dy] of [[4, 2], [16, 2], [4, 8], [16, 8]]) {
+    c.rect(x + dx, y + dy, 8, 4, '#2a2a28');
+    c.rect(x + dx + 2, y + dy + 1, 4, 2, '#4a4a46');
+  }
+  c.rect(x + 3, y + 17, 22, 9, '#5c5e59'); // forno
+  c.rect(x + 6, y + 19, 16, 3, '#2a2c2a');
+}
+
+function wardrobe(c, x, y) {
+  // Guarda-roupa, 32×34
+  c.rect(x, y, 32, 34, WOOD_DARK);
+  c.rect(x, y, 32, 4, WOOD);
+  c.rect(x + 2, y + 5, 13, 27, WOOD_INSET);
+  c.rect(x + 17, y + 5, 13, 27, WOOD_INSET);
+  c.rect(x + 13, y + 17, 1, 3, '#a8925e');
+  c.rect(x + 18, y + 17, 1, 3, '#a8925e');
+}
+
+function chinaCabinet(c, x, y) {
+  // Cristaleira com louça de festa guardada, 32×30
+  c.rect(x, y, 32, 30, WOOD_DARK);
+  c.rect(x, y, 32, 3, WOOD);
+  c.rect(x + 2, y + 4, 28, 14, '#2a3238'); // vidro
+  for (let i = 0; i < 5; i++) c.rect(x + 4 + i * 5, y + 8, 4, 3, '#c4bfae');
+  c.rect(x + 2, y + 11, 28, 1, WOOD);
+  c.rect(x + 5, y + 13, 6, 4, '#c84a5a'); // copinhos de festa
+  c.rect(x + 2, y + 20, 28, 8, WOOD_INSET);
+}
+
+function carTarp(c, x, y) {
+  // Carro coberto por lona, visto de cima, 60×120
+  c.rect(x + 4, y + 2, 52, 116, '#3a4038');
+  c.rect(x + 2, y + 10, 56, 100, '#3a4038');
+  c.rect(x + 8, y + 24, 44, 36, '#454c42'); // teto
+  for (let i = 0; i < 6; i++) c.rect(x + 6 + i * 9, y + 64 + (i % 2) * 6, 2, 30, '#2e342c'); // dobras
+  c.rect(x + 2, y + 18, 3, 10, '#1a1c1a'); // rodas aparecendo
+  c.rect(x + 55, y + 18, 3, 10, '#1a1c1a');
+  c.rect(x + 2, y + 92, 3, 10, '#1a1c1a');
+  c.rect(x + 55, y + 92, 3, 10, '#1a1c1a');
+}
+
+function gardenBench(c, x, y) {
+  // Banco de jardim molhado, 40×16
+  c.rect(x, y, 40, 4, '#4a3a2a');
+  c.rect(x, y + 5, 40, 5, '#5a4a36');
+  c.rect(x, y + 5, 40, 1, '#6a5a44');
+  c.rect(x + 3, y + 10, 3, 6, '#2a2420');
+  c.rect(x + 34, y + 10, 3, 6, '#2a2420');
+}
+
+function swing(c, x, y) {
+  // Balanço de criança no jardim, parado, 28×30
+  c.rect(x, y, 28, 3, '#3a3028'); // trave
+  c.rect(x, y, 3, 30, '#3a3028');
+  c.rect(x + 25, y, 3, 30, '#3a3028');
+  c.rect(x + 10, y + 3, 1, 18, '#7a7a70'); // cordas
+  c.rect(x + 17, y + 3, 1, 18, '#7a7a70');
+  c.rect(x + 8, y + 21, 12, 3, '#6a4a3a'); // assento
+}
+
+function towel(c, x, y) {
+  // Toalha pendurada, 10×12
+  c.rect(x, y, 10, 2, '#7a7a80');
+  c.rect(x + 1, y + 2, 8, 10, '#5a6a7a');
+  c.rect(x + 1, y + 9, 8, 1, '#4a5a6a');
+}
+
 // ---- Tarefas, ursos e fusível (GDD 4.4, 4.11 e 4.12) ----------------------------
 
 function laundryBasket(c, x, y) {
@@ -818,6 +991,27 @@ const PROPS = [
   ['trash-bin', 8, 10, trashBin, true],
   ['plant-pot', 12, 14, plantPot, true],
   ['clothesline', 64, 24, clothesline, true],
+  ['rug-red', 96, 64, rug(96, 64, '#5a2a26', '#3a1a18', '#7a4a3a')],
+  ['rug-blue', 64, 40, rug(64, 40, '#2a3a4a', '#1a2430', '#4a5a6a')],
+  ['rug-brown', 80, 48, rug(80, 48, '#4a3a2a', '#2e241a', '#6a5a40')],
+  ['runner', 96, 20, rug(96, 20, '#4a2a2a', '#2e1a1a', '#6a4a3a')],
+  ['frame-a', 12, 9, (c, x, y) => wallFrame(c, x, y, '#5a6a7a')],
+  ['frame-b', 12, 9, (c, x, y) => wallFrame(c, x, y, '#7a6a5a')],
+  ['armchair', 22, 22, armchair, true],
+  ['floor-lamp', 10, 30, floorLamp, true],
+  ['chair', 12, 16, chair, true],
+  ['coffee-table', 32, 14, coffeeTable, true],
+  ['coat-rack', 12, 30, coatRack, true],
+  ['shoe-bench', 32, 14, shoeBench, true],
+  ['toilet', 14, 18, toilet, true],
+  ['shower', 26, 26, shower, true],
+  ['stove', 28, 28, stove, true],
+  ['wardrobe', 32, 34, wardrobe, true],
+  ['china-cabinet', 32, 30, chinaCabinet, true],
+  ['car-tarp', 60, 120, carTarp, true],
+  ['garden-bench', 40, 16, gardenBench, true],
+  ['swing', 28, 30, swing, true],
+  ['towel', 10, 12, towel],
   ['pantry-shelf', 32, 24, pantryShelf, true],
   ['workbench', 48, 24, workbench, true],
   ['freezer', 32, 20, freezer, true],
