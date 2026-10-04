@@ -303,7 +303,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 
 ### 4.10 Itens
 
-- **Onde ficam os itens:** remédios, pilhas e a chave são **pequenos** e ficam **em cima dos móveis** (mesas, cômoda, criado-mudo, aparadores, bancada da pia, prateleiras, arquivo, caixas), nunca soltos no chão. Há uma lista de lugares específicos em cada móvel; a cada noite o jogo sorteia entre eles, respeitando o que pode aparecer em cada cômodo (tabela 4.2) e preferindo cômodos diferentes.
+- **Onde ficam os itens:** remédios, pilhas e a chave são **pequenos** e ficam **em cima dos móveis** (mesas, cômoda, criado-mudo, aparadores, bancada da pia, prateleiras, arquivo, caixas), nunca soltos no chão nem em cima de eletrodomésticos (máquina de lavar, micro-ondas, freezer). Há uma lista de lugares específicos em cada móvel; a cada noite o jogo sorteia entre eles, respeitando o que pode aparecer em cada cômodo (tabela 4.2) e preferindo cômodos diferentes.
 - **Remédio:** sorteado entre os lugares possíveis. Quantidade fixa por noite, não acumula. Ao tomar: **glitch rápido na tela** (menos de 1 s: imagem deslocada, cores separadas, linhas cortadas) e o medo cai rápido. Sem custo.
 - **Pilha:** sorteada entre os lugares possíveis. Som característico de encaixe. Recarrega a bateria.
 - **Lanterna:** só é usada no escuro (liga/desliga com clique esquerdo, mira com mouse). Bateria começa cheia toda noite, gasta só ligada; a duração cai a cada noite (9.1). Abaixo de 20%: a luz falha (aviso). Vazia: não liga. **O cone de luz para nas paredes** (não atravessa paredes nem portas fechadas).
@@ -317,7 +317,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - **Ler a lista começa a noite** (4.6). As tarefas **só podem ser feitas depois de ler a lista**; antes disso, interagir com algo de tarefa: *"Primeiro deixa eu ver a lista."*
 - Interagir com a geladeira mostra a lista da noite: tarefas feitas aparecem **riscadas**. A lista **não aparece no HUD**.
 - **Progresso:** na lista, tarefas com vários itens mostram só a contagem: *"Lavar a louça (1/4)"*, *"Tirar o lixo (0/3)"*, *"Regar as plantas (2/5)"*, *"Fechar as janelas (3/6)"*. Sem descrições na folha.
-- **Próximo passo:** enquanto Artur carrega algo de uma tarefa, uma **legenda bem pequena** no pé da tela diz o que fazer com aquilo, de forma direta (ex.: *"Lavar na pia da cozinha"*, *"Esquentar no micro-ondas"*, *"Comer na mesa de jantar"*). Ela fica lá até o objeto ser **solto** ou a ação ser **feita**. Sem progresso nem contagem na legenda.
+- **Próximo passo:** enquanto Artur carrega algo de uma tarefa, uma **legenda bem pequena** no canto inferior direito da tela diz o que fazer com aquilo, de forma direta (ex.: *"Lavar na pia da cozinha"*, *"Esquentar no micro-ondas"*, *"Comer na mesa de jantar"*). Ela fica lá até o objeto ser **solto** ou a ação ser **feita**. Sem progresso nem contagem na legenda.
 - As tarefas são **do cotidiano** e **não têm relação com as alucinações**. São **fixas por noite**.
 - Dormir exige todas as tarefas da noite feitas (4.7).
 
@@ -361,7 +361,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - **Nenhum som** ajuda a encontrar um urso.
 - **Visual antes de coletar:** um brilho âmbar **bem fraco** e pequeno em volta do urso — a única coisa de cor quente na paleta fria da casa, mas discreto. Só aparece com **linha de visão** do Artur até o urso (paredes e portas fechadas escondem) e a menos de ~7 m, mais fraco quanto mais longe.
 - **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e toca uma nota curta de caixinha de música. **A tela não muda de cor** (o tom quente na tela inteira foi testado e removido). Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
-- **O urso coletado reaparece sentado na cama do Artur** (até 7, em duas fileiras), surgindo devagar. É o jeito de ver o progresso sem número.
+- **O urso coletado reaparece na cama do Artur**, surgindo devagar. Os ursos ficam **juntos numa montanha organizada** (fileiras centralizadas, cada uma apoiada nos vãos da de baixo: 4-2-1 com sete), que se rearruma a cada urso. É o jeito de ver o progresso sem número.
 - **A tela fica mais limpa:** o granulado e a vinheta da tela (13.1) diminuem a cada urso; com todos, ficam em 30% do normal.
 - **Efeito no jogo:** tudo o que antes o tempo facilitava agora depende dos ursos — intervalo entre alucinações e trava (4.6), crescimento do risco do gerador e chance de cair durante o sono (4.4 e 9.2). Não mexe direto no medo nem nos monstros.
 

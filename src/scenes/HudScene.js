@@ -66,17 +66,17 @@ export class HudScene extends Phaser.Scene {
     this.dialogue = new DialogueBox(this);
     this.buildList();
 
-    // Legenda do próximo passo (o que fazer com o que está nas mãos): pequena, fica até soltar
-    // ou concluir a ação
+    // Legenda do próximo passo (o que fazer com o que está nas mãos): pequena, no canto
+    // inferior direito; fica até soltar ou concluir a ação
     this.hintText = this.add
-      .text(this.scale.width / 2, this.scale.height - 150, '', {
+      .text(this.scale.width - 16, this.scale.height - 14, '', {
         fontFamily: FONT,
         fontSize: '18px',
         color: '#cfc9b6',
         backgroundColor: '#00000088',
         padding: { x: 6, y: 1 },
       })
-      .setOrigin(0.5, 1)
+      .setOrigin(1, 1)
       .setDepth(900)
       .setVisible(false);
 
@@ -144,7 +144,7 @@ export class HudScene extends Phaser.Scene {
   /** Legenda do próximo passo ('' esconde). Não aparece com a lista aberta. */
   setHint(text) {
     if (this.hintText.text !== text) this.hintText.setText(text);
-    this.hintText.setVisible(!!text && !this.listOpen);
+    this.hintText.setVisible(!!text && !this.talking);
   }
 
   /** Fecha a lista sem avisar ninguém (cena reiniciada, morte). */

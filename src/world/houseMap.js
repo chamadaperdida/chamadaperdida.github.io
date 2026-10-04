@@ -294,7 +294,6 @@ export const ITEM_SPOTS = [
   { on: 'pia', dx: 8, dy: 13 },
   { on: 'mesaCozinha', dx: 12, dy: 12 },
   { on: 'mesaCozinha', dx: 40, dy: 15 },
-  { on: 'maquina', dx: 12, dy: 18 },
   { on: 'tabua', dx: 8, dy: 5 },
   { on: 'prateleiraDespensa1', dx: 23, dy: 10 },
   { on: 'prateleiraDespensa1', dx: 9, dy: 19 },

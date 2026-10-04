@@ -7,7 +7,7 @@
 //   (paredes e portas fechadas escondem) e perto. Nenhum som ajuda a achar.
 // - Ao coletar: some como uma presença (partículas de luz subindo) e uma nota de caixinha
 //   de música. O jogador não sabe quantos faltam.
-// - O urso coletado reaparece sentado na cama do Artur (sem número: só os ursinhos lá).
+// - O urso coletado reaparece na cama do Artur, numa montanha de ursos (sem número).
 // - Efeito no jogo: clock.bearsCollected (intervalo das alucinações, trava, gerador).
 
 import Phaser from 'phaser';
@@ -27,6 +27,26 @@ function shuffle(list) {
   return a;
 }
 
+// Montanha de ursos na cama: base no meio da cama (px dentro do sprite da cama)
+const PILE_X = 24;
+const PILE_Y = 36;
+const PILE_STEP_X = 7; // ursos de 10 px: um pouco por cima um do outro
+const PILE_STEP_Y = 6; // cada fileira sobe isto
+// Quantos por fileira (de baixo para cima) para n ursos
+const PILE_ROWS = { 1: [1], 2: [2], 3: [2, 1], 4: [3, 1], 5: [3, 2], 6: [3, 2, 1], 7: [4, 2, 1] };
+
+/** [dx, dy, fileira] de cada urso, na ordem em que foram coletados (de baixo para cima). */
+function pileSlots(n) {
+  const rows = PILE_ROWS[Math.min(n, 7)] ?? PILE_ROWS[7];
+  const slots = [];
+  rows.forEach((count, row) => {
+    for (let i = 0; i < count; i++) {
+      slots.push([(i - (count - 1) / 2) * PILE_STEP_X, -row * PILE_STEP_Y, row]);
+    }
+  });
+  return slots;
+}
+
 export class Bears {
   /**
    * @param nav  NavGrid da casa (células livres)
@@ -39,6 +59,7 @@ export class Bears {
     this.nav = nav;
     this.furnitureRects = furnitureRects;
     this.list = [];
+    this.onBed = []; // ursos já sentados na cama (imagens)
   }
 
   /** Lugares possíveis no chão, agrupados por cômodo. */
@@ -158,27 +179,30 @@ export class Bears {
       });
     }
     sfx.musicBox();
-    this.#sitOnBed(this.clock.bearsCollected - 1);
+    this.#sitOnBed();
   }
 
-  /** Coloca o n-ésimo urso coletado sentado na cama (duas fileiras sobre a cama). */
-  #sitOnBed(n) {
-    const slots = [
-      [10, 21],
-      [24, 22],
-      [38, 21],
-      [8, 33],
-      [19, 34],
-      [30, 33],
-      [41, 34],
-    ];
-    const [dx, dy] = slots[n % slots.length];
-    const bear = this.scene.add
-      .image(this.bed.x + dx, this.bed.y + dy, 'props', 'bear')
-      .setOrigin(0.5, 1)
-      .setDepth(this.bed.depth + 1 + n)
-      .setAlpha(0);
-    this.scene.tweens.add({ targets: bear, alpha: 1, duration: 900, delay: 300 });
+  /**
+   * Põe mais um urso na cama: todos ficam juntos numa montanha organizada (fileiras
+   * centralizadas, cada uma sentada nos vãos da de baixo). A montanha se rearruma a cada urso.
+   */
+  #sitOnBed() {
+    const bear = this.scene.add.image(0, 0, 'props', 'bear').setOrigin(0.5, 1).setAlpha(0);
+    this.onBed.push(bear);
+    const slots = pileSlots(this.onBed.length);
+    this.onBed.forEach((b, i) => {
+      const [dx, dy, row] = slots[i];
+      const x = this.bed.x + PILE_X + dx;
+      const y = this.bed.y + PILE_Y + dy;
+      // Fileiras de baixo na frente
+      b.setDepth(this.bed.depth + 10 - row);
+      if (b === bear) {
+        b.setPosition(x, y);
+        this.scene.tweens.add({ targets: b, alpha: 1, duration: 900, delay: 300 });
+      } else {
+        this.scene.tweens.add({ targets: b, x, y, duration: 400, ease: 'Sine.easeInOut' });
+      }
+    });
   }
 
   /** Quantos ainda estão na casa (só debug). */
