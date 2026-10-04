@@ -174,12 +174,30 @@ export const BALANCE = {
     reach: 1.0, // distância (m) para interagir com objetos de tarefa
   },
 
+  // Coração (GDD 5 e 7): volume e ritmo pelo medo, medo subindo, alucinação e perseguição
+  heart: {
+    bpmMin: 62,
+    bpmMax: 160,
+    volumeMin: 0.15,
+    volumeMax: 1.0,
+    silentBelow: 0.18, // intensidade abaixo disto: coração não se ouve
+    weightFear: 0.45, // medo em 100% sozinho
+    weightRising: 0.55, // medo subindo rápido
+    weightHallucination: 0.12,
+    weightChase: 0.7,
+    riseForFull: 4, // pontos de medo por segundo = "subindo no máximo"
+    riseSmoothing: 0.8, // s
+    jumpFear: 8, // susto de uma vez a partir disto: a próxima batida vem já
+  },
+
   // Ursos (GDD 4.12)
   bears: {
     reach: 0.9, // distância (m) para coletar
     glowAlpha: 0.06, // brilho âmbar bem fraco
     glowScale: 0.75,
     glowRange: 7, // m: só brilha com linha de visão e mais perto que isto
+    // Com todos os ursos, o granulado e a vinheta da tela diminuem até esta fração (GDD 13.1)
+    calmScreenFactor: 0.3,
   },
 
   // ---------------------------------------------------------------------------

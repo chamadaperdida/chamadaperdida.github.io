@@ -8,8 +8,8 @@
 // - Tarefa feita não se desfaz.
 // - Artur pode soltar o que carrega quando quiser (Q) e pegar de volta depois.
 // - Micro-ondas e máquina mostram que estão funcionando e quanto tempo falta.
-// - Progresso e próximo passo: na lista da geladeira (embaixo de cada tarefa) e num aviso
-//   rápido na tela sempre que a tarefa avança (hooks.toast).
+// - Progresso: tarefas com vários itens mostram "(x/n)" na lista da geladeira.
+// - Próximo passo: num aviso rápido na tela sempre que a tarefa avança (hooks.toast).
 //
 // Este módulo só guarda o estado e diz o que dá para fazer agora (targets). A cena cuida
 // de mostrar o [F], segurar F e chamar use()/complete().
@@ -180,13 +180,22 @@ export class Tasks {
     return this.ids.every((id) => this.done.has(id));
   }
 
-  /** Linhas da folha da geladeira: nome, feita?, progresso e próximo passo. */
+  /** Linhas da folha da geladeira: nome (com "(x/n)" nas tarefas de vários itens) e feita?. */
   get lines() {
-    return this.ids.map((id) => ({
-      text: TASK_NAMES[id],
-      done: this.done.has(id),
-      status: this.done.has(id) ? '' : this.status(id),
-    }));
+    return this.ids.map((id) => {
+      const c = this.count(id);
+      return { text: c ? `${TASK_NAMES[id]} (${c[0]}/${c[1]})` : TASK_NAMES[id], done: this.done.has(id) };
+    });
+  }
+
+  /** [feitos, total] das tarefas com vários itens; null nas outras. */
+  count(id) {
+    const s = this.st;
+    if (id === 'louca') return [s.louca.washed, s.louca.plates.length];
+    if (id === 'lixo') return [s.lixo.deposited, s.lixo.bags.length];
+    if (id === 'regar') return [s.regar.watered.size, POTS.length];
+    if (id === 'janelas') return [s.janelas.windows.filter((w) => w.closed).length, s.janelas.windows.length];
+    return null;
   }
 
   /** Algo desta tarefa ficou no chão (soltou com Q ou a luz caiu)? */

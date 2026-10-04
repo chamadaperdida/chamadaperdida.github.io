@@ -4,6 +4,7 @@
 
 import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
+import { BALANCE } from '../config/balance.js';
 
 const FONT = 'VT323, monospace';
 
@@ -82,7 +83,27 @@ export class HudScene extends Phaser.Scene {
     const { width, height } = this.scale;
     this.fade = this.add.rectangle(0, 0, width, height, 0x000000).setOrigin(0).setAlpha(0).setDepth(3000);
 
-    // Perseguição (GDD 7): bordas da tela escurecem e pulsam no ritmo do coração
+    // Granulado e vinheta leves em toda a tela (GDD 13.1); diminuem com os ursos
+    if (!this.textures.exists('ambient-vignette')) {
+      const tex = this.textures.createCanvas('ambient-vignette', width, height);
+      const ctx = tex.getContext();
+      const g = ctx.createRadialGradient(width / 2, height / 2, height * 0.35, width / 2, height / 2, width * 0.7);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.85)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, width, height);
+      tex.refresh();
+    }
+    this.ambientVignette = this.add.image(0, 0, 'ambient-vignette').setOrigin(0).setDepth(-30);
+    this.grainW = Math.ceil(width / 3);
+    this.grainH = Math.ceil(height / 3);
+    if (!this.textures.exists('grain')) this.textures.createCanvas('grain', this.grainW, this.grainH);
+    this.grainTex = this.textures.get('grain');
+    this.grain = this.add.image(0, 0, 'grain').setOrigin(0).setScale(3).setDepth(-25);
+    this.grainIn = 0;
+    this.calm = 0;
+
+    // Medo subindo / perseguição (GDD 5 e 7): bordas da tela escurecem e pulsam com o coração
     if (!this.textures.exists('chase-vignette')) {
       const tex = this.textures.createCanvas('chase-vignette', width, height);
       const ctx = tex.getContext();
@@ -95,7 +116,9 @@ export class HudScene extends Phaser.Scene {
       tex.refresh();
     }
     this.vignette = this.add.image(0, 0, 'chase-vignette').setOrigin(0).setAlpha(0).setDepth(-10);
-    this.chaseLevel = 0;
+    this.dread = 0;
+    this.dreadTarget = 0;
+    this.pulse = 0;
   }
 
   // ---- Lista da rotina (GDD 4.11) -----------------------------------------
@@ -183,18 +206,56 @@ export class HudScene extends Phaser.Scene {
     });
   }
 
-  /** Liga/desliga o efeito de perseguição (bordas escuras pulsando como o coração). */
-  setChase(active) {
-    this.chaseTarget = active ? 1 : 0;
+  /**
+   * Uma batida do coração (Heart.js). dread 0–1: quanto as bordas escurecem (medo subindo,
+   * perseguição). rising: o medo está subindo → a barra de medo pisca junto.
+   */
+  heartPulse(dread, rising) {
+    this.dreadTarget = dread;
+    this.pulse = 1;
+    if (rising) this.barFlash = 1;
   }
 
-  updateChase(time, dt) {
-    const target = this.chaseTarget ?? 0;
-    this.chaseLevel += Math.max(-dt * 2, Math.min(dt * 3, target - this.chaseLevel));
-    // Pulso no ritmo do coração da perseguição (~0,55 s), duas batidas (tum-tum)
-    const phase = (time / 1000) % 0.55;
-    const beat = Math.exp(-phase * 14) + 0.6 * Math.exp(-Math.max(0, phase - 0.17) * 14) * (phase > 0.17 ? 1 : 0);
-    this.vignette.setAlpha(this.chaseLevel * (0.6 + 0.4 * Math.min(1, beat)));
+  /** Sem pulso (cena reiniciada, morte). */
+  resetDread() {
+    this.dread = 0;
+    this.dreadTarget = 0;
+    this.pulse = 0;
+    this.vignette?.setAlpha(0);
+  }
+
+  /** Ursos coletados (0 a 1): a tela fica mais limpa (menos granulado e vinheta). */
+  setCalm(fraction) {
+    this.calm = fraction;
+  }
+
+  updateDread(dt) {
+    this.dread += (this.dreadTarget - this.dread) * (1 - Math.exp(-dt * 4));
+    this.pulse = Math.max(0, this.pulse - dt * 3.2);
+    this.vignette.setAlpha(Math.min(1, this.dread * (0.35 + 0.65 * this.pulse)));
+    // Barra de medo pisca mais clara a cada batida enquanto o medo sobe
+    this.barFlash = Math.max(0, (this.barFlash ?? 0) - dt * 3);
+    this.fearFill.fillColor = this.barFlash > 0.3 ? 0xe0383f : 0xb3161d;
+  }
+
+  updateGrain(dt) {
+    const k = 1 - (1 - BALANCE.bears.calmScreenFactor) * this.calm;
+    this.ambientVignette.setAlpha(0.55 * k);
+    this.grain.setAlpha(0.06 * k);
+    this.grainIn -= dt;
+    if (this.grainIn > 0) return;
+    this.grainIn = 0.08;
+    const ctx = this.grainTex.getContext();
+    const img = ctx.createImageData(this.grainW, this.grainH);
+    for (let i = 0; i < img.data.length; i += 4) {
+      const v = Math.random() < 0.5 ? 255 : 0;
+      img.data[i] = v;
+      img.data[i + 1] = v;
+      img.data[i + 2] = v;
+      img.data[i + 3] = Math.random() < 0.35 ? 255 : 0;
+    }
+    ctx.putImageData(img, 0, 0);
+    this.grainTex.refresh();
   }
 
   /** Escurece a tela inteira aos poucos. */
@@ -215,7 +276,8 @@ export class HudScene extends Phaser.Scene {
     const dt = deltaMs / 1000;
     this.dialogue.update(dt);
     this.updateFace(time, dt);
-    this.updateChase(time, dt);
+    this.updateDread(dt);
+    this.updateGrain(dt);
   }
 
   /** O HUD já foi montado? (a casa espera por ele antes do primeiro quadro) */

@@ -26,6 +26,7 @@ import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
 import { Tasks } from '../systems/Tasks.js';
 import { Bears } from '../systems/Bears.js';
+import { Heart } from '../systems/Heart.js';
 import { HALLUCINATION_KINDS, HallucinationDirector } from '../systems/HallucinationDirector.js';
 import { BEDROOM_DOOR_ID, BEDROOM_LOCKED_FROM_DAY, BEDROOM_ROOMS, LOCKED_DOOR_LINE } from '../systems/BedroomEvent.js';
 import { FlickerHallucination } from '../hallucinations/Flicker.js';
@@ -50,7 +51,6 @@ const ITEM_RANGE = 1.0;
 const BED_RANGE = 1.4;
 const CHEST_OFFSET = 14; // px acima dos pés: de onde sai a luz da lanterna
 const NIGHT_SPEEDS = [1, 10, 60]; // debug: acelera só o relógio da noite
-const HEARTBEAT_FEAR = 8; // medo que sobe de uma vez a partir disto: som de coração (GDD 5)
 
 const HALLUCINATIONS = {
   flicker: FlickerHallucination,
@@ -129,7 +129,7 @@ export class HouseScene extends Phaser.Scene {
 
     this.lighting = new Lighting(this, { kind: this.grid.kind, bounds: this.bounds, doors: this.doors });
     this.nav = new NavGrid(this.grid.kind, this.furnitureRects, this.lighting.doorByCell);
-    this.bears = new Bears(this, this.clock, this.nav, this.furnitureRects);
+    this.bears = new Bears(this, this.clock, this.nav, this.furnitureRects, this.bedSprite);
     this.monsters = new MonsterDirector(this.createMonsterCtx(), this.clock, this.fear);
     this.godMode = false; // debug: monstros não matam
     this.chaseSound = null;
@@ -197,9 +197,9 @@ export class HouseScene extends Phaser.Scene {
       this.flashlight.forceOff();
       this.hasFuse = false; // o fusível novo foi usado
     });
-    this.fear.onIncrease((amount) => {
-      if (amount >= HEARTBEAT_FEAR) sfx.heartbeat(2);
-    });
+    // Coração contínuo: volume e ritmo pelo medo, medo subindo, alucinação e perseguição
+    this.heart = new Heart(this.fear, sfx, this.hud);
+    this.hud.resetDread();
 
     this.setupDebugKeys();
 
@@ -214,7 +214,7 @@ export class HouseScene extends Phaser.Scene {
       this.director.active?.end();
       this.monsters.endAll();
       this.chaseSound?.stop();
-      this.hud.setChase?.(false);
+      this.hud.resetDread?.();
       debug.clearGroup('Casa');
       debug.clearGroup('Noite');
       debug.clearGroup('Gerador');
@@ -699,6 +699,8 @@ export class HouseScene extends Phaser.Scene {
     });
     if (this.dead) return;
     this.updateChaseEffects(dt);
+    if (!this.sleep) this.heart.update(dt, { hallucinating: !!this.director.active, chasing: this.monsters.chasing });
+    this.hud.setCalm(this.clock.bears);
 
     // Segurar F: no gerador (com fusível) ou numa tarefa que leva tempo
     const target = this.nearestInteractable();
@@ -775,6 +777,7 @@ export class HouseScene extends Phaser.Scene {
     debug.set('Noite/Alucinações na noite', `${d.count}`);
     debug.set('Noite/Tarefas', this.tasks.listRead ? this.tasks.debugText : 'lista não lida');
     debug.set('Noite/Ursos na casa', `${this.bears.remaining}`);
+    debug.set('Noite/Coração', this.heart.debugText);
     debug.set(
       'Noite/Dormir',
       this.sleep
@@ -900,8 +903,7 @@ export class HouseScene extends Phaser.Scene {
   /** Perseguição (GDD 7): coração forte + respiração, bordas pulsando e leve tremor. */
   updateChaseEffects(dt) {
     const chasing = this.monsters.chasing;
-    this.hud.setChase(chasing);
-    if (chasing && !this.chaseSound) this.chaseSound = sfx.chaseLoop(0.8);
+    if (chasing && !this.chaseSound) this.chaseSound = sfx.chaseLoop(0.8, false);
     if (!chasing && this.chaseSound) {
       this.chaseSound.stop();
       this.chaseSound = null;
@@ -919,7 +921,7 @@ export class HouseScene extends Phaser.Scene {
     this.dead = true;
     this.chaseSound?.stop();
     this.chaseSound = null;
-    this.hud.setChase(false);
+    this.hud.resetDread();
     this.hud.dialogue?.clear();
     this.scene.start('Death', { monster, day: this.clock.day });
   }

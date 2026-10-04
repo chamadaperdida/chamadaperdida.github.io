@@ -128,6 +128,15 @@ class Sfx {
     }
   }
 
+  /** Uma batida do coração (tum-tum). period = tempo até a próxima batida (s). */
+  heartBeat(volume = 0.6, period = 0.8) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime + 0.01;
+    const gap = Math.min(0.2, period * 0.32);
+    this.#thump(t, { freq: 48, dur: 0.14, volume, noise: 0.2 });
+    this.#thump(t + gap, { freq: 42, dur: 0.16, volume: volume * 0.72, noise: 0.2 });
+  }
+
   /** Coração batendo forte (toda vez que o medo sobe muito). */
   heartbeat(beats = 2, volume = 0.9) {
     if (!this.ready) return;
@@ -463,7 +472,8 @@ class Sfx {
   }
 
   /** Perseguição: coração forte + respiração ofegante de Artur, em loop. */
-  chaseLoop(volume = 0.8) {
+  /** Perseguição: respiração ofegante (e o coração, se withHeart). */
+  chaseLoop(volume = 0.8, withHeart = true) {
     if (!this.ready) return this.#silentHandle();
     const { gain, panner } = this.#out(volume);
     // Respiração ofegante: ruído filtrado entrando e saindo rápido
@@ -484,9 +494,9 @@ class Sfx {
       breath.gain.linearRampToValueAtTime(inhale ? 0.25 : 0.35, at + 0.08);
       breath.gain.linearRampToValueAtTime(0, at + (inhale ? 0.3 : 0.36));
     }
-    // Coração forte e rápido
+    // Coração forte e rápido (a casa usa o coração contínuo, Heart.js, e desliga este)
     const beats = [];
-    for (let i = 0; i < 120; i++) beats.push(t0 + i * 0.55);
+    if (withHeart) for (let i = 0; i < 120; i++) beats.push(t0 + i * 0.55);
     const heart = this.ctx.createGain();
     heart.gain.value = 1;
     heart.connect(gain);

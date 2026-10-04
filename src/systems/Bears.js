@@ -7,6 +7,7 @@
 //   (paredes e portas fechadas escondem) e perto. Nenhum som ajuda a achar.
 // - Ao coletar: some como uma presença (partículas de luz subindo) e uma nota de caixinha
 //   de música. O jogador não sabe quantos faltam.
+// - O urso coletado reaparece sentado na cama do Artur (sem número: só os ursinhos lá).
 // - Efeito no jogo: clock.bearsCollected (intervalo das alucinações, trava, gerador).
 
 import Phaser from 'phaser';
@@ -31,8 +32,9 @@ export class Bears {
    * @param nav  NavGrid da casa (células livres)
    * @param furnitureRects retângulos dos móveis (px)
    */
-  constructor(scene, clock, nav, furnitureRects) {
+  constructor(scene, clock, nav, furnitureRects, bed) {
     this.scene = scene;
+    this.bed = bed; // sprite da cama do Artur: os ursos coletados ficam sentados nela
     this.clock = clock;
     this.nav = nav;
     this.furnitureRects = furnitureRects;
@@ -156,6 +158,27 @@ export class Bears {
       });
     }
     sfx.musicBox();
+    this.#sitOnBed(this.clock.bearsCollected - 1);
+  }
+
+  /** Coloca o n-ésimo urso coletado sentado na cama (duas fileiras sobre a cama). */
+  #sitOnBed(n) {
+    const slots = [
+      [10, 21],
+      [24, 22],
+      [38, 21],
+      [8, 33],
+      [19, 34],
+      [30, 33],
+      [41, 34],
+    ];
+    const [dx, dy] = slots[n % slots.length];
+    const bear = this.scene.add
+      .image(this.bed.x + dx, this.bed.y + dy, 'props', 'bear')
+      .setOrigin(0.5, 1)
+      .setDepth(this.bed.depth + 1 + n)
+      .setAlpha(0);
+    this.scene.tweens.add({ targets: bear, alpha: 1, duration: 900, delay: 300 });
   }
 
   /** Quantos ainda estão na casa (só debug). */

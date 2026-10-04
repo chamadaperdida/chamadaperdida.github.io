@@ -316,7 +316,8 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
   - *Intenção (só para o design, nunca aparece no jogo): a lista é da psicóloga do bilhete do Marcos no dia 2.*
 - **Ler a lista começa a noite** (4.6). As tarefas **só podem ser feitas depois de ler a lista**; antes disso, interagir com algo de tarefa: *"Primeiro deixa eu ver a lista."*
 - Interagir com a geladeira mostra a lista da noite: tarefas feitas aparecem **riscadas**. A lista **não aparece no HUD**.
-- **Progresso e próximo passo:** embaixo de cada tarefa pendente, a lista mostra quanto falta e o que fazer em seguida (ex.: *"1/4 lavados · lavar na pia da cozinha (1 na mão) · faltam 2 pela casa"*, *"comer na mesa da sala de jantar"*). Toda vez que uma tarefa avança, um **aviso curto** com essa mesma linha aparece no pé da tela por ~3,5 s (não trava o Artur).
+- **Progresso:** na lista, tarefas com vários itens mostram só a contagem: *"Lavar a louça (1/4)"*, *"Tirar o lixo (0/3)"*, *"Regar as plantas (2/5)"*, *"Fechar as janelas (3/6)"*. Sem descrições na folha.
+- **Próximo passo:** toda vez que uma tarefa avança, um **aviso curto** aparece no pé da tela por ~3,5 s (não trava o Artur), com o progresso e o que fazer em seguida (ex.: *"Jantar: comer na mesa da sala de jantar"*, *"Lavar a louça: 1/4 lavados · lavar na pia da cozinha (1 na mão) · faltam 2 pela casa"*).
 - As tarefas são **do cotidiano** e **não têm relação com as alucinações**. São **fixas por noite**.
 - Dormir exige todas as tarefas da noite feitas (4.7).
 
@@ -360,6 +361,8 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - **Nenhum som** ajuda a encontrar um urso.
 - **Visual antes de coletar:** um brilho âmbar **bem fraco** e pequeno em volta do urso — a única coisa de cor quente na paleta fria da casa, mas discreto. Só aparece com **linha de visão** do Artur até o urso (paredes e portas fechadas escondem) e a menos de ~7 m, mais fraco quanto mais longe.
 - **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e toca uma nota curta de caixinha de música. **A tela não muda de cor** (o tom quente na tela inteira foi testado e removido). Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
+- **O urso coletado reaparece sentado na cama do Artur** (até 7, em duas fileiras), surgindo devagar. É o jeito de ver o progresso sem número.
+- **A tela fica mais limpa:** o granulado e a vinheta da tela (13.1) diminuem a cada urso; com todos, ficam em 30% do normal.
 - **Efeito no jogo:** tudo o que antes o tempo facilitava agora depende dos ursos — intervalo entre alucinações e trava (4.6), crescimento do risco do gerador e chance de cair durante o sono (4.4 e 9.2). Não mexe direto no medo nem nos monstros.
 
 ---
@@ -379,7 +382,9 @@ Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos
 | **TV ligando sozinha** | Só se Artur estiver perto. Chiado; às vezes meia palavra de uma jornalista (prenuncia o final). Medo sobe enquanto ligada. | Interagir com a TV para desligar. |
 | **Telefone fixo tocando** | Só se Artur estiver perto. | Deixar tocar até parar: sobe pouco. Atender (interagir): chiado e respiração, sobe muito + coração. |
 
-Toda ação que aumenta muito o medo vem com **som de coração batendo**.
+**Coração (contínuo):** um batimento só, que acompanha o Artur o tempo todo. **Volume e ritmo** (de ~62 a ~160 bpm) sobem com o medo, com o **medo subindo** (quanto mais rápido sobe, mais forte — ex.: chegando perto da poça de sangue), durante alucinações e, bem mais, em perseguições; demora a acalmar. Medo baixo e parado: quase não se ouve. Susto grande de uma vez: a batida vem na hora.
+
+**Medo subindo, visual:** a cada batida, as **bordas da tela escurecem e pulsam**, mais forte quanto mais rápido o medo sobe (e em perseguições); a **barra de medo pisca** mais clara junto com o coração enquanto o medo sobe. Assim o jogador percebe, por exemplo, que chegar perto da poça dá mais medo.
 
 ---
 
@@ -409,7 +414,7 @@ Toda ação que aumenta muito o medo vem com **som de coração batendo**.
 - Com medo em 100%: os eventos podem coincidir.
 - Durante qualquer perseguição:
   - medo sobe um pouco;
-  - **som:** coração batendo forte + respiração ofegante de Artur;
+  - **som:** o coração contínuo (seção 5) dispara + respiração ofegante de Artur;
   - **visual:** bordas da tela escurecem e pulsam no ritmo do coração + leve tremor de câmera.
 
 ---
@@ -609,7 +614,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 - **Só o cômodo onde Artur está fica iluminado.** Os outros cômodos que aparecem na tela ficam bem mais escuros (quase pretos), com a luz vazando pelas portas abertas. O cômodo vizinho só se revela quando Artur entra nele.
 - A transição de luz só acontece em **portas**. Áreas ligadas por vão sem porta acendem juntas: entrada, sala e sala de jantar são uma área só; quintal, jardim e varanda externa também.
 - Chuva visível nas áreas externas e nas janelas; relâmpagos raros iluminam a casa por um instante.
-- Leve granulado e vinheta em toda a tela.
+- Leve granulado e vinheta em toda a tela. Diminuem a cada urso coletado (4.12).
 
 ### 13.2 Artur
 
