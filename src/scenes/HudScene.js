@@ -241,18 +241,18 @@ export class HudScene extends Phaser.Scene {
   updateGrain(dt) {
     const k = 1 - (1 - BALANCE.bears.calmScreenFactor) * this.calm;
     this.ambientVignette.setAlpha(0.55 * k);
-    this.grain.setAlpha(0.06 * k);
+    this.grain.setAlpha(0.025 * k);
     this.grainIn -= dt;
     if (this.grainIn > 0) return;
-    this.grainIn = 0.08;
+    this.grainIn = 0.25;
     const ctx = this.grainTex.getContext();
     const img = ctx.createImageData(this.grainW, this.grainH);
     for (let i = 0; i < img.data.length; i += 4) {
-      const v = Math.random() < 0.5 ? 255 : 0;
+      const v = Math.random() < 0.5 ? 170 : 40; // tons médios, sem preto e branco puros
       img.data[i] = v;
       img.data[i + 1] = v;
       img.data[i + 2] = v;
-      img.data[i + 3] = Math.random() < 0.35 ? 255 : 0;
+      img.data[i + 3] = Math.random() < 0.2 ? 255 : 0;
     }
     ctx.putImageData(img, 0, 0);
     this.grainTex.refresh();
