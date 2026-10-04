@@ -319,7 +319,8 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - Dormir exige todas as tarefas da noite feitas (4.7).
 
 **Regras das tarefas**
-- **Carregar:** com as mãos ocupadas (pilha de pratos, sacos de lixo, cesto, roupa molhada, regador, uniforme, marmita), Artur **não corre**. Se a luz cair, ele **larga o que carrega ali mesmo** (uma mão fica com a lanterna); dá para voltar e pegar quando a luz voltar. **No escuro não dá para pegar objetos de tarefa.**
+- **Carregar:** com as mãos ocupadas (pilha de pratos, sacos de lixo, cesto, roupa molhada, regador, uniforme, marmita), Artur **não corre**. Carrega uma coisa por vez (pratos e sacos empilham); tentar pegar outra: *"Estou com as mãos ocupadas."* Se a luz cair, ele **larga o que carrega ali mesmo** (uma mão fica com a lanterna); dá para voltar e pegar quando a luz voltar.
+- **No escuro nenhuma tarefa avança:** não dá para pegar objetos de tarefa nem fazer as interações (fechar janela, regar etc.).
 - Interações de tarefa que levam tempo (lavar, regar, comer, passar) **não são canceladas** por alucinações; só param se Artur sair de perto ou se a luz cair.
 - O lugar sorteado do celular nunca coincide com outro item (remédio, pilha, chave, fusível).
 - **Precisa de energia:** micro-ondas, máquina de lavar e ferro só funcionam com a luz acesa. Se a luz cai, a tarefa **pausa** e continua quando a luz voltar.
@@ -354,7 +355,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 - Podem ser coletados **a qualquer momento**, com a luz acesa ou apagada. Coletar: interagir (F) perto.
 - O jogador **não sabe quantos ursos existem nem quantos faltam** (sem contador no HUD).
 - **Nenhum som** ajuda a encontrar um urso.
-- **Visual antes de coletar:** um brilho âmbar **bem fraco** — a única coisa de cor quente na paleta fria da casa, mas discreto, sem chamar atenção de longe.
+- **Visual antes de coletar:** um brilho âmbar **bem fraco** e pequeno em volta do urso — a única coisa de cor quente na paleta fria da casa, mas discreto, sem chamar atenção de longe.
 - **Ao coletar:** o urso se desfaz em partículas de luz quente que sobem e, **por um instante curto (~0,6 s)**, a escuridão das bordas da tela recua e a imagem ganha um tom quente, que logo volta ao normal. Uma nota curta de caixinha de música e a respiração do Artur se acalmando. Nada que lembre alucinação ou monstro (sem "parabéns pra você", sem risada da Clara).
 - **Efeito no jogo:** tudo o que antes o tempo facilitava agora depende dos ursos — intervalo entre alucinações e trava (4.6), crescimento do risco do gerador e chance de cair durante o sono (4.4 e 9.2). Não mexe direto no medo nem nos monstros.
 
@@ -444,7 +445,7 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 
 ### 9.2 Fórmulas
 
-- **Intervalo entre alucinações** com `k` de `N` ursos coletados: `sem + (todos − sem) · (k/N)^1,6`, com variação de ±20% a cada sorteio (nunca sem limite). Valores iniciais — calibrar com simulação e no modo debug, com o alvo: abaixo da trava, impossível; logo acima, vários minutos para zerar o medo; com todos, cerca de 1 minuto (mais na noite 7).
+- **Intervalo entre alucinações** com `k` de `N` ursos coletados: `sem + (todos − sem) · (k/N)^3,5`, com variação de ±20% a cada sorteio (nunca sem limite). O expoente 3,5 deixa os primeiros ursos acima da trava ajudando pouco e os últimos ajudando muito (simulação 9.5). Alvo: abaixo da trava, impossível; logo acima, difícil; com todos, cerca de 1 minuto (mais na noite 7).
 - **Queda do medo** (luz acesa, sem alucinação): valor fixo da noite (9.1).
 - **Risco do gerador** (por segundo, só com Artur longe): a cada segundo soma `incremento · (1 − 0,7 · k/N)`, limitado ao teto. Zera quando o gerador cai. (`k/N` = fração dos ursos da noite já coletados.)
 - **Gerador na hora de dormir:** `base · (1 − 0,6 · k/N)`. Cada vez que cair durante o sono, a base perde **35 pontos percentuais** (mínimo 0).
@@ -493,23 +494,28 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Máquina de lavar | 90 s |
 | Regador | 3 vasos por enchida |
 | Urso: luz ao coletar | ~0,6 s |
+| Lavar cada prato / estender a roupa / regar cada vaso / fechar cada janela / passar o uniforme (segurar F) | 2 / 3 / 1,5 / 1 / 4 s |
 | Sequência de sono | 8 s |
 
-### 9.5 Resultado da simulação (chance de vencer a noite)
+### 9.5 Resultado da simulação (ursos)
 
-> **Desatualizado:** esta simulação é do sistema antigo (caos e janelas de calma). Refazer com ursos, tarefas e fusível.
+Script: `scripts/sim-ursos.py`. Mede quanto tempo de luz acesa o jogador leva para **zerar o medo** (condição para dormir, junto com as tarefas), por quantidade de ursos já coletados. Modelo simples: começa com 25% de medo, reage certo a 75% das alucinações, toma remédio quando o medo passa de 35%. **Não** modela o escuro, os monstros, as tarefas nem o tempo para achar os ursos — é o melhor caso.
 
-| Noite | Jogador bom | Jogador médio | Jogador ruim | Duração média (bom) |
-|---|---|---|---|---|
-| 1 | 99% | 93% | 82% | 4,4 min |
-| 2 | 97% | 89% | 71% | 5,1 min |
-| 3 | 95% | 85% | 58% | 5,7 min |
-| 4 | 95% | 79% | 39% | 6,6 min |
-| 5 | 91% | 71% | 20% | 7,6 min |
-| 6 | 88% | 56% | 7% | 8,7 min |
-| 7 | 85% | 33% | 1% | 10,1 min |
+Mediana para zerar o medo (entre parênteses: chance de zerar em até 5 min). "Nunca" = trava ativa ou menos da metade das noites consegue em 30 min.
 
-Quedas de gerador por noite: ~1,5 (D1) a ~2,5 (D7). Nenhuma noite trava sem possibilidade de dormir.
+| Noite | Ursos coletados → tempo |
+|---|---|
+| 1 (4 ursos, trava 2) | 0–1: nunca · 2: 1,4 min (92%) · 3: 0,7 min · 4: 0,5 min |
+| 2 (4, trava 2) | 0–1: nunca · 2: 1,9 min (81%) · 3: 0,8 min · 4: 0,5 min |
+| 3 (5, trava 2) | 0–1: nunca · 2: 1,8 min (58%) · 3: 1,7 min (85%) · 4: 0,9 min · 5: 0,5 min |
+| 4 (5, trava 3) | 0–2: nunca · 3: 2,0 min (68%) · 4: 1,2 min · 5: 0,6 min |
+| 5 (6, trava 3) | 0–2: nunca · 3: nunca (31%) · 4: 2,2 min (69%) · 5: 1,4 min (98%) · 6: 0,6 min |
+| 6 (6, trava 3) | 0–2: nunca · 3: nunca (13%) · 4: 1,6 min (58%) · 5: 1,9 min (88%) · 6: 1,1 min |
+| 7 (7, trava 3) | 0–3: nunca · 4: nunca (8%) · 5: 1,6 min (54%) · 6: 2,4 min (76%) · 7: 1,6 min (98%) |
+
+- Sem ursos (ou abaixo da trava): impossível em todas as noites. ✔
+- Com todos os ursos: possível em todas as noites, mais demorado na 7. ✔
+- **Logo acima da trava, as noites 1–4 ainda ficam fáceis**, principalmente por causa dos remédios (−30 cada). Ajuste a decidir jogando (Apêndice B).
 
 **Recomendação:** incluir um **modo debug** (tecla oculta) que mostra medo, risco do gerador, ursos coletados, intervalo até a próxima alucinação e timers na tela, para ajustar jogando.
 
@@ -715,6 +721,7 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Tentando dormir com tarefa pendente | "Ainda falta coisa da lista." |
 | Tentando dormir no escuro | "Está tudo escuro... primeiro o gerador." |
 | Mexendo em tarefa antes de ler a lista | "Primeiro deixa eu ver a lista." |
+| Tentando pegar algo com as mãos ocupadas | "Estou com as mãos ocupadas." |
 | Tentando dormir com medo | "Não consigo dormir agora, estou com medo." |
 | Gerador sem fusível | "Queimou o fusível... tem que ter outro em algum lugar." |
 | Achou o fusível | "Achei um fusível." |
@@ -920,6 +927,7 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 - Como as pistas das ligações-alucinação (voz distorcida, cortes) aparecem na caixa de diálogo sem áudio de voz (ex.: letras tremendo, trechos apagando).
 - Quais momentos específicos terão áudio de voz (seção 14.3).
 - Ajuste fino de todos os valores da seção 9 jogando o protótipo.
+- **Logo acima da trava, as noites 1–4 ficam fáceis** (simulação 9.5), por causa dos remédios. Opções: menos remédios, trava mais alta nessas noites, ou aceitar (as primeiras noites são as mais fáceis).
 
 ---
 

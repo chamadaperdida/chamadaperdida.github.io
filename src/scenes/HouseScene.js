@@ -1,4 +1,5 @@
-// Casa (GDD 4): mapa, Artur, portas, colisões, câmera, luz, medo, alucinações e sono.
+// Casa (GDD 4): mapa, Artur, portas, colisões, câmera, luz, medo, alucinações, monstros,
+// lista da rotina e tarefas, ursos, fusível e sono.
 
 import Phaser from 'phaser';
 import { BALANCE, TOTAL_DAYS } from '../config/balance.js';
@@ -23,6 +24,8 @@ import { Generator } from '../systems/Generator.js';
 import { Flashlight } from '../systems/Flashlight.js';
 import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
+import { Tasks } from '../systems/Tasks.js';
+import { Bears } from '../systems/Bears.js';
 import { HALLUCINATION_KINDS, HallucinationDirector } from '../systems/HallucinationDirector.js';
 import { BEDROOM_DOOR_ID, BEDROOM_LOCKED_FROM_DAY, BEDROOM_ROOMS, LOCKED_DOOR_LINE } from '../systems/BedroomEvent.js';
 import { FlickerHallucination } from '../hallucinations/Flicker.js';
@@ -63,7 +66,11 @@ const HALLUCINATIONS = {
 // Falas do Artur (GDD 15), mostradas na caixa de diálogo
 const say = (text) => ({ speaker: 'Artur', text });
 const LINES = {
-  arrival: say('Estou exausto... só quero dormir.'),
+  arrival: say('Estou exausto... Deixa eu ver a lista e vou dormir.'),
+  tasksPending: say('Ainda falta coisa da lista.'),
+  noFuse: say('Queimou o fusível... tem que ter outro em algum lugar.'),
+  foundFuse: say('Achei um fusível.'),
+  listFirst: say('Primeiro deixa eu ver a lista.'),
   clara: say('Não posso entrar, está trancado.'),
   cantSleep: say('Não consigo dormir agora, estou com medo.'),
   sleepDark: say('Está tudo escuro... primeiro o gerador.'),
@@ -91,6 +98,9 @@ export class HouseScene extends Phaser.Scene {
     this.dead = false; // a cena é reaproveitada a cada noite: zera o estado
     this.arrived = false; // fala de chegada já fechada
     this.hasKey = false;
+    this.hasFuse = false; // fusível novo no bolso (GDD 4.4)
+    this.fuse = null; // { item, glint } enquanto o fusível está na casa
+    this.taskHold = null; // { key, progress } segurando F numa tarefa
     this.frameCtx = { lightsOn: true, blocked: false, playerMoving: false, playerVelocity: new Phaser.Math.Vector2() };
 
     this.buildMap();
@@ -98,6 +108,10 @@ export class HouseScene extends Phaser.Scene {
     this.doors = DOORS.map((def) => new Door(this, def));
     this.bedroomDoor = this.doors.find((d) => d.id === BEDROOM_DOOR_ID);
     this.items = new Items(this, this.clock.night, this.furnitureById);
+    this.tasks = new Tasks(this, this.clock.night.tasks, this.furnitureById, this.items, {
+      say: (text) => this.hud.talk(say(text)),
+      sfx,
+    });
     if (this.clock.day >= BEDROOM_LOCKED_FROM_DAY) {
       // Noites 5–7: o quarto já está trancado; a chave está em algum lugar fora dele
       this.bedroomDoor.lock();
@@ -114,6 +128,7 @@ export class HouseScene extends Phaser.Scene {
 
     this.lighting = new Lighting(this, { kind: this.grid.kind, bounds: this.bounds, doors: this.doors });
     this.nav = new NavGrid(this.grid.kind, this.furnitureRects, this.lighting.doorByCell);
+    this.bears = new Bears(this, this.clock, this.nav, this.furnitureRects);
     this.monsters = new MonsterDirector(this.createMonsterCtx(), this.clock, this.fear);
     this.godMode = false; // debug: monstros não matam
     this.chaseSound = null;
@@ -130,6 +145,7 @@ export class HouseScene extends Phaser.Scene {
 
     this.hud = this.scene.get('Hud');
     this.hud.dialogue?.clear();
+    this.hud.hideList?.();
     this.hud.clearFade(0);
     this.scene.setVisible(true, 'Hud');
 
@@ -161,20 +177,24 @@ export class HouseScene extends Phaser.Scene {
       if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep) this.flashlight.toggle(!this.generator.on);
     });
 
-    this.generator.listen('drop', () => cam.shake(180, 0.004));
-    this.generator.listen('restore', () => this.flashlight.forceOff());
+    this.generator.listen('drop', () => {
+      cam.shake(180, 0.004);
+      this.onPowerDrop();
+    });
+    this.generator.listen('restore', () => {
+      this.flashlight.forceOff();
+      this.hasFuse = false; // o fusível novo foi usado
+    });
     this.fear.onIncrease((amount) => {
       if (amount >= HEARTBEAT_FEAR) sfx.heartbeat(2);
     });
 
     this.setupDebugKeys();
 
-    // Chegada: a fala. Ao fechar, a noite começa (provisório: na etapa 8 a noite começa
-    // ao ler a lista na geladeira).
+    // Chegada: a fala. A noite só começa quando Artur lê a lista na geladeira (GDD 4.6).
     this.time.delayedCall(600, () =>
       this.hud.talk(LINES.arrival).then(() => {
         this.arrived = true;
-        this.startNight();
       }),
     );
 
@@ -286,9 +306,17 @@ export class HouseScene extends Phaser.Scene {
     // Alucinação ao alcance tem prioridade (estourar o balão perto de uma porta, etc.)
     const h = this.director.active?.interactable;
     if (h && dist(h.point.x, h.point.y) < h.range) return { kind: 'hallucination', use: h.use, anchor: h.anchor };
+    const lightsOn = this.generator.on;
     for (const item of this.items.list) {
+      // O celular é objeto de tarefa: no escuro não dá para pegar (GDD 4.11)
+      if (item.type === 'phone' && !lightsOn) continue;
       consider({ kind: 'item', item, anchor: { x: item.sprite.x, y: item.sprite.y - 10 } }, dist(item.x, item.y), ITEM_RANGE);
     }
+    const bear = this.bears.nearest(feet);
+    if (bear) consider({ kind: 'bear', bear, anchor: { x: bear.sprite.x, y: bear.sprite.y - 14 } }, dist(bear.x, bear.y), Infinity);
+    const list = this.tasks.listTarget;
+    consider({ kind: 'list', anchor: list.anchor }, dist(list.point.x, list.point.y), BALANCE.tasks.reach);
+    for (const t of this.tasks.targets(lightsOn)) consider(t, dist(t.point.x, t.point.y), t.range);
     if (!this.generator.on) {
       const s = this.generatorSprite;
       consider(
@@ -315,14 +343,70 @@ export class HouseScene extends Phaser.Scene {
   }
 
   interact() {
-    if (this.hud.talking || this.sleep) return;
+    // A mesma tecla F que fechou a lista não interage de novo
+    if (this.hud.talking || this.sleep || this.hud.listClosedFrame === this.game.loop.frame) return;
     const target = this.nearestInteractable();
     if (!target) return;
     if (target.kind === 'hallucination') target.use();
     else if (target.kind === 'item') this.useItem(target.item);
     else if (target.kind === 'door') this.useDoor(target.door);
     else if (target.kind === 'bed') this.tryToSleep();
-    // gerador: segurar F, tratado no update
+    else if (target.kind === 'list') this.readList();
+    else if (target.kind === 'bear') this.bears.collect(target.bear, this.hud, sfx);
+    else if (target.kind === 'task' && !target.hold) target.use();
+    else if (target.kind === 'generator' && !this.hasFuse) this.hud.talk(LINES.noFuse);
+    // gerador (com fusível) e tarefas de segurar F: tratados no update
+  }
+
+  // ---- Lista da rotina e começo da noite (GDD 4.6 e 4.11) -----------------
+
+  readList() {
+    this.hud.showList('Rotina antes de dormir', this.tasks.lines).then(() => {
+      if (this.tasks.listRead) return;
+      this.tasks.listRead = true;
+      this.startNight();
+    });
+  }
+
+  // ---- Fusível (GDD 4.4) --------------------------------------------------
+
+  /** A luz caiu: Artur larga o que carrega e um fusível novo aparece em algum lugar. */
+  onPowerDrop() {
+    this.tasks.dropCarried(this.player.feetMeters);
+    this.taskHold = null;
+    this.spawnFuse();
+  }
+
+  spawnFuse() {
+    if (this.fuse || this.hasFuse) return;
+    const feet = this.player.feetMeters;
+    const here = roomAt(feet.x, feet.y) ?? this.lighting.currentRoom;
+    // Nunca num cômodo trancado (o quarto nas noites 5–7, ou o da tranca)
+    const locked = this.bedroomDoor.locked ? [...BEDROOM_ROOMS] : [];
+    const exclude = [...locked, ...(here ? [here.id] : [])];
+    const far = (p) => Math.hypot(p.x - feet.x, p.y - feet.y) >= BALANCE.extra.fuseMinDistance;
+    // Sem lugar válido: relaxa a distância, depois o cômodo (a noite nunca trava)
+    const placed =
+      this.items.place('fuse', 1, exclude, { anyRoom: true, filter: far }) ||
+      this.items.place('fuse', 1, exclude, { anyRoom: true }) ||
+      this.items.place('fuse', 1, locked, { anyRoom: true });
+    if (!placed) return;
+    const item = this.items.list.find((i) => i.type === 'fuse');
+    const glint = this.add
+      .image(item.sprite.x, item.sprite.y - 2, 'props', 'glow')
+      .setScale(0.45)
+      .setDepth(1_000_001)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(0);
+    this.fuse = { item, glint };
+  }
+
+  /** Brilho fraco do fusível só quando o feixe da lanterna passa por ele. */
+  updateFuseGlint(time) {
+    if (!this.fuse) return;
+    const { item, glint } = this.fuse;
+    const lit = !this.generator.on && this.litByFlashlight(item.sprite.x / PPM, (item.sprite.y - 2) / PPM);
+    glint.setAlpha(lit ? 0.32 + 0.12 * Math.sin(time / 90) : 0);
   }
 
   useDoor(door) {
@@ -348,6 +432,11 @@ export class HouseScene extends Phaser.Scene {
   }
 
   useItem(item) {
+    // O celular é objeto de tarefa: só depois de ler a lista
+    if (item.type === 'phone' && !this.tasks.listRead) {
+      this.hud.talk(LINES.listFirst);
+      return;
+    }
     this.items.take(item);
     if (item.type === 'medicine') {
       // Remédio: medo cai rápido + glitch rápido na tela
@@ -358,16 +447,25 @@ export class HouseScene extends Phaser.Scene {
     } else if (item.type === 'key') {
       this.hasKey = true;
       this.hud.talk(LINES.foundKey);
+    } else if (item.type === 'fuse') {
+      this.hasFuse = true;
+      this.fuse.glint.destroy();
+      this.fuse = null;
+      sfx.lockClick(0.4);
+      this.hud.talk(LINES.foundFuse);
+    } else if (item.type === 'phone') {
+      this.tasks.hasPhone = true;
     }
   }
 
   // ---- Começo da noite (GDD 4.6) ----------------------------------------------
 
-  /** A noite começa: relógio, alucinações e sabotagem do gerador. */
+  /** A noite começa: relógio, alucinações, ursos e sabotagem do gerador. */
   startNight() {
     if (this.clock.started) return;
     this.clock.start();
     this.director.enabled = true;
+    this.bears.spawn(this.clock.night.bearCount);
   }
 
   // ---- Alucinações --------------------------------------------------------
@@ -472,6 +570,10 @@ export class HouseScene extends Phaser.Scene {
       this.hud.talk(LINES.sleepDark);
       return;
     }
+    if (!this.tasks.allDone) {
+      this.hud.talk(LINES.tasksPending);
+      return;
+    }
     if (this.fear.value > 0) {
       this.hud.talk(LINES.cantSleep);
       return;
@@ -528,8 +630,10 @@ export class HouseScene extends Phaser.Scene {
     const cam = this.cameras.main;
     const toScreen = (p) => ({ x: (p.x - cam.worldView.x) * cam.zoom, y: (p.y - cam.worldView.y) * cam.zoom });
 
-    // Artur fica parado com a caixa de diálogo aberta e durante a sequência de sono
+    // Artur fica parado com a caixa de diálogo aberta e durante a sequência de sono;
+    // com as mãos ocupadas não corre (GDD 4.11)
     this.player.frozen = this.hud.talking || !!this.sleep;
+    this.player.carrying = !!this.tasks.carrying;
     if (this.sleep) this.updateSleep(dt);
 
     // Lanterna mira no mouse; parado, Artur vira para onde aponta
@@ -552,6 +656,8 @@ export class HouseScene extends Phaser.Scene {
     this.fear.update(nightDt, this.generator.on);
     this.flashlight.update(dt);
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
+    this.tasks.update(dt, this.generator.on, this.player);
+    this.updateFuseGlint(time);
 
     // Monstros (só no escuro) e efeitos de perseguição
     this.monsters.update(dt, nightDt, {
@@ -561,11 +667,24 @@ export class HouseScene extends Phaser.Scene {
     if (this.dead) return;
     this.updateChaseEffects(dt);
 
-    // Segurar F no gerador
+    // Segurar F: no gerador (com fusível) ou numa tarefa que leva tempo
     const target = this.nearestInteractable();
-    const atGenerator = target?.kind === 'generator';
-    if (atGenerator && this.keyF.isDown && !this.hud.talking) this.generator.hold(dt);
+    const holding = this.keyF.isDown && !this.hud.talking && !this.sleep;
+    const atGenerator = target?.kind === 'generator' && this.hasFuse;
+    if (atGenerator && holding) this.generator.hold(dt);
     else this.generator.release();
+    const holdTask = target?.kind === 'task' && target.hold && this.tasks.listRead ? target : null;
+    let taskProgress = 0;
+    if (holdTask && holding) {
+      const key = `${holdTask.task}:${holdTask.point.x.toFixed(2)},${holdTask.point.y.toFixed(2)}`;
+      if (this.taskHold?.key !== key) this.taskHold = { key, progress: 0 };
+      this.taskHold.progress += dt / holdTask.hold;
+      taskProgress = Math.min(1, this.taskHold.progress);
+      if (this.taskHold.progress >= 1) {
+        this.taskHold = null;
+        holdTask.complete();
+      }
+    } else this.taskHold = null;
 
     this.lighting.update(dt, {
       powerOn: this.generator.on,
@@ -580,9 +699,10 @@ export class HouseScene extends Phaser.Scene {
     this.hud.setStamina(this.player.stamina, this.player.exhausted);
     this.hud.setBattery(this.flashlight.battery, this.flashlight.low);
     this.hud.showPrompt(target && !this.sleep ? { ...toScreen(target.anchor), y: toScreen(target.anchor).y - 4 } : null);
+    const holdProgress = atGenerator ? this.generator.holdProgress : taskProgress;
     this.hud.showHold(
-      atGenerator && this.generator.holdProgress > 0 ? { ...toScreen(target.anchor), y: toScreen(target.anchor).y - 40 } : null,
-      this.generator.holdProgress,
+      holdProgress > 0 ? { ...toScreen(target.anchor), y: toScreen(target.anchor).y - 40 } : null,
+      holdProgress,
     );
 
     if (debug.enabled) this.publishDebug(target);
@@ -601,6 +721,7 @@ export class HouseScene extends Phaser.Scene {
     debug.set('Geral/FPS', Math.round(this.game.loop.actualFps));
     debug.set('Geral/Atalhos', '1–7 dia · R reinicia · T tempo · N termina a noite');
     debug.set('Geral/Mais atalhos', 'K gerador · +/− medo · H alucinação · J próxima alucinação · G colisões');
+    debug.set('Geral/Atalhos novos', 'B pega um urso · O completa as tarefas');
 
     const clock = this.clock;
     debug.set('Noite/Dia', `${clock.day}`);
@@ -619,6 +740,8 @@ export class HouseScene extends Phaser.Scene {
     else if (d.nextAt !== null) now = `próxima em ${Math.max(0, d.nextAt - t).toFixed(1)} s`;
     debug.set('Noite/Alucinação: agora', now);
     debug.set('Noite/Alucinações na noite', `${d.count}`);
+    debug.set('Noite/Tarefas', this.tasks.listRead ? this.tasks.debugText : 'lista não lida');
+    debug.set('Noite/Ursos na casa', `${this.bears.remaining}`);
     debug.set(
       'Noite/Dormir',
       this.sleep
@@ -627,6 +750,7 @@ export class HouseScene extends Phaser.Scene {
     );
 
     debug.set('Gerador/Estado', g.on ? 'ligado' : `DESLIGADO (${g.lastDropReason})`);
+    debug.set('Gerador/Fusível', this.hasFuse ? 'no bolso' : this.fuse ? `na casa (${this.fuse.item.room})` : '—');
     debug.set('Gerador/Artur', `${g.isFar(feet) ? 'longe' : 'perto'} (${g.distanceTo(feet).toFixed(1)} m)`);
     debug.set('Gerador/Risco', `${g.risk.toFixed(5)} /s  (teto ${night.generatorRiskCap})`);
     debug.set('Gerador/Quedas', `${g.drops}${clock.started && clock.guaranteedDropDue && g.drops === 0 ? ' (queda garantida pendente)' : ''}`);
@@ -801,6 +925,8 @@ export class HouseScene extends Phaser.Scene {
         this.monsters.endAll();
         this.monsters.start(MONSTER_KINDS[this.monsterDebugIndex]);
       } else if (k === 'i') this.godMode = !this.godMode;
+      else if (k === 'b' && this.bears.list.length) this.bears.collect(this.bears.list[0], this.hud, sfx);
+      else if (k === 'o') this.tasks.completeAll();
     });
   }
 

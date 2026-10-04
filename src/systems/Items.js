@@ -1,4 +1,4 @@
-// Remédios e pilhas (GDD 4.10), e depois a chave (etapa 7).
+// Remédios, pilhas, chave, celular e fusível (GDD 4.4, 4.10 e 4.11).
 // Ficam em cima dos móveis, em lugares específicos (ITEM_SPOTS), sorteados a cada noite.
 // O que cabe em cada lugar depende do cômodo do móvel (GDD 4.2). Quantidade fixa por
 // noite (9.1), de preferência em cômodos diferentes. Usar é na hora (não acumula).
@@ -35,10 +35,21 @@ export class Items {
     this.place('battery', night.batteryCount);
   }
 
-  /** Sorteia `count` lugares livres para `type`, evitando repetir cômodo enquanto der. */
-  place(type, count, excludeRooms = []) {
-    // excludeRooms: ex.: a chave nunca cai dentro do cômodo trancado (GDD 4.9)
-    const options = shuffle(this.free.filter((s) => s.types.includes(type) && !excludeRooms.includes(s.room)));
+  /**
+   * Sorteia `count` lugares livres para `type`, evitando repetir cômodo enquanto der.
+   * excludeRooms: ex.: a chave nunca cai dentro do cômodo trancado (GDD 4.9).
+   * opts.anyRoom: ignora a tabela do que pode aparecer em cada cômodo (celular, fusível).
+   * opts.filter(point): só lugares cujo ponto de alcance (m) passe no filtro.
+   */
+  place(type, count, excludeRooms = [], { anyRoom = false, filter = null } = {}) {
+    const options = shuffle(
+      this.free.filter(
+        (s) =>
+          (anyRoom || s.types.includes(type)) &&
+          !excludeRooms.includes(s.room) &&
+          (!filter || filter(this.#reachPoint(s))),
+      ),
+    );
     const picked = [];
     const rooms = new Set();
     for (const avoidRepeat of [true, false]) {
@@ -54,6 +65,12 @@ export class Items {
     return picked.length;
   }
 
+  /** Ponto de alcance (m) de um lugar, sem criar o item. */
+  #reachPoint(spot) {
+    const { sprite: base } = this.furniture.get(spot.on);
+    return { x: (base.x + spot.dx) / PPM, y: (base.y + base.height) / PPM + REACH_IN_FRONT, room: spot.room };
+  }
+
   #create(type, spot) {
     const { sprite: base } = this.furniture.get(spot.on);
     const sprite = this.scene.add.image(base.x + spot.dx, base.y + spot.dy, 'props', type).setOrigin(0.5, 1);
@@ -62,6 +79,7 @@ export class Items {
       type,
       room: spot.room,
       on: spot.on,
+      spot,
       sprite,
       // ponto de alcance (m): na frente do móvel, alinhado com o item
       x: sprite.x / PPM,
@@ -73,8 +91,10 @@ export class Items {
     return this.list.filter((i) => i.type === type).length;
   }
 
+  /** Pega o item: some da casa e o lugar volta a ficar livre. */
   take(item) {
     item.sprite.destroy();
     this.list = this.list.filter((i) => i !== item);
+    this.free.push({ ...item.spot });
   }
 }

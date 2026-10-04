@@ -185,6 +185,54 @@ class Sfx {
     this.#burst(at, gain, { filter: { type: 'highpass', freq: 4000, q: 0.6 }, attack: 0.001, decay: 0.02, level: 0.12 });
   }
 
+  /** Nota curta de caixinha de música (urso coletado): duas notas suaves, sem melodia conhecida. */
+  musicBox(volume = 0.35) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime + 0.01;
+    const { gain } = this.#out(volume);
+    for (const [freq, delay] of [
+      [1318.5, 0],
+      [1046.5, 0.22],
+    ]) {
+      for (const [mult, level] of [
+        [1, 1],
+        [3, 0.18],
+      ]) {
+        const osc = this.ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = freq * mult;
+        const env = this.ctx.createGain();
+        env.gain.setValueAtTime(0.0001, at + delay);
+        env.gain.exponentialRampToValueAtTime(level, at + delay + 0.005);
+        env.gain.exponentialRampToValueAtTime(0.0001, at + delay + 1.1);
+        osc.connect(env).connect(gain);
+        osc.start(at + delay);
+        osc.stop(at + delay + 1.2);
+      }
+    }
+  }
+
+  /** Bipe de aparelho (micro-ondas, máquina de lavar terminou). */
+  beep(times = 3, volume = 0.25, pan = 0) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime + 0.01;
+    const { gain } = this.#out(volume, pan);
+    for (let i = 0; i < times; i++) {
+      const osc = this.ctx.createOscillator();
+      osc.type = 'square';
+      osc.frequency.value = 1900;
+      const env = this.ctx.createGain();
+      const t = at + i * 0.32;
+      env.gain.setValueAtTime(0.0001, t);
+      env.gain.exponentialRampToValueAtTime(0.4, t + 0.005);
+      env.gain.setValueAtTime(0.4, t + 0.16);
+      env.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+      osc.connect(env).connect(gain);
+      osc.start(t);
+      osc.stop(t + 0.2);
+    }
+  }
+
   /** Clique de tranca/destrancar. */
   lockClick(volume = 0.8, pan = 0) {
     if (!this.ready) return;

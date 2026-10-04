@@ -52,6 +52,17 @@ export const BALANCE = {
     // Eventos de monstro no escuro (por segundo). Dobrado no protótipo (GDD: 1/40 … 1/12).
     monsterEventRate: [1 / 20, 1 / 14.5, 1 / 11.25, 1 / 9.25, 1 / 7.8, 1 / 6.8, 1 / 6],
 
+    // Tarefas obrigatórias da lista da rotina (GDD 4.11), fixas por noite.
+    tasks: [
+      ['jantar', 'louca'],
+      ['lixo', 'celular'],
+      ['jantar', 'roupa', 'louca'],
+      ['regar', 'janelas', 'lixo'],
+      ['jantar', 'uniforme', 'louca', 'janelas'],
+      ['roupa', 'regar', 'lixo', 'celular'],
+      ['jantar', 'roupa', 'uniforme', 'janelas', 'celular'],
+    ],
+
     // Itens espalhados pela casa (quantidade fixa por noite, não acumula).
     medicineCount: [4, 4, 4, 3, 3, 3, 3],
 
@@ -67,7 +78,7 @@ export const BALANCE = {
   formulas: {
     // Intervalo entre alucinações com k de N ursos:
     // semUrsos + (todosUrsos − semUrsos) · (k/N)^hallucinationGapExponent, com ±20%.
-    hallucinationGapExponent: 1.6,
+    hallucinationGapExponent: 3.5,
     hallucinationGapJitter: 0.2,
 
     // Risco do gerador: a cada segundo soma incremento · (1 − generatorRiskBearFactor · k/N).
@@ -149,6 +160,28 @@ export const BALANCE = {
     sleepSequenceSeconds: 8,
   },
 
+  // Tarefas (GDD 4.11 e 9.4)
+  tasks: {
+    microwaveSeconds: 30, // jantar no micro-ondas (precisa de luz)
+    eatSeconds: 5, // comer sentado (segurar F)
+    washPlateSeconds: 2, // lavar cada prato (segurar F)
+    washerSeconds: 90, // ciclo da máquina de lavar (precisa de luz)
+    hangClothesSeconds: 3, // estender a roupa no varal (segurar F)
+    canCapacity: 3, // regador: vasos por enchida
+    waterPotSeconds: 1.5, // regar cada vaso (segurar F)
+    closeWindowSeconds: 1, // fechar cada janela (segurar F)
+    ironSeconds: 4, // passar o uniforme (segurar F, precisa de luz)
+    reach: 1.0, // distância (m) para interagir com objetos de tarefa
+  },
+
+  // Ursos (GDD 4.12)
+  bears: {
+    reach: 0.9, // distância (m) para coletar
+    glowAlpha: 0.06, // brilho âmbar bem fraco
+    glowScale: 0.75,
+    flashSeconds: 0.6, // tom quente na tela ao coletar
+  },
+
   // ---------------------------------------------------------------------------
   // Valores que NÃO estão no GDD (decididos no protótipo — ajustar jogando)
   // ---------------------------------------------------------------------------
@@ -183,21 +216,14 @@ export const BALANCE = {
     nearDeviceDistance: 7,
     // Vulto: Artur a esta distância (m) de uma porta aberta para a sombra passar do outro lado.
     shadowDoorDistance: { min: 2.5, max: 7 },
+    // Fusível: aparece a pelo menos esta distância (m) de Artur, fora do cômodo dele (GDD 4.4).
+    fuseMinDistance: 10,
     // Sono: em que momento da sequência (s) o gerador pode cair.
     sleepGeneratorRollMin: 1.5,
     sleepGeneratorRollMax: 6.5,
   },
 
-  // ---------------------------------------------------------------------------
-  // 9.5 Resultado da simulação (só referência — o jogo não usa estes números)
-  //     Chance de vencer a noite por perfil de jogador.
-  // ---------------------------------------------------------------------------
-  simulationReference: {
-    winChanceGood: [0.99, 0.97, 0.95, 0.95, 0.91, 0.88, 0.85],
-    winChanceAverage: [0.93, 0.89, 0.85, 0.79, 0.71, 0.56, 0.33],
-    winChanceBad: [0.82, 0.71, 0.58, 0.39, 0.20, 0.07, 0.01],
-    averageDurationGoodMinutes: [4.4, 5.1, 5.7, 6.6, 7.6, 8.7, 10.1],
-  },
+  // 9.5 Resultado da simulação: ver GDD e scripts/sim-ursos.py (o jogo não usa).
 };
 
 export const TOTAL_DAYS = 7;

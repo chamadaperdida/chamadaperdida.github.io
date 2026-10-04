@@ -95,7 +95,8 @@ export const FURNITURE = [
   { id: 'cama', sprite: 'bed', x: 22.4, y: 4.25, room: 'quartoArtur' },
   { id: 'criadoMudo', sprite: 'nightstand', x: 24.0, y: 4.25, room: 'quartoArtur' },
   { id: 'comoda', sprite: 'dresser', x: 27.3, y: 4.25, room: 'quartoArtur' },
-  { id: 'armarioQuarto', sprite: 'cabinet', x: 27.9, y: 9.05, room: 'quartoArtur' },
+  { id: 'armarioQuarto', sprite: 'cabinet', x: 27.9, y: 7.5, room: 'quartoArtur' },
+  { id: 'cesto', sprite: 'laundry-basket', x: 24.6, y: 4.6, room: 'quartoArtur' },
   // Suíte e banheiro social
   { id: 'piaSuite', sprite: 'bathroom-sink', x: 30.0, y: 4.25, room: 'suite' },
   { id: 'armarioSuite', sprite: 'cabinet', x: 30.95, y: 4.25, room: 'suite' },
@@ -119,7 +120,8 @@ export const FURNITURE = [
   { id: 'tv', sprite: 'tv', x: 12.3, y: 1.3, room: 'sala' },
   { id: 'estante', sprite: 'shelf', x: 14.4, y: 1.3, room: 'sala' },
   { id: 'sofa', sprite: 'sofa', x: 12.0, y: 3.6, room: 'sala' },
-  { id: 'aparador', sprite: 'sideboard', x: 12.0, y: 12.9, room: 'sala' },
+  { id: 'aparador', sprite: 'sideboard', x: 12.0, y: 12.3, room: 'sala' },
+  { id: 'vasoSala', sprite: 'plant-pot', x: 11.4, y: 10.5, room: 'sala' },
   { id: 'mesinhaSala', sprite: 'side-table', x: 20.9, y: 7.0, room: 'sala' },
   // Sala de jantar
   { id: 'mesaJantar', sprite: 'dining-big', x: 25.5, y: 13.0, room: 'salaJantar' },

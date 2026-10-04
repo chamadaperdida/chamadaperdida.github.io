@@ -457,6 +457,148 @@ function clothesline(c, x, y) {
   for (let i = 0; i < 6; i++) c.px(x + 10 + i * 9, y + 9, '#b0a080');
 }
 
+// ---- Tarefas, ursos e fusível (GDD 4.4, 4.11 e 4.12) ----------------------------
+
+function laundryBasket(c, x, y) {
+  // Cesto de roupa suja, 14×10
+  c.rect(x + 1, y + 2, 12, 8, '#8a7448');
+  c.rect(x, y + 2, 14, 2, '#9a8458');
+  for (let i = 0; i < 4; i++) c.rect(x + 2 + i * 3, y + 5, 1, 4, '#6a5838');
+  c.rect(x + 2, y, 5, 3, '#5a6a7a'); // roupa saindo
+  c.rect(x + 7, y, 4, 2, '#7a5a5a');
+}
+
+function plate(c, x, y) {
+  // Prato sujo, 8×4
+  c.rect(x + 1, y, 6, 1, '#d8d2c0');
+  c.rect(x, y + 1, 8, 2, '#c4bfae');
+  c.rect(x + 1, y + 3, 6, 1, '#9a9688');
+  c.px(x + 3, y + 1, '#7a5a3a');
+  c.px(x + 5, y + 2, '#6a4a2a');
+}
+
+function trashBag(c, x, y) {
+  // Saco de lixo, 8×9
+  c.rect(x + 3, y, 2, 2, '#2a2a2e'); // nó
+  c.rect(x + 1, y + 2, 6, 7, '#1e1e22');
+  c.rect(x, y + 4, 8, 4, '#1e1e22');
+  c.rect(x + 2, y + 3, 1, 3, '#3a3a40');
+}
+
+function wetClothes(c, x, y) {
+  // Roupa molhada dobrada no braço, 12×6
+  c.rect(x, y, 12, 6, '#4a5a6a');
+  c.rect(x, y, 12, 2, '#5a6a7a');
+  c.rect(x + 4, y + 2, 4, 3, '#6a4a4a');
+  c.px(x + 2, y + 5, '#7a8a9a'); // pingando
+}
+
+function wateringCan(c, x, y) {
+  // Regador, 12×8
+  c.rect(x + 2, y + 2, 7, 6, '#4a6a5a');
+  c.rect(x + 2, y + 2, 7, 1, '#5a7a6a');
+  c.rect(x + 9, y + 2, 3, 1, '#4a6a5a'); // bico
+  c.rect(x + 11, y + 1, 1, 1, '#4a6a5a');
+  c.rect(x + 3, y, 5, 1, '#3a5a4a'); // alça
+  c.px(x + 3, y + 1, '#3a5a4a');
+  c.px(x + 7, y + 1, '#3a5a4a');
+}
+
+function foldedUniform(c, x, y, pressed) {
+  // Uniforme dobrado (amarrotado ou passado), 10×6
+  c.rect(x, y, 10, 6, '#2e3a4e');
+  c.rect(x, y, 10, 1, '#3e4a5e');
+  c.rect(x + 2, y + 2, 2, 2, '#b8a050'); // distintivo
+  if (!pressed) {
+    c.px(x + 6, y + 2, '#25303f');
+    c.px(x + 8, y + 4, '#25303f');
+    c.px(x + 5, y + 4, '#3e4a5e');
+  }
+}
+
+function lunchbox(c, x, y, hot) {
+  // Marmita (fria) ou prato de comida quente, 9×5
+  if (hot) {
+    c.rect(x, y + 1, 9, 4, '#c4bfae');
+    c.rect(x + 2, y + 1, 5, 2, '#a86a3a');
+    c.px(x + 3, y, '#d8d8d8'); // vapor
+    c.px(x + 6, y, '#d8d8d8');
+  } else {
+    c.rect(x, y, 9, 5, '#9aa2a4');
+    c.rect(x, y, 9, 1, '#b8c0c2');
+    c.rect(x + 3, y + 2, 3, 1, '#6a7274');
+  }
+}
+
+function cellphone(c, x, y) {
+  // Celular no silencioso (tela apagada), 4×6
+  c.rect(x, y, 4, 6, '#1a1a1e');
+  c.rect(x + 1, y + 1, 2, 3, '#26303a');
+}
+
+function fuse(c, x, y) {
+  // Fusível de cartucho, 6×3
+  c.rect(x, y, 1, 3, '#a8a8a0');
+  c.rect(x + 5, y, 1, 3, '#a8a8a0');
+  c.rect(x + 1, y, 4, 3, '#d8d0b8');
+  c.rect(x + 2, y + 1, 2, 1, '#8a7a5a');
+}
+
+function routineList(c, x, y) {
+  // Folha da lista presa na geladeira com um ímã feito pela Clara, 8×10
+  c.rect(x, y + 1, 8, 9, '#e0dccc');
+  for (let i = 0; i < 4; i++) c.rect(x + 1, y + 3 + i * 2, 5 - (i % 2), 1, '#7a7a80');
+  c.rect(x + 3, y, 3, 2, '#c84a5a'); // ímã (coração de massinha)
+  c.px(x + 4, y + 2, '#c84a5a');
+}
+
+function windowFrame(c, x, y, open) {
+  // Janela na parede, 32×10: aberta (vidro afastado, chuva entrando) ou fechada
+  c.rect(x, y, 32, 10, '#2a2420');
+  c.rect(x + 2, y + 2, 28, 6, open ? '#0e141c' : '#3a4a5a');
+  if (open) {
+    c.rect(x + 2, y + 2, 9, 6, '#4a5a6a'); // folha recolhida
+    for (let i = 0; i < 5; i++) c.px(x + 14 + i * 3, y + 3 + (i % 3), '#5a6a7a'); // chuva
+  } else {
+    c.rect(x + 15, y + 2, 2, 6, '#2a2420');
+    c.rect(x + 4, y + 3, 4, 1, '#5a6a7a'); // reflexo
+    c.rect(x + 19, y + 3, 4, 1, '#5a6a7a');
+  }
+}
+
+function bear(c, x, y) {
+  // Ursinho de pelúcia da Clara, sentado, 10×11
+  const fur = '#8a6440';
+  const furDark = '#6a4a2e';
+  c.rect(x + 1, y, 3, 3, fur); // orelhas
+  c.rect(x + 6, y, 3, 3, fur);
+  c.px(x + 2, y + 1, furDark);
+  c.px(x + 7, y + 1, furDark);
+  c.rect(x + 2, y + 1, 6, 5, fur); // cabeça
+  c.rect(x + 4, y + 4, 2, 1, '#b89a70'); // focinho
+  c.px(x + 3, y + 3, '#1a1410'); // olhos
+  c.px(x + 6, y + 3, '#1a1410');
+  c.rect(x + 2, y + 6, 6, 4, fur); // corpo
+  c.rect(x + 4, y + 7, 2, 2, '#b89a70'); // barriga
+  c.rect(x, y + 6, 2, 3, furDark); // braços
+  c.rect(x + 8, y + 6, 2, 3, furDark);
+  c.rect(x + 1, y + 9, 3, 2, furDark); // pés
+  c.rect(x + 6, y + 9, 3, 2, furDark);
+}
+
+function softGlow(size, color) {
+  // Brilho redondo e suave (desenhado em degraus), size×size
+  return (c, x, y) => {
+    const r = size / 2;
+    for (let yy = 0; yy < size; yy++) {
+      for (let xx = 0; xx < size; xx++) {
+        const d = Math.hypot(xx + 0.5 - r, yy + 0.5 - r) / r;
+        if (d < 1 && (d < 0.45 || (xx + yy) % 2 === 0 || d < 0.7)) c.px(x + xx, y + yy, color);
+      }
+    }
+  };
+}
+
 // ---- Alucinações -------------------------------------------------------------
 
 function helenaSilhouette(c, x, y) {
@@ -614,6 +756,23 @@ const PROPS = [
   ['trash-bin', 8, 10, trashBin, true],
   ['plant-pot', 12, 14, plantPot, true],
   ['clothesline', 64, 24, clothesline, true],
+  ['laundry-basket', 14, 10, laundryBasket, true],
+  ['plate', 8, 4, plate, true],
+  ['trash-bag', 8, 9, trashBag, true],
+  ['wet-clothes', 12, 6, wetClothes, true],
+  ['watering-can', 12, 8, wateringCan, true],
+  ['uniform-folded', 10, 6, (c, x, y) => foldedUniform(c, x, y, false), true],
+  ['uniform-pressed', 10, 6, (c, x, y) => foldedUniform(c, x, y, true), true],
+  ['lunchbox', 9, 5, (c, x, y) => lunchbox(c, x, y, false), true],
+  ['dinner', 9, 5, (c, x, y) => lunchbox(c, x, y, true), true],
+  ['phone', 4, 6, cellphone, true],
+  ['fuse', 6, 3, fuse, true],
+  ['routine-list', 8, 10, routineList],
+  ['window-open', 32, 10, (c, x, y) => windowFrame(c, x, y, true)],
+  ['window-closed', 32, 10, (c, x, y) => windowFrame(c, x, y, false)],
+  ['bear', 10, 11, bear, true],
+  ['glow', 24, 24, softGlow(24, '#ffb860')],
+  ['spark', 2, 2, (c, x, y) => c.rect(x, y, 2, 2, '#ffd08a')],
   ['helena-silhouette', 16, 32, helenaSilhouette, true],
   ['balloon', 9, 22, balloon, true],
   ['blood-pool', 26, 10, bloodPool],

@@ -1,5 +1,6 @@
 // Interface da casa (GDD 11): rosto do Artur, barra de medo (vermelha), estamina (azul),
-// bateria (amarela), aviso de interação [F], progresso do gerador e caixa de diálogo.
+// bateria (amarela), aviso de interação [F], progresso de segurar F, caixa de diálogo,
+// lista da rotina (GDD 4.11) e o clarão quente ao pegar um urso (GDD 4.12).
 
 import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
@@ -62,6 +63,7 @@ export class HudScene extends Phaser.Scene {
     this.holdFill = this.add.rectangle(0, 0, 62, 5, 0xe8e2cf).setOrigin(0, 0.5).setVisible(false);
 
     this.dialogue = new DialogueBox(this);
+    this.buildList();
 
     // Escurecer a tela (sequência de sono)
     const { width, height } = this.scale;
@@ -81,6 +83,90 @@ export class HudScene extends Phaser.Scene {
     }
     this.vignette = this.add.image(0, 0, 'chase-vignette').setOrigin(0).setAlpha(0).setDepth(-10);
     this.chaseLevel = 0;
+
+    // Urso coletado: a imagem ganha um tom quente por um instante (GDD 4.12)
+    this.warm = this.add
+      .rectangle(0, 0, width, height, 0xffa850)
+      .setOrigin(0)
+      .setAlpha(0)
+      .setDepth(-5)
+      .setBlendMode(Phaser.BlendModes.ADD);
+  }
+
+  /** Tom quente rápido na tela (some em `seconds`). */
+  warmFlash(seconds) {
+    this.tweens.killTweensOf(this.warm);
+    this.warm.setAlpha(0.22);
+    this.tweens.add({ targets: this.warm, alpha: 0, duration: seconds * 1000, ease: 'Quad.easeIn' });
+  }
+
+  // ---- Lista da rotina (GDD 4.11) -----------------------------------------
+
+  buildList() {
+    this.listOpen = false;
+    this.list = this.add.container(0, 0).setDepth(1100).setVisible(false);
+    this.listResolve = null;
+    const close = () => {
+      // Ignora a mesma tecla que abriu a lista
+      if (!this.listOpen || this.game.loop.frame <= this.listOpenedFrame) return;
+      this.listOpen = false;
+      this.listClosedFrame = this.game.loop.frame;
+      this.list.setVisible(false);
+      this.listResolve?.();
+      this.listResolve = null;
+    };
+    this.input.keyboard.on('keydown-SPACE', close);
+    this.input.keyboard.on('keydown-F', close);
+  }
+
+  /** Fecha a lista sem avisar ninguém (cena reiniciada, morte). */
+  hideList() {
+    this.listOpen = false;
+    this.listResolve = null;
+    this.list?.setVisible(false);
+  }
+
+  /** Mostra a folha da geladeira. lines: [{ text, done }]. Fecha com Espaço ou F. */
+  showList(title, lines) {
+    this.list.removeAll(true);
+    const { width, height } = this.scale;
+    const w = 380;
+    const h = 96 + lines.length * 34;
+    const x = (width - w) / 2;
+    const y = (height - h) / 2;
+    const paper = this.add.graphics();
+    paper.fillStyle(0xd8d4c4, 1).fillRect(x, y, w, h);
+    paper.lineStyle(2, 0x8a8678, 1).strokeRect(x, y, w, h);
+    paper.fillStyle(0xc84a5a, 1).fillRect(x + w / 2 - 10, y - 8, 20, 14); // ímã
+    this.list.add(paper);
+    this.list.add(
+      this.add.text(x + 26, y + 18, title, { fontFamily: FONT, fontSize: '32px', color: '#2a2a30' }),
+    );
+    lines.forEach((line, i) => {
+      const ty = y + 66 + i * 34;
+      const t = this.add.text(x + 40, ty, `- ${line.text}`, {
+        fontFamily: FONT,
+        fontSize: '28px',
+        color: line.done ? '#8a8678' : '#2a2a30',
+      });
+      this.list.add(t);
+      if (line.done) {
+        const strike = this.add.graphics();
+        strike.lineStyle(2, 0x3a3a40, 1).lineBetween(x + 34, ty + 16, x + 46 + t.width, ty + 14);
+        this.list.add(strike);
+      }
+    });
+    this.list.add(
+      this.add
+        .text(x + w - 12, y + h - 8, '[Espaço]', { fontFamily: FONT, fontSize: '20px', color: '#6a665a' })
+        .setOrigin(1, 1),
+    );
+    this.list.setVisible(true);
+    this.listOpen = true;
+    this.listOpenedFrame = this.game.loop.frame;
+    return new Promise((resolve) => {
+      this.listResolve = resolve;
+    });
   }
 
   /** Liga/desliga o efeito de perseguição (bordas escuras pulsando como o coração). */
@@ -185,8 +271,9 @@ export class HudScene extends Phaser.Scene {
     return this.dialogue.show(Array.isArray(lines) ? lines : [lines]);
   }
 
+  /** Caixa de diálogo ou lista abertas: Artur fica parado. */
   get talking() {
-    return this.dialogue?.isOpen ?? false;
+    return (this.dialogue?.isOpen ?? false) || !!this.listOpen;
   }
 
   // ---- Avisos no mundo ----------------------------------------------------

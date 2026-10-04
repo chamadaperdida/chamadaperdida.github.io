@@ -20,8 +20,9 @@ npm run dev
 | Correr | Shift (segurar) |
 | Mirar a lanterna | Mouse |
 | Ligar/desligar lanterna (só no escuro) | Clique esquerdo |
-| Abrir/fechar porta, pegar remédio/pilha, dormir na cama | F |
-| Religar o gerador | F (segurar 3 s) |
+| Abrir/fechar porta, pegar itens e ursos, ler a lista na geladeira, tarefas, dormir na cama | F |
+| Tarefas que levam tempo (lavar, regar, fechar janela…) | F (segurar) |
+| Religar o gerador (com um fusível novo) | F (segurar 3 s) |
 | Avançar diálogo | Espaço |
 
 ## Estrutura
@@ -29,12 +30,13 @@ npm run dev
 | Caminho | O que é |
 |---|---|
 | `src/config/balance.js` | Todos os valores de balanceamento (GDD seção 9). Ajuste aqui. |
-| `src/systems/` | Fórmulas (GDD 9.2), relógio da noite, medo, gerador, lanterna, iluminação e itens. |
+| `src/systems/` | Fórmulas (GDD 9.2), relógio da noite, medo, gerador, lanterna, iluminação, itens, tarefas (`Tasks.js`) e ursos (`Bears.js`). |
 | `src/world/houseMap.js` | Mapa da casa em metros (cômodos, portas, móveis), feito a partir da planta. |
 | `src/entities/` | Artur (`Player.js`) e portas (`Door.js`). |
 | `src/scenes/` | Cenas do Phaser (carregamento, casa, HUD). |
 | `src/debug/` | Modo debug. |
 | `scripts/sprites/` | Pixel art desenhada por código. `npm run sprites` gera os PNG em `public/assets/sprites`. |
+| `scripts/sim-ursos.py` | Simulação de balanceamento dos ursos (GDD 9.5). |
 | `.github/workflows/deploy.yml` | Publicação automática no GitHub Pages a cada push na `main`. |
 
 ## Modo debug

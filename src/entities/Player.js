@@ -45,6 +45,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.running = false;
     this.facing = 'down';
     this.frozen = false;
+    this.carrying = false; // mãos ocupadas com algo de uma tarefa
 
     this.keys = scene.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -79,7 +80,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     }
     const moving = dx !== 0 || dy !== 0;
 
-    this.updateStamina(dt, moving && k.run.isDown);
+    // Carregando algo de uma tarefa: não corre (GDD 4.11)
+    this.updateStamina(dt, moving && k.run.isDown && !this.carrying);
 
     const speed = this.running ? this.runSpeed : this.walkSpeed;
     const v = new Phaser.Math.Vector2(dx, dy).normalize().scale(moving ? speed : 0);
