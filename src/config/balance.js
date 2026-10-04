@@ -231,8 +231,10 @@ export const BALANCE = {
     tvSeconds: 12,
     // Telefone fixo: quanto tempo toca se ninguém atender (s).
     landlineRingSeconds: 9,
-    // TV e telefone só tocam/ligam com Artur a menos desta distância (m).
-    nearDeviceDistance: 7,
+    // TV e telefone só tocam/ligam com Artur a menos desta distância (m), em qualquer cômodo.
+    nearDeviceDistance: 14,
+    // Até onde se ouve a TV e o telefone (m); mais alto perto.
+    deviceSoundRange: 20,
     // Vulto: Artur a esta distância (m) de uma porta aberta para a sombra passar do outro lado.
     shadowDoorDistance: { min: 2.5, max: 7 },
     // Fusível: aparece a pelo menos esta distância (m) de Artur, fora do cômodo dele (GDD 4.4).

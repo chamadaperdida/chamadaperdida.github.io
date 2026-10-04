@@ -488,6 +488,8 @@ export class Tasks {
           hold: cfg.hangClothesSeconds,
           complete: () => {
             this.carrying = null;
+            // A roupa fica estendida no varal
+            this.furniture.get('varal').sprite.setFrame('clothesline-full');
             this.#finish('roupa');
           },
         }));

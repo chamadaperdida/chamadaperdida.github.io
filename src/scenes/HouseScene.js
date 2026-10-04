@@ -537,9 +537,9 @@ export class HouseScene extends Phaser.Scene {
     const s = this.furnitureById.get(id);
     const feet = this.player.feetMeters;
     const p = { x: (s.sprite.x + s.sprite.width / 2) / PPM, y: (s.sprite.y + s.sprite.height) / PPM };
+    // Artur dentro de casa (não no quintal/jardim) e perto o bastante para ouvir
     const room = roomAt(feet.x, feet.y);
-    const sameZone = room && LIGHT_ZONE.get(room.id) === LIGHT_ZONE.get(s.def.room);
-    return sameZone && Math.hypot(feet.x - p.x, feet.y - p.y) < BALANCE.extra.nearDeviceDistance;
+    return !!room && !room.external && Math.hypot(feet.x - p.x, feet.y - p.y) < BALANCE.extra.nearDeviceDistance;
   }
 
   /**

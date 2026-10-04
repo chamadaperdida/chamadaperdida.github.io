@@ -457,6 +457,49 @@ function clothesline(c, x, y) {
   for (let i = 0; i < 6; i++) c.px(x + 10 + i * 9, y + 9, '#b0a080');
 }
 
+function clotheslineFull(c, x, y) {
+  // Varal com a roupa estendida (tarefa feita), 64×24: camisas, calça, toalha e meias
+  // penduradas nos dois fios, ainda pingando
+  clothesline(c, x, y);
+  const peg = (px, py) => c.px(px, py, '#b0a080');
+  // Fio de cima (y+10)
+  const shirt = (sx, color, shade) => {
+    c.rect(sx, y + 11, 10, 2, color); // ombros e mangas
+    c.rect(sx + 2, y + 13, 6, 5, color);
+    c.rect(sx + 2, y + 17, 6, 1, shade);
+    c.px(sx + 4, y + 11, shade); // gola
+    c.px(sx + 5, y + 11, shade);
+    peg(sx + 1, y + 10);
+    peg(sx + 8, y + 10);
+  };
+  shirt(x + 6, '#4a5a6a', '#3a4a5a');
+  shirt(x + 19, '#7a4a3a', '#6a3a2e');
+  // Toalha comprida
+  c.rect(x + 33, y + 11, 9, 8, '#8a8a6a');
+  c.rect(x + 33, y + 17, 9, 1, '#6a6a52');
+  c.rect(x + 33, y + 13, 9, 1, '#9a9a7a');
+  peg(x + 34, y + 10);
+  peg(x + 40, y + 10);
+  // Calça no fio de baixo (y+15)
+  c.rect(x + 45, y + 16, 9, 2, '#3a4a6a');
+  c.rect(x + 45, y + 18, 4, 5, '#3a4a6a');
+  c.rect(x + 50, y + 18, 4, 5, '#3a4a6a');
+  c.rect(x + 49, y + 18, 1, 5, '#2a3a52');
+  peg(x + 46, y + 15);
+  peg(x + 52, y + 15);
+  // Meias
+  c.rect(x + 56, y + 16, 2, 4, '#9a9a90');
+  c.rect(x + 56, y + 19, 3, 1, '#9a9a90');
+  peg(x + 56, y + 15);
+  // Pingos
+  for (const [dx, dy] of [
+    [9, 19],
+    [23, 19],
+    [37, 20],
+    [47, 24 - 1],
+  ]) c.px(x + dx, y + dy, '#7a8a9a');
+}
+
 function pantryShelf(c, x, y) {
   // Prateleira de despensa/depósito com potes e latas, 32×24. Vãos livres onde os
   // itens podem aparecer: em cima (tampo), prateleira de cima à direita, de baixo à esquerda.
@@ -991,6 +1034,7 @@ const PROPS = [
   ['trash-bin', 8, 10, trashBin, true],
   ['plant-pot', 12, 14, plantPot, true],
   ['clothesline', 64, 24, clothesline, true],
+  ['clothesline-full', 64, 24, clotheslineFull, true],
   ['rug-red', 96, 64, rug(96, 64, '#5a2a26', '#3a1a18', '#7a4a3a')],
   ['rug-blue', 64, 40, rug(64, 40, '#2a3a4a', '#1a2430', '#4a5a6a')],
   ['rug-brown', 80, 48, rug(80, 48, '#4a3a2a', '#2e241a', '#6a5a40')],

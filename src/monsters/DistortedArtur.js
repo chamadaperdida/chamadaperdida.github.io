@@ -1,7 +1,7 @@
 // Artur distorcido (GDD 6): aparece no escuro e persegue, um pouco mais rápido que Artur
 // correndo (1,08×). Reconhecido pelos passos pesados e pela voz do Artur sussurrando,
 // distorcida; quase invisível no escuro (todo preto, sem nenhuma parte brilhante).
-// Sobreviver: apontar a lanterna nele por 0,6 s contínuos — ele se desfaz em cinzas.
+// Sobreviver: apontar a lanterna nele por 0,6 s — ele se desfaz em cinzas.
 
 import Phaser from 'phaser';
 import { BALANCE } from '../config/balance.js';
@@ -10,6 +10,8 @@ import { Chaser } from './Chaser.js';
 import { MONSTER_ANIMS } from './anims.js';
 
 const STEP_EVERY = 0.34; // s
+const BODY_POINTS = [0.25, 0.6, 0.95]; // m acima dos pés: pernas, peito, cabeça
+const LIGHT_LOSS = 1.5; // sem luz, o tempo acumulado cai 1,5× mais rápido do que sobe
 
 export class DistortedArturEvent {
   constructor(ctx) {
@@ -52,9 +54,11 @@ export class DistortedArturEvent {
     this.whisper.setVolume(0.55 * w.volume, w.pan);
 
     // Lanterna nele: 0,6 s contínuos e ele vira cinzas
+    // Qualquer parte do corpo (pernas, peito, cabeça) no feixe conta; perder a luz por um
+    // instante (de perto a mira escapa fácil) só desconta, não zera
     const f = this.chaser.feet;
-    const inLight = this.ctx.litByFlashlight(f.x, f.y - 0.6);
-    this.lit = inLight ? this.lit + dt : 0;
+    const inLight = BODY_POINTS.some((h) => this.ctx.litByFlashlight(f.x, f.y - h));
+    this.lit = inLight ? this.lit + dt : Math.max(0, this.lit - dt * LIGHT_LOSS);
     if (this.lit >= BALANCE.timings.distortedArturAshSeconds) {
       this.crumble();
       return;

@@ -56,8 +56,9 @@ export class TvHallucination extends Hallucination {
       this.screen.setFrame(`tv-static-${this.frame}`);
     }
 
-    const { volume, pan } = positional(this.ctx.feet(), this.pos, 12);
-    this.sound.setVolume(0.35 * volume, pan);
+    // Chiado alto o bastante para chamar o Artur de outros cômodos
+    const { volume, pan } = positional(this.ctx.feet(), this.pos, BALANCE.extra.deviceSoundRange);
+    this.sound.setVolume(0.6 * Math.max(0.12, volume), pan);
 
     if (this.extraLeft > 0) {
       const add = Math.min(this.extraLeft, this.extraPerSecond * dt);

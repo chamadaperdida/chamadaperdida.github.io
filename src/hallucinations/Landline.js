@@ -62,7 +62,7 @@ export class LandlineHallucination extends Hallucination {
   update(dt) {
     super.update(dt);
     if (this.answered) return;
-    const { volume, pan } = positional(this.ctx.feet(), this.pos, 14);
+    const { volume, pan } = positional(this.ctx.feet(), this.pos, BALANCE.extra.deviceSoundRange);
     this.ring.setVolume(0.5 * Math.max(0.15, volume), pan);
     // Treme junto com a campainha (1 s tocando, 2 s parado)
     const ringing = this.elapsed % 3 < 1;

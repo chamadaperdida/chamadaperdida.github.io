@@ -336,7 +336,7 @@ Nas noites 5–7 a porta do quarto do Artur já começa trancada e a chave está
 | **Jantar** | Pegar a marmita no freezer da lavanderia → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s) |
 | **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um |
 | **Tirar o lixo** | Juntar os sacos das 3 lixeiras (cozinha, banheiro social, escritório) → levar até o latão na garagem |
-| **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal |
+| **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal (a roupa fica estendida no varal) |
 | **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher |
 | **Fechar as janelas** | Fechar as 6 janelas da casa (4.2) |
 | **Passar o uniforme** | Pegar o uniforme no armário do quarto → tábua na lavanderia (ferro, precisa de luz) → pendurar no armário do quarto |
@@ -381,8 +381,8 @@ Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos
 | **Luz piscando (comum)** | A luz do cômodo pisca. | Ficar parado: para de piscar mais rápido. |
 | **Luz piscando com Helena (rara)** | Pisca → silhueta de Helena → pisca → some. Sons de susto + coração. | Nenhuma (duração fixa). |
 | **Passos falsos** | Passos pesados correndo (confunde com o Artur distorcido). **Também acontece no escuro.** | Nenhuma. |
-| **TV ligando sozinha** | Só se Artur estiver perto. Chiado; às vezes meia palavra de uma jornalista (prenuncia o final). Medo sobe enquanto ligada. | Interagir com a TV para desligar. |
-| **Telefone fixo tocando** | Só se Artur estiver perto. | Deixar tocar até parar: sobe pouco. Atender (interagir): chiado e respiração, sobe muito + coração. |
+| **TV ligando sozinha** | Só com Artur dentro de casa a até ~14 m dela (qualquer cômodo); o chiado se ouve de longe (~20 m), mais alto perto. Chiado; às vezes meia palavra de uma jornalista (prenuncia o final). Medo sobe enquanto ligada. | Interagir com a TV para desligar. |
+| **Telefone fixo tocando** | Só com Artur dentro de casa a até ~14 m dele (qualquer cômodo); a campainha se ouve de longe (~20 m). | Deixar tocar até parar: sobe pouco. Atender (interagir): chiado e respiração, sobe muito + coração. |
 
 **Coração (contínuo):** um batimento só, que acompanha o Artur o tempo todo. **Volume e ritmo** (de ~62 a ~160 bpm) sobem com o medo, com o **medo subindo** (quanto mais rápido sobe, mais forte — ex.: chegando perto da poça de sangue), durante alucinações e, bem mais, em perseguições; demora a acalmar. Medo baixo e parado: quase não se ouve. Susto grande de uma vez: a batida vem na hora.
 
@@ -395,7 +395,7 @@ Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos
 | Monstro | Comportamento | Como sobreviver |
 |---|---|---|
 | **Invasor** | Perseguições periódicas. Reconhecido pelo **chaveiro tilintando** a cada passo. Com medo em 100%: perseguição garantida, mais agressiva — correr quase não adianta, mas ainda dá para escapar. | Correr, usar portas e os circuitos da casa. |
-| **Artur distorcido** | Chance de aparecer no escuro e perseguir. Um pouco mais rápido que Artur correndo. Reconhecido pelos **passos pesados** e pela **voz do Artur sussurrando**, distorcida (ouvida de mais longe que os passos). Quase invisível no escuro: todo preto, **sem nenhuma parte brilhante**. | Apontar a lanterna: ele **se desfaz em cinzas**. |
+| **Artur distorcido** | Chance de aparecer no escuro e perseguir. Um pouco mais rápido que Artur correndo. Reconhecido pelos **passos pesados** e pela **voz do Artur sussurrando**, distorcida (ouvida de mais longe que os passos). Quase invisível no escuro: todo preto, **sem nenhuma parte brilhante**. | Apontar a lanterna em qualquer parte do corpo (pernas, peito ou cabeça): ele **se desfaz em cinzas**. Perder a luz por um instante só desconta o tempo, não zera. |
 | **Clara** | Do nada, risadas de criança diabólicas. A risada é um **aviso**: há um delay para o jogador parar; depois disso, mexer-se faz ela aparecer e correr atrás dele (um pouco mais rápida que Artur correndo) — fuga impossível. A risada sumir é o aviso de que pode voltar a se mexer. | Ficar parado durante as risadas. |
 | **Helena** | **Presença quase constante no escuro:** sempre que nenhum outro monstro está agindo, ela está em algum lugar perto, onde a lanterna alcança (às vezes exatamente para onde ela aponta), e vai mudando de lugar. Quando outro monstro age, ela some e volta depois. O jogador precisa cuidar da lanterna o tempo todo. Com a luz nela, vai surgindo como espírito; a cabeça vai se erguendo e o **choro aumenta** conforme fica menos transparente. Visível por completo: mata. | Tirar a lanterna dela antes; ela volta a sumir. |
 
@@ -496,7 +496,7 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Clara: delay entre o início da risada e a proibição de mexer | 1,2 s |
 | Clara: duração da risada | 4 a 6 s |
 | Helena: luz contínua para aparecer por completo | Diminui a cada noite: 2,5 / 2,3 / 2,1 / 1,9 / 1,7 / 1,5 / 1,3 s (some 2× mais rápido) |
-| Artur distorcido: luz contínua para virar cinzas | 0,6 s |
+| Artur distorcido: luz para virar cinzas | 0,6 s (sem luz, desconta 1,5× mais rápido) |
 | Lanterna: bateria cheia | por noite (9.1): de 240 s na noite 1 a 90 s na noite 7 |
 | Gerador: segurar F | 3 s |
 | Fusível: distância mínima de Artur ao aparecer | 10 m (e fora do cômodo dele) |
