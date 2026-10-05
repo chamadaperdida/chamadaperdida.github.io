@@ -34,13 +34,18 @@ const TV_RACK = { w: 640 };
 const PULL_BACK = { scale: 0.5, y: 228, delay: 1200, duration: 24000 };
 
 const REPORT = [
-  'Um ex-policial de 41 anos foi encontrado morto em sua casa, em Vale Sereno.',
+  'Boa noite. Interrompemos a programação para uma notícia de Vale Sereno.',
+  'Um ex-policial de 41 anos foi encontrado morto na madrugada de hoje, em sua casa, na Rua das Acácias.',
+  'Artur Lemos estava sozinho.',
+  'A polícia foi chamada por um colega de trabalho, que estranhou a ausência dele no plantão.',
   'Segundo a perícia, a morte está relacionada ao uso excessivo de medicamentos controlados.',
-  'Artur Lemos havia sido afastado das ruas há um ano, após a morte da esposa, Helena, e da filha, Clara,',
-  'durante uma invasão à residência da família no dia do aniversário da filha.',
+  'Frascos vazios foram encontrados no quarto.',
+  'Há um ano, Artur havia sido afastado das ruas e passou a trabalhar como atendente noturno na delegacia da cidade.',
+  'O afastamento aconteceu depois da morte da esposa, Helena, e da filha, Clara, durante uma invasão à residência da família.',
+  'O crime aconteceu na noite do aniversário de nove anos da menina. Hoje, a tragédia completa um ano.',
   'O criminoso nunca foi identificado.',
 ].map((text) => ({ speaker: 'Jornalista', text }));
-const PHOTO_AT_LINE = 1; // a foto aparece a partir da 2ª fala
+const PHOTO_AT_LINE = 1; // a foto da casa aparece na 2ª fala (Rua das Acácias)
 
 // Créditos: [texto, tamanho]; '' = espaço
 const CREDITS = [
