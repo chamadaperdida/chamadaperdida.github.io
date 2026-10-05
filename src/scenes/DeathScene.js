@@ -15,10 +15,13 @@ const RED = '#b3161d';
 const ROWS = { invasor: 0, distorcido: 1, helena: 2, clara: 3 };
 // Grito de cada monstro (gravações, ver audio/Sfx.js → scream)
 const SCREAMS = { invasor: 'roar1', distorcido: 'roar2', helena: 'woman', clara: 'girl' };
-// Quadros de cada jumpscare (scripts/sprites/jumpscares.mjs: 128×128, 4 por monstro)
-const FRAMES = 4;
+// Quadros de cada jumpscare (scripts/sprites/jumpscares.mjs: 128×128, 8 por monstro)
+const FRAMES = 8;
 const START = 200; // ms (antes: 0,2 s de silêncio)
-const FRAME_AT = [START, 340, 470, 620]; // ms — no 2º quadro ele já tomou a tela
+const HIT = START + 90; // ms — o voo até tomar a tela dura 0,09 s
+// Quadros rápidos no voo e no impacto (~22 por segundo), mais espaçados no fim; o último
+// fica tremendo até o corte
+const FRAME_AT = [START, START + 45, HIT, HIT + 45, HIT + 90, HIT + 150, HIT + 230, HIT + 330];
 const HIT_SCALE = 4.8;
 
 export const DEATH_PHRASES = {
@@ -51,7 +54,7 @@ export class DeathScene extends Phaser.Scene {
     const flash = this.add.rectangle(width / 2, height / 2, width, height, 0xd8d0c8).setAlpha(0);
 
     // 2. Jumpscare: o monstro surge pequeno, num canto, e VOA na cara do jogador
-    const hit = FRAME_AT[1]; // chega na tela cheia junto com o 2º quadro
+    const hit = HIT;
     this.time.delayedCall(START, () => {
       const side = Math.random() < 0.5 ? -1 : 1;
       scare.setPosition(width / 2 + side * width * 0.18, height / 2 + height * 0.12).setVisible(true);
@@ -72,7 +75,7 @@ export class DeathScene extends Phaser.Scene {
       // continua avançando devagar, a cabeça tremendo de forma irregular
       this.tweens.add({ targets: scare, scale: HIT_SCALE * 1.18, duration: 1000, ease: 'Quad.easeIn' });
       this.jitter = this.time.addEvent({
-        delay: 45,
+        delay: 33, // tremor a ~30 por segundo
         loop: true,
         callback: () => scare.setPosition(width / 2 + (Math.random() - 0.5) * 18, height / 2 + (Math.random() - 0.5) * 14),
       });

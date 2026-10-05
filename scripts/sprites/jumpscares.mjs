@@ -1,12 +1,16 @@
-// Jumpscares (GDD 13.5 e 13.6): 128×128 por quadro, 4 quadros por monstro, bem maiores e
+// Jumpscares (GDD 13.5 e 13.6): 128×128 por quadro, 8 quadros por monstro, bem maiores e
 // mais detalhados que os sprites do jogo — sombreado com pontilhado (dithering), luz da
 // lanterna vindo de baixo e da frente, textura, e a cabeça tombando nos últimos quadros.
+// Cada desenho recebe o progresso s (0 → 3): as medidas (boca, cabelo, maxilar...) são
+// interpoladas entre 4 poses-chave, e o que é de "estágio" (pontos arrebentando,
+// rachaduras) avança aos poucos. A semente é fixa por monstro (dentes, rachaduras e chuva
+// não pulam de lugar entre quadros); só o granulado muda.
 // Ordem das linhas: invasor, distorcido, helena, clara.
 
 import { PixelCanvas, seeded } from './canvas.mjs';
 
 export const JUMPSCARE_SIZE = 128;
-export const JUMPSCARE_FRAMES = 4;
+export const JUMPSCARE_FRAMES = 8;
 export const JUMPSCARE_ORDER = ['invasor', 'distorcido', 'helena', 'clara'];
 
 const S = JUMPSCARE_SIZE;
@@ -25,6 +29,11 @@ const LIGHT = (() => {
 })();
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+/** Valor entre as 4 poses-chave para o progresso s (0–3). */
+const at = (keys, s) => {
+  const i = clamp(Math.floor(s), 0, keys.length - 2);
+  return keys[i] + (keys[i + 1] - keys[i]) * clamp(s - i, 0, 1);
+};
 
 /** Cor da rampa para o tom t (0–1), com pontilhado ordenado entre os degraus. */
 function tone(ramp, t, x, y) {
@@ -41,9 +50,10 @@ function lit(dx, dy, ambient = 0.15, diffuse = 0.85) {
 
 /** Quadro de 128×128: desenha numa tela própria (para poder tombar a cabeça depois). */
 class Frame {
-  constructor(seed) {
+  constructor(seed, grainSeed = seed) {
     this.c = new PixelCanvas(S, S);
     this.rand = seeded(seed);
+    this.grainRand = seeded(grainSeed);
     this.c.rect(0, 0, S, S, BG);
   }
   px(x, y, color) {
@@ -93,8 +103,8 @@ class Frame {
   grain(amount = 0.06) {
     const d = this.c.data;
     for (let i = 0; i < d.length; i += 4) {
-      if (this.rand() > amount) continue;
-      const k = 0.55 + this.rand() * 0.3;
+      if (this.grainRand() > amount) continue;
+      const k = 0.55 + this.grainRand() * 0.3;
       d[i] *= k;
       d[i + 1] *= k;
       d[i + 2] *= k;
@@ -158,8 +168,8 @@ function grinShape(x, cx, half, top, open) {
   return [up, up + h];
 }
 
-function invader(frame, seed) {
-  const f = new Frame(seed);
+function invader(s, seed, grainSeed) {
+  const f = new Frame(seed, grainSeed);
   rain(f, 70, '#0e1218');
   // Ombros da capa
   f.blob(64, 150, 92, 52, INV.coat, { ambient: 0.1, diffuse: 0.7 });
@@ -195,11 +205,12 @@ function invader(frame, seed) {
 
   // Olhinhos de luz no fundo do escuro, desde o primeiro quadro (é um rosto que avança,
   // não uma boca surgindo do nada); crescem e brilham mais
-  const glint = frame >= 2 ? ['#f0e8d8', '#a8a090'] : ['#a8a090', '#5a564e'];
+  const bright = s >= 1.5;
+  const glint = bright ? ['#f0e8d8', '#a8a090'] : ['#a8a090', '#5a564e'];
   for (const [ex, ey] of [[50, 66], [77, 64]]) {
     f.px(ex, ey, glint[0]);
     f.px(ex + 1, ey, glint[1]);
-    if (frame >= 2) {
+    if (bright) {
       f.px(ex, ey + 1, glint[1]);
       f.px(ex - 1, ey, '#3a3630');
     }
@@ -207,10 +218,10 @@ function invader(frame, seed) {
 
   // O sorriso já está lá (dentes cerrados, no escuro) e vai rasgando a cada quadro
   {
-    const half = [24, 29, 34, 38][frame];
-    const open = [7, 13, 19, 24][frame];
-    const top = [84, 86, 87, 88][frame];
-    const dim = frame === 0 ? 0.22 : 0;
+    const half = Math.round(at([24, 29, 34, 38], s));
+    const open = at([7, 13, 19, 24], s);
+    const top = at([84, 86, 87, 88], s);
+    const dim = 0.22 * clamp(1 - s, 0, 1);
     const cols = [];
     for (let x = 64 - half; x <= 64 + half; x++) {
       const s = grinShape(x, 64, half, top, open);
@@ -250,7 +261,7 @@ function invader(frame, seed) {
       }
     }
     // Fios de baba entre os dentes
-    for (let i = 0; i < [0, 2, 3, 6][frame]; i++) {
+    for (let i = 0; i < Math.round(at([0, 2, 3, 6], s)); i++) {
       const col = cols[Math.floor(cols.length * (0.25 + f.rand() * 0.5))];
       const [x, a, b] = col;
       for (let y = a + 4; y < b - 3; y++) if ((y + x) % 3) f.px(x, y, '#6a6458');
@@ -273,8 +284,8 @@ const DIS = {
   blood: ['#2a0606', '#4e0c0c', '#741616'],
 };
 
-function distorted(frame, seed) {
-  const f = new Frame(seed);
+function distorted(s, seed, grainSeed) {
+  const f = new Frame(seed, grainSeed);
   // Pescoço e ombros curvados
   f.blob(64, 148, 70, 44, DIS.skin, { ambient: 0.05, diffuse: 0.6 });
   f.blob(64, 112, 22, 26, DIS.skin, { ambient: 0.05, diffuse: 0.7 });
@@ -322,7 +333,8 @@ function distorted(frame, seed) {
     f.crack(x, y, 8 + Math.floor(f.rand() * 14), [f.rand() < 0.5 ? 1 : -1, 1], DIS.crackDark, DIS.crack);
   }
   // Órbitas fundas e os olhos brancos, sem íris (maiores quando a boca rasga)
-  const eyeR = frame >= 3 ? [10, 7] : [8, 5];
+  const wide = clamp(s - 2, 0, 1);
+  const eyeR = [Math.round(8 + 2 * wide), Math.round(5 + 2 * wide)];
   for (const ex of [45, 83]) {
     f.fill(ex, 58, 13, 9, '#000000');
     f.blob(ex, 58, eyeR[0], eyeR[1], DIS.eye, { ambient: 0.35, diffuse: 0.7 });
@@ -342,25 +354,32 @@ function distorted(frame, seed) {
   // Boca costurada
   const my = 97;
   const stitches = [44, 50, 56, 62, 68, 74, 80];
-  const popped = frame === 0 ? [] : frame === 1 ? [56, 74] : frame === 2 ? [44, 56, 62, 74, 80] : stitches;
-  if (frame <= 1) {
+  // arrebentam um por um, nesta ordem
+  const popped = [56, 74, 44, 62, 80, 50, 68].slice(0, Math.round(at([0, 2, 5, 7], s)));
+  const torn = s >= 2.4; // a boca rasgada num grito
+  if (s < 1.5) {
     f.line(42, my, 86, my, '#000000', 2);
     for (let x = 42; x <= 86; x++) f.px(x, my + 2, DIS.skin[4]); // lábio de baixo
-  } else if (frame === 2) {
-    // a boca começa a rasgar: uma fresta preta e vermelha
+  } else if (!torn) {
+    // a boca começa a rasgar: uma fresta preta e vermelha que vai abrindo
+    const slit = 2 + 4 * clamp((s - 1.5) / 0.8, 0, 1);
     for (let x = 42; x <= 86; x++) {
       const u = (x - 64) / 22;
-      const h = Math.round(5 * (1 - u * u));
+      const h = Math.round(slit * (1 - u * u));
       for (let y = my - h; y <= my + h; y++) f.px(x, y, y === my - h || y === my + h ? DIS.blood[2] : '#000000');
     }
   } else {
     // rasgada num grito: a mandíbula desce, lábios rasgados, sangue
+    const k = 0.75 + 0.25 * clamp((s - 2.4) / 0.6, 0, 1);
     const cx = 64;
-    const cy = 106;
-    for (let y = cy - 20; y <= cy + 24; y++) {
-      for (let x = cx - 26; x <= cx + 26; x++) {
-        const dx = (x - cx) / 26;
-        const dy = (y - cy) / (y < cy ? 20 : 24);
+    const cy = Math.round(100 + 6 * k);
+    const rx = 26 * k;
+    const ru = 20 * k;
+    const rd = 24 * k;
+    for (let y = Math.floor(cy - ru); y <= cy + rd; y++) {
+      for (let x = Math.floor(cx - rx); x <= cx + rx; x++) {
+        const dx = (x - cx) / rx;
+        const dy = (y - cy) / (y < cy ? ru : rd);
         const r = dx * dx + dy * dy;
         if (r > 1) continue;
         f.px(x, y, r > 0.82 ? tone(DIS.blood, 1 - r, x, y) : r > 0.6 ? '#120202' : '#000000');
@@ -374,7 +393,7 @@ function distorted(frame, seed) {
   }
   // pontos de linha grossa: inteiros (X) ou arrebentados (pontas soltas)
   for (const x of stitches) {
-    if (frame === 3) {
+    if (torn) {
       f.line(x, my - 16 - (x % 3), x + 2, my - 11, DIS.thread[2], 1); // restos pendurados
       f.line(x - 1, my + 20, x, my + 25 + (x % 4), DIS.thread[1], 1);
       continue;
@@ -407,12 +426,12 @@ const HEL = {
   tearEdge: '#24201e',
 };
 
-function helena(frame, seed) {
-  const f = new Frame(seed);
-  const open = [16, 28, 33, 37][frame]; // abertura do cabelo (já aparece no 1º quadro)
+function helena(s, seed, grainSeed) {
+  const f = new Frame(seed, grainSeed);
+  const open = at([16, 28, 33, 37], s); // abertura do cabelo (já aparece no 1º quadro)
   const cx = 64;
   const cy = 60;
-  const jaw = [1, 1, 1.2, 1.45][frame]; // maxilar deslocando: a metade de baixo estica
+  const jaw = at([1, 1, 1.2, 1.45], s); // maxilar deslocando: a metade de baixo estica
   // Rosto (desenhado antes; o cabelo cobre o resto)
   {
     for (let y = 0; y < 128; y++) {
@@ -447,19 +466,20 @@ function helena(frame, seed) {
         if (y % 13 === 0) f.fill(x, y + 1, 2, 2, HEL.tear); // gota seca
       }
     }
-    if (frame === 2) {
+    if (s >= 1.5 && s < 2.4) {
       // lábios cinzentos entreabertos
       for (let x = 54; x <= 74; x++) {
         const y = 90 + Math.round(((x - 64) / 10) ** 2);
         f.px(x, y, '#000000');
         f.px(x, y + 1, HEL.skin[1]);
       }
-    } else if (frame === 3) {
+    } else if (s >= 2.4) {
       // maxilar deslocado além do normal: boca escancarada, pele esticada
+      const k = 0.7 + 0.3 * clamp((s - 2.4) / 0.6, 0, 1);
       for (let y = 80; y < 128; y++) {
         for (let x = 44; x < 85; x++) {
-          const dx = (x - 64) / 14;
-          const dy = (y - 106) / 26;
+          const dx = (x - 64) / (14 * k);
+          const dy = (y - (92 + 14 * k)) / (26 * k);
           const r = dx * dx + dy * dy;
           if (r <= 1) f.px(x, y, r > 0.8 ? '#1a1214' : '#000000');
         }
@@ -515,8 +535,8 @@ const CLA = {
   blush: '#d4a8a0',
 };
 
-function clara(frame, seed) {
-  const f = new Frame(seed);
+function clara(s, seed, grainSeed) {
+  const f = new Frame(seed, grainSeed);
   const cx = 64;
   const cy = 56;
   // Vestido de festa de costas: mangas bufantes, corpo, manchas
@@ -530,7 +550,7 @@ function clara(frame, seed) {
   f.fill(98, 120, 2, 2, CLA.stain);
   // pescoço: nos quadros 2 e 3, torcido (a cabeça girou para trás)
   f.blob(cx, 102, 10, 12, CLA.porcelain, { ambient: 0.1, diffuse: 0.6 });
-  if (frame >= 2) for (let k = 0; k < 4; k++) f.line(cx - 9, 96 + k * 4, cx + 9, 100 + k * 4, CLA.porcelain[0]);
+  if (s >= 1.2) for (let k = 0; k < 4; k++) f.line(cx - 9, 96 + k * 4, cx + 9, 100 + k * 4, CLA.porcelain[0]);
   // gola de renda
   for (let x = cx - 26; x <= cx + 26; x++) {
     const y = 110 + Math.round(((x - cx) / 26) ** 2 * 4);
@@ -547,7 +567,7 @@ function clara(frame, seed) {
   }
   f.blob(cx, cy, 36, 40, CLA.hair, { ambient: 0.12, diffuse: 0.8 });
 
-  if (frame === 0) {
+  if (s < 0.6) {
     // de costas: só a nuca e o cabelo, em mechas
     for (let i = 0; i < 120; i++) {
       const x = cx - 34 + Math.floor(f.rand() * 68);
@@ -556,23 +576,23 @@ function clara(frame, seed) {
     }
   } else {
     // a cabeça gira para trás: de lado no quadro 1, de frente nos quadros 2 e 3
-    const turn = frame === 1 ? 0.6 : 0;
+    const turn = clamp(1.6 - s, 0, 0.6); // vai girando até ficar de frente
     const fcx = Math.round(cx + turn * 16);
     const frx = Math.round(30 * (1 - turn * 0.3));
     f.blob(fcx, cy + 6, frx, 35, CLA.porcelain, { ambient: 0.25, diffuse: 0.8 });
     // bochechas pintadas
-    for (const bx of turn ? [fcx + 10] : [fcx - 15, fcx + 15]) {
+    for (const bx of turn > 0.4 ? [fcx + 10] : [fcx - 15, fcx + 15]) {
       for (let y = 72; y < 80; y++) for (let x = bx - 5; x < bx + 5; x++) if ((x + y) % 2 === 0) f.px(x, y, CLA.blush);
     }
     // olhos totalmente pretos, de boneca; sobrancelhas pintadas finas
-    const eyes = turn ? [fcx + 8] : [fcx - 12, fcx + 12];
-    const er = frame === 3 ? [8, 10] : [7, 8];
+    const eyes = turn > 0.4 ? [fcx + 8] : [fcx - 12, fcx + 12];
+    const er = s >= 2.4 ? [8, 10] : [7, 8];
     for (const ex of eyes) {
       f.fill(ex, 58, er[0], er[1], '#000000');
       f.px(ex - 3, 54, '#5a5a64');
       f.px(ex - 2, 54, '#33333a');
       f.line(ex - 6, 46, ex + 5, 45, CLA.hair[3]);
-      if (frame >= 2) f.line(ex, 66, ex - 1 + (ex % 2), 76 + frame * 3, '#000000', 2); // escorrendo preto
+      if (s >= 1.5) f.line(ex, 66, ex - 1 + (ex % 2), Math.round(76 + s * 3), '#000000', 2); // escorrendo preto
     }
     f.px(fcx + 1, 70, CLA.porcelain[2]);
     // franja em pontas, irregular
@@ -587,15 +607,15 @@ function clara(frame, seed) {
       }
     }
     // rachaduras na porcelana (mais a cada quadro)
-    const cracks = [0, 4, 9, 16][frame];
+    const cracks = Math.round(at([0, 4, 9, 16], s));
     for (let i = 0; i < cracks; i++) {
       const x = Math.round(fcx - frx * 0.7 + f.rand() * frx * 1.4);
       const y = 36 + Math.floor(f.rand() * 48);
       f.crack(x, y, 10 + Math.floor(f.rand() * 14), [f.rand() < 0.5 ? 1 : -1, 1], CLA.crack, CLA.crackEdge);
     }
-    if (frame === 1) {
+    if (s < 1.5) {
       f.line(fcx + 4, 86, fcx + 12, 85, CLA.crack);
-    } else if (frame === 2) {
+    } else if (s < 2.4) {
       // sorriso fino e torto, subindo demais de um lado
       for (let x = fcx - 12; x <= fcx + 15; x++) {
         const y = 87 - Math.round(((x - fcx) / 13) ** 2 * 4) - (x > fcx ? Math.round((x - fcx) / 4) : 0);
@@ -604,10 +624,11 @@ function clara(frame, seed) {
       }
     } else {
       // boca aberta larga demais: a porcelana quebra em volta, pedaços faltando
+      const k = 0.7 + 0.3 * clamp((s - 2.4) / 0.6, 0, 1);
       for (let y = 76; y < 118; y++) {
         for (let x = fcx - 26; x <= fcx + 26; x++) {
-          const dx = (x - fcx) / 23;
-          const dy = (y - 95) / 17;
+          const dx = (x - fcx) / (23 * k);
+          const dy = (y - 95) / (17 * k);
           const jag = Math.sin(x * 1.7) * 0.12 + Math.sin(y * 2.3) * 0.1;
           const r = dx * dx + dy * dy + jag;
           if (r > 1) continue;
@@ -621,7 +642,7 @@ function clara(frame, seed) {
     }
   }
   // Chapéu de aniversário torto (listrado, com pompom)
-  const tip = frame === 3 ? [104, 2] : [96, 0];
+  const tip = s >= 2.4 ? [104, 2] : [96, 0];
   for (let y = tip[1]; y <= 26; y++) {
     const t = (y - tip[1]) / (26 - tip[1]);
     const xl = Math.round(tip[0] + (66 - tip[0]) * t);
@@ -633,26 +654,31 @@ function clara(frame, seed) {
     }
   }
   f.blob(tip[0], tip[1] + 2, 3, 3, ['#8a8478', '#d8d2c6', '#f4efe6'], { ambient: 0.4 });
-  if (frame >= 2) f.line(70, 26, 40, 96, '#b8b0a0'); // elástico passando pelo rosto
+  if (s >= 1.5) f.line(70, 26, 40, 96, '#b8b0a0'); // elástico passando pelo rosto
   f.vignette(0.8);
   f.grain(0.04);
   return f;
 }
 
 const DRAW = { invasor: invader, distorcido: distorted, helena, clara };
-// Tremor e cabeça tombando por quadro (o último quadro tomba mais)
+// Tremor e cabeça tombando por quadro (irregular; o fim tomba mais)
 const MOTION = [
   { tilt: 0, dx: 0, dy: 0 },
+  { tilt: 0.01, dx: -1, dy: 0 },
   { tilt: 0.03, dx: -2, dy: 1 },
-  { tilt: -0.05, dx: 3, dy: 0 },
-  { tilt: 0.12, dx: -3, dy: 2 },
+  { tilt: -0.02, dx: 2, dy: 0 },
+  { tilt: -0.05, dx: 3, dy: -1 },
+  { tilt: 0.04, dx: -1, dy: 1 },
+  { tilt: 0.09, dx: -3, dy: 2 },
+  { tilt: 0.12, dx: -2, dy: 2 },
 ];
 
 export function drawJumpscares() {
   const atlas = new PixelCanvas(S * JUMPSCARE_FRAMES, S * JUMPSCARE_ORDER.length);
   JUMPSCARE_ORDER.forEach((name, row) => {
     for (let n = 0; n < JUMPSCARE_FRAMES; n++) {
-      const frame = DRAW[name](n, row * 10 + n + 1);
+      const progress = (n * 3) / (JUMPSCARE_FRAMES - 1);
+      const frame = DRAW[name](progress, row * 10 + 1, row * 100 + n + 7);
       frame.blit(atlas, n * S, row * S, MOTION[n]);
     }
   });
