@@ -706,7 +706,13 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 ### 13.6 Estrutura dos jumpscares (~1,2 s)
 
 1. Todo o som corta por 0,2 s.
-2. Monstro toma a tela com animação de 3–4 frames, tremor e glitch. Sprites de jumpscare são **maiores e mais detalhados** que os do jogo.
+2. Monstro toma a tela com animação de 4 quadros (aos 0, 0,2, 0,4 e 0,62 s), tremor, zoom e glitch. Sprites de jumpscare são **maiores e mais detalhados** que os do jogo.
+
+> **Feito na etapa 14** (`scripts/sprites/jumpscares.mjs`): 128×128 por quadro (ampliados ~4,6× até tomar a tela), sombreados com pontilhado, luz da lanterna vindo de baixo, granulado e vinheta; nos últimos quadros a cabeça treme e tomba.
+> - **Invasor:** capuz encharcado com dobras e pingos, chuva atrás; o escuro do rosto ganha uma rachadura vermelha que vira o sorriso — cantos subindo até as orelhas, gengiva exposta, duas fileiras de dentes tortos, fios de baba; no último quadro, dois pontinhos de luz no escuro.
+> - **Artur distorcido:** o rosto magro do Artur em carvão (cabelo curto queimado, olheiras, barba por fazer, maçãs fundas, rachaduras), olhos brancos com veias; os pontos da costura arrebentam (pontas soltas, furos sangrando), a boca abre uma fresta e depois rasga num grito, com restos de linha pendurados.
+> - **Helena:** parede de cabelo molhado em mechas, com brilho e gotas; abre uma fresta com um olho leitoso, depois o rosto cinza inteiro com as lágrimas pretas e secas até o queixo; no fim, o maxilar desloca e a boca escancara com a pele esticada.
+> - **Clara:** de costas (cabelo comprido, vestido com mangas bufantes, gola de renda, manchas, chapéu listrado com pompom); a cabeça gira (de lado, depois de frente, com o pescoço torcido), rosto de boneca de porcelana com olhos pretos escorrendo, bochechas pintadas, sorriso torto; no fim, a boca abre larga demais e a porcelana quebra em volta, com cacos faltando.
 3. Grito do monstro + trecho escondido dos gritos da 3ª ligação final.
 4. Corta para a sequência de morte (seção 2.5).
 
@@ -755,8 +761,8 @@ Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofega
 **Monstros e vozes (macabros):**
 - **Invasor:** chaveiro de verdade tilintando a cada passo; jumpscare com um berro em camadas que entra de uma vez (cheio em ~20 ms): pancada grave, golpe curto rasgado, berro comprido sem lentidão e um grito grave por baixo, tudo saturado.
 - **Artur distorcido:** passos pesados no taco, bem mais graves e arrastados, com eco; sussurro de homem mais lento, grave e rasgado, com outro sussurro invertido por baixo; jumpscare tão rápido quanto o do Invasor, mas mais grave e sujo (a boca costurada arrebentando): pancada, berro de homem rasgado, grito demoníaco bem grave e saturado por baixo e um sussurro invertido.
-- **Clara:** risadas de verdade de criança (seis gravações diferentes, sorteadas sem repetir a mesma em seguida), um pouco mais lentas e graves, com eco leve; começam altas na hora (são o aviso) e emendam uma na outra sem silêncio até o fim da risada — às vezes uma volta invertida; estalos de ossos de verdade quando ela corre de quatro; jumpscare com grito de menina.
-- **Helena:** choro de mulher baixinho, mais lento e grave, com eco, e o mesmo choro invertido e bem grave por baixo; jumpscare com grito demoníaco de mulher + tom de linha ocupada.
+- **Clara:** risadas de verdade de criança (seis gravações diferentes, sorteadas sem repetir a mesma em seguida), um pouco mais lentas e graves, com eco leve; começam altas na hora (são o aviso) e emendam uma na outra sem silêncio até o fim da risada — às vezes uma volta invertida; estalos de ossos de verdade quando ela corre de quatro; jumpscare (etapa 14) em que a risada **distorce até virar grito**: pancada, risada alta que despenca de tom na hora e o grito de menina entrando rasgado, com um grito agudo de mulher dando o corte.
+- **Helena:** choro de mulher baixinho, mais lento e grave, com eco, e o mesmo choro invertido e bem grave por baixo; jumpscare (etapa 14) que entra de uma vez já no pico: pancada, grito demoníaco de mulher, o mesmo grito bem grave e saturado por baixo, grito de menina grave e um sopro invertido + tom de linha ocupada.
 - **Luz piscando com Helena:** grito de mulher invertido e lento crescendo até ela aparecer, sopro de sussurro grave com eco longo e estalos de lâmpada.
 - **Sono:** quatro sussurros (dois de homem, um suave, um invertido), lentos, com eco longo, de lados diferentes, aumentando; no fim, silêncio na hora (o eco também corta).
 - **3ª ligação final:** passos pesados, porta rangendo, grito da Helena e da Clara, tudo abafado pelo filtro de telefone; um trecho baixinho desse grito fica escondido em todo jumpscare.
@@ -1037,4 +1043,4 @@ Cada etapa termina com o jogo rodando e publicado no GitHub Pages para teste.
 11. **Fluxo completo:** tela inicial, transições, save, pausa, dificuldade por dia.
 12. **Final:** madrugada do dia 7, reportagem, créditos, tela do CVV.
 13. **Áudio:** ambiente, efeitos (incluindo **todos os sons das tarefas, ursos e fusível da tabela em 14.2 — prioridade alta**) e as vozes dos momentos específicos (seção 14.3).
-14. **Arte final e polimento:** sprites definitivos, jumpscares detalhados, ajuste de balanceamento.
+14. **Arte final e polimento:** sprites definitivos, jumpscares detalhados, ajuste de balanceamento. *(Feito: jumpscares novos — 13.6 — e os gritos da Clara e da Helena refeitos — 14.2. Os outros sprites já eram os definitivos das etapas anteriores. Balanceamento: ver Apêndice B.)*

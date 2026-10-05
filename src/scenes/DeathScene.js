@@ -1,6 +1,6 @@
 // Morte (GDD 2.5 e 13.6):
 // 1. Todo o som corta por 0,2 s.
-// 2. Jumpscare (~1,2 s): o monstro toma a tela, 3 quadros, tremor e glitch, grito.
+// 2. Jumpscare (~1,2 s): o monstro toma a tela, 4 quadros, tremor e glitch, grito.
 // 3. Tela preta com chiado e estática vermelha que vai diminuindo até o preto total.
 // 4. Frase do monstro em vermelho.
 // 5. Volta para a tela inicial. O Continuar leva de volta para a casa, pulando a delegacia
@@ -15,6 +15,9 @@ const RED = '#b3161d';
 const ROWS = { invasor: 0, distorcido: 1, helena: 2, clara: 3 };
 // Grito de cada monstro (gravações, ver audio/Sfx.js → scream)
 const SCREAMS = { invasor: 'roar1', distorcido: 'roar2', helena: 'woman', clara: 'girl' };
+// Quadros de cada jumpscare (scripts/sprites/jumpscares.mjs: 128×128, 4 por monstro)
+const FRAMES = 4;
+const FRAME_AT = [200, 400, 600, 820]; // ms
 
 export const DEATH_PHRASES = {
   clara: 'Ela só queria brincar de estátua.',
@@ -37,8 +40,8 @@ export class DeathScene extends Phaser.Scene {
 
     const row = ROWS[monster] ?? 0;
     const scare = this.add
-      .image(width / 2, height / 2, 'jumpscares', row * 3)
-      .setScale(9)
+      .image(width / 2, height / 2, 'jumpscares', row * FRAMES)
+      .setScale(4.6)
       .setVisible(false);
     // Artur distorcido: glitch alternando com o rosto normal do Artur
     const arturFace = this.add.image(width / 2, height / 2, 'face', 0).setScale(22).setVisible(false);
@@ -54,8 +57,7 @@ export class DeathScene extends Phaser.Scene {
       cam.shake(1100, 0.02);
       glitchCamera(this, cam, 1.1, 0.8);
     });
-    this.time.delayedCall(450, () => scare.setFrame(row * 3 + 1));
-    this.time.delayedCall(700, () => scare.setFrame(row * 3 + 2));
+    for (let n = 1; n < FRAMES; n++) this.time.delayedCall(FRAME_AT[n], () => scare.setFrame(row * FRAMES + n));
     if (monster === 'distorcido') {
       for (let t = 750; t < 1300; t += 110) {
         this.time.delayedCall(t, () => arturFace.setVisible(true));
@@ -63,7 +65,7 @@ export class DeathScene extends Phaser.Scene {
       }
     }
     // Zoom e tremor da cabeça
-    this.tweens.add({ targets: scare, scale: 10.5, duration: 1200, ease: 'Quad.easeIn' });
+    this.tweens.add({ targets: scare, scale: 5.4, duration: 1200, ease: 'Quad.easeIn' });
 
     // 3. Corta para preto com chiado e estática vermelha diminuindo
     this.time.delayedCall(1400, () => {

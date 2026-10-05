@@ -676,6 +676,8 @@ class Sfx {
   scream(volume = 0.9, phone = false, kind = 'woman') {
     if (kind === 'roar1' && !phone) return this.#invaderScream(volume);
     if (kind === 'roar2' && !phone) return this.#distortedScream(volume);
+    if (kind === 'girl' && !phone) return this.#claraScream(volume);
+    if (kind === 'woman' && !phone) return this.#helenaScream(volume);
     const name = { woman: 'scream-woman', girl: 'scream-girl', roar1: 'roar-1', roar2: 'roar-2' }[kind] ?? 'scream-woman';
     const rate = { roar1: 0.8, roar2: 0.7 }[kind] ?? 1;
     this.play(name, { volume, phone, rate, distort: phone ? 0.3 : 0.15, reverb: phone ? 0.1 : 0.35 });
@@ -730,6 +732,37 @@ class Sfx {
     this.play('roar-1', { when: t + 0.05, volume, offset: 0.4, duration: 1.6, rate: 1.0, distort: 0.55, reverb: 0.35 });
     this.play('scream-woman', { when: t, volume: volume * 0.75, offset: 0.35, duration: 1.8, rate: 0.6, distort: 0.7, filter: { type: 'lowpass', freq: 2200 }, reverb: 0.35 });
     this.play('whisper-man', { when: t, volume: volume * 0.5, duration: 1.2, rate: 0.7, reverse: true, distort: 0.4, reverb: 0.5 });
+  }
+
+  /**
+   * Grito da Clara (GDD 13.5: a risada distorce até virar grito): pancada, uma risada
+   * alta que despenca de tom na hora — vira um som grave e arrastado — e, por cima, o
+   * grito de menina entra rasgado, com um grito de mulher agudo dando o corte.
+   */
+  #claraScream(volume) {
+    if (!this.ready) return;
+    volume *= 0.52;
+    const t = this.ctx.currentTime;
+    this.#impact(t, volume * 0.9);
+    const laugh = this.play('laugh-4', { when: t, volume: volume * 1.1, rate: 1, offset: 0.05, duration: 0.9, distort: 0.35, reverb: 0.3 });
+    laugh.setRate(0.42); // a risada afunda (distorcendo)
+    this.play('scream-girl', { when: t + 0.22, volume, offset: 0.08, duration: 1.5, rate: 1.05, distort: 0.35, reverb: 0.3 });
+    this.play('scream-woman', { when: t + 0.25, volume: volume * 0.45, offset: 0.6, duration: 1.3, rate: 1.3, distort: 0.3, filter: { type: 'highpass', freq: 900 }, reverb: 0.25 });
+  }
+
+  /**
+   * Grito da Helena: entra de uma vez, já no pico (pula o começo lento da gravação), com
+   * um grito grave por baixo e um sopro invertido; o tom de linha ocupada vem da cena.
+   */
+  #helenaScream(volume) {
+    if (!this.ready) return;
+    volume *= 0.7;
+    const t = this.ctx.currentTime;
+    this.#impact(t, volume * 0.8);
+    this.play('scream-woman', { when: t, volume: volume * 1.1, offset: 0.55, duration: 1.6, rate: 1.0, distort: 0.3, reverb: 0.35 });
+    this.play('scream-woman', { when: t, volume: volume * 0.6, offset: 0.7, duration: 1.6, rate: 0.62, distort: 0.55, filter: { type: 'lowpass', freq: 1800 }, reverb: 0.4 });
+    this.play('scream-girl', { when: t + 0.05, volume: volume * 0.4, offset: 0.1, duration: 1.3, rate: 0.8, distort: 0.3, reverb: 0.3 });
+    this.play('whisper-soft', { when: t, volume: volume * 0.5, duration: 0.8, rate: 0.6, reverse: true, reverb: 0.6 });
   }
 
   /**
