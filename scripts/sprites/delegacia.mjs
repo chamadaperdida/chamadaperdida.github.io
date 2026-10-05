@@ -96,36 +96,12 @@ function background(c, ox, oy) {
   c.rect(ox + 140, oy, 2, 2, C.metalDark);
   c.rect(ox + 178, oy, 2, 2, C.metalDark);
 
-  // Janela com chuva (o vidro fica escuro; a chuva anima por cima)
-  c.rect(ox + 12, oy + 22, 62, 58, C.metal);
-  c.rect(ox + 15, oy + 25, 56, 52, C.glassNight);
-  c.rect(ox + 42, oy + 25, 2, 52, C.metal); // divisória
-  c.rect(ox + 15, oy + 50, 56, 2, C.metal);
-  c.rect(ox + 15, oy + 66, 27, 11, C.glassDark); // reflexo escuro
-  c.rect(ox + 10, oy + 80, 66, 3, C.metalLight); // peitoril
-  c.rect(ox + 10, oy + 83, 66, 1, C.metalDark);
-  // Luz da rua distante borrada
-  c.rect(ox + 54, oy + 34, 2, 2, '#4a4430');
-  c.rect(ox + 24, oy + 58, 1, 1, '#3a3828');
+  windowArt(c, ox + 10, oy + 22);
 
   // Calendário (dia 7 circulado em vermelho)
   calendarSmall(c, ox + 84, oy + 30);
 
-  // Relógio redondo (ponteiros são desenhados pelo jogo)
-  const cx = ox + 160;
-  const cy = oy + 27;
-  for (let y = -12; y <= 12; y++) {
-    for (let x = -12; x <= 12; x++) {
-      const d = Math.hypot(x, y);
-      if (d <= 12) c.px(cx + x, cy + y, d > 10.5 ? '#1e1e22' : C.paper);
-    }
-  }
-  for (let k = 0; k < 12; k++) {
-    const a = (k / 12) * Math.PI * 2;
-    const px = Math.round(cx + Math.sin(a) * 9);
-    const py = Math.round(cy - Math.cos(a) * 9);
-    c.px(px, py, k % 3 === 0 ? '#2a2a2e' : '#7a7a74');
-  }
+  clockFace(c, ox + 148, oy + 15);
 
   // Quadro de avisos com cartazes de desaparecidos
   c.rect(ox + 198, oy + 26, 66, 46, C.woodDark);
@@ -148,21 +124,58 @@ function background(c, ox, oy) {
   c.rect(ox + 232, oy + 53, 22, 14, '#a8b0b8'); // escala de plantão
   for (let y = 0; y < 5; y++) c.rect(ox + 234, oy + 55 + y * 2, 18, 1, '#5a6068');
 
-  // Porta de vidro fosco, à direita ("SAÍDA" escrito pelo jogo)
-  c.rect(ox + 270, oy + 18, 44, 112, C.metalDark);
-  c.rect(ox + 272, oy + 20, 40, 108, C.metal);
-  c.rect(ox + 276, oy + 26, 32, 70, C.frosted);
-  for (let y = 0; y < 70; y += 2) c.rect(ox + 276, oy + 26 + y, 32, 1, y < 20 ? C.frostedLight : C.frosted);
-  c.rect(ox + 276, oy + 26, 1, 70, C.frostedDark);
-  c.rect(ox + 276, oy + 102, 32, 22, C.metalDark); // parte de baixo
-  c.rect(ox + 278, oy + 104, 28, 18, C.metal);
-  c.rect(ox + 302, oy + 70, 4, 10, C.metalLight); // maçaneta
-  c.rect(ox + 300, oy + 74, 2, 2, C.metalLight);
+  doorArt(c, ox + 270, oy + 18);
 
   // Tomada na parede (onde o cabo do telefone fica ligado)
   c.rect(ox + 254, oy + 100, 8, 9, C.paperShade);
   c.rect(ox + 255, oy + 101, 6, 7, C.paper);
   c.rect(ox + 257, oy + 103, 2, 3, '#2a2a2e');
+}
+
+function windowArt(c, x, y) {
+  // 66×62 a partir do canto do peitoril: janela com chuva (o vidro fica escuro; a chuva
+  // anima por cima)
+  c.rect(x + 2, y, 62, 58, C.metal);
+  c.rect(x + 5, y + 3, 56, 52, C.glassNight);
+  c.rect(x + 32, y + 3, 2, 52, C.metal); // divisória
+  c.rect(x + 5, y + 28, 56, 2, C.metal);
+  c.rect(x + 5, y + 44, 27, 11, C.glassDark); // reflexo escuro
+  c.rect(x, y + 58, 66, 3, C.metalLight); // peitoril
+  c.rect(x, y + 61, 66, 1, C.metalDark);
+  // Luz da rua distante borrada
+  c.rect(x + 44, y + 12, 2, 2, '#4a4430');
+  c.rect(x + 14, y + 36, 1, 1, '#3a3828');
+}
+
+function clockFace(c, x, y) {
+  // 25×25: relógio redondo (ponteiros são desenhados pelo jogo)
+  const cx = x + 12;
+  const cy = y + 12;
+  for (let yy = -12; yy <= 12; yy++) {
+    for (let xx = -12; xx <= 12; xx++) {
+      const d = Math.hypot(xx, yy);
+      if (d <= 12) c.px(cx + xx, cy + yy, d > 10.5 ? '#1e1e22' : C.paper);
+    }
+  }
+  for (let k = 0; k < 12; k++) {
+    const a = (k / 12) * Math.PI * 2;
+    const px = Math.round(cx + Math.sin(a) * 9);
+    const py = Math.round(cy - Math.cos(a) * 9);
+    c.px(px, py, k % 3 === 0 ? '#2a2a2e' : '#7a7a74');
+  }
+}
+
+function doorArt(c, x, y) {
+  // 44×112: porta de vidro fosco ("SAÍDA" escrito pelo jogo)
+  c.rect(x, y, 44, 112, C.metalDark);
+  c.rect(x + 2, y + 2, 40, 108, C.metal);
+  c.rect(x + 6, y + 8, 32, 70, C.frosted);
+  for (let yy = 0; yy < 70; yy += 2) c.rect(x + 6, y + 8 + yy, 32, 1, yy < 20 ? C.frostedLight : C.frosted);
+  c.rect(x + 6, y + 8, 1, 70, C.frostedDark);
+  c.rect(x + 6, y + 84, 32, 22, C.metalDark); // parte de baixo
+  c.rect(x + 8, y + 86, 28, 18, C.metal);
+  c.rect(x + 32, y + 52, 4, 10, C.metalLight); // maçaneta
+  c.rect(x + 30, y + 56, 2, 2, C.metalLight);
 }
 
 function calendarSmall(c, x, y) {
@@ -326,14 +339,19 @@ function desk(c, x, y) {
   c.rect(x + 21, y - 14, 10, 2, C.lampBulb);
 
   // Planta no canto da mesa
-  c.rect(x + 200, y + 4, 12, 12, C.pot);
-  c.rect(x + 199, y + 4, 14, 3, C.potLight);
-  c.rect(x + 205, y - 10, 2, 14, C.leaf);
-  c.rect(x + 199, y - 8, 5, 3, C.leafLight);
-  c.rect(x + 208, y - 12, 5, 3, C.leafLight);
-  c.rect(x + 198, y - 2, 5, 3, C.leaf);
-  c.rect(x + 209, y - 4, 5, 3, C.leaf);
-  c.rect(x + 202, y - 15, 4, 3, C.leafLight);
+  deskPlant(c, x + 198, y - 15);
+}
+
+function deskPlant(c, x, y) {
+  // 16×31: vaso com planta, no canto da mesa
+  c.rect(x + 2, y + 19, 12, 12, C.pot);
+  c.rect(x + 1, y + 19, 14, 3, C.potLight);
+  c.rect(x + 7, y + 5, 2, 14, C.leaf);
+  c.rect(x + 1, y + 7, 5, 3, C.leafLight);
+  c.rect(x + 10, y + 3, 5, 3, C.leafLight);
+  c.rect(x, y + 13, 5, 3, C.leaf);
+  c.rect(x + 11, y + 11, 5, 3, C.leaf);
+  c.rect(x + 4, y, 4, 3, C.leafLight);
 }
 
 function phoneBase(c, x, y, withHandset) {
@@ -371,10 +389,27 @@ function tube(c, x, y, on) {
   if (on) c.rect(x, y + 2, 84, 1, '#b8c0b0');
 }
 
-function plug(c, x, y) {
-  // 5×4: plugue do cabo do telefone (solto no chão nas alucinações)
-  c.rect(x, y, 4, 4, C.paperShade);
-  c.rect(x + 4, y + 1, 1, 2, '#8a8a84');
+
+// ---- Contornos de destaque (mouse em cima) -------------------------------------
+
+const HIGHLIGHT = '#f0e6c8';
+
+/**
+ * Contorno de 1 px em volta da forma de um objeto (para destacar ao passar o mouse).
+ * O quadro tem 1 px a mais de cada lado; o jogo o põe 1 px antes do objeto.
+ */
+function outlineOf(w, h, draw) {
+  return (c, x, y) => {
+    const tmp = new PixelCanvas(w + 2, h + 2);
+    draw(tmp, 1, 1);
+    for (let yy = 0; yy < h + 2; yy++) {
+      for (let xx = 0; xx < w + 2; xx++) {
+        if (tmp.alphaAt(xx, yy)) continue;
+        const near = tmp.alphaAt(xx - 1, yy) || tmp.alphaAt(xx + 1, yy) || tmp.alphaAt(xx, yy - 1) || tmp.alphaAt(xx, yy + 1);
+        if (near) c.px(x + xx, y + yy, HIGHLIGHT);
+      }
+    }
+  };
 }
 
 // ---- Atlas ------------------------------------------------------------------
@@ -394,7 +429,14 @@ const PIECES = [
   ['note', 10, 11, (c, x, y) => note(c, x, y + 1)],
   ['tube-on', 84, 3, (c, x, y) => tube(c, x, y, true)],
   ['tube-off', 84, 3, (c, x, y) => tube(c, x, y, false)],
-  ['plug', 5, 4, plug],
+  // Contornos (w+2 × h+2)
+  ['hl-window', 68, 64, outlineOf(66, 62, windowArt)],
+  ['hl-clock', 27, 27, outlineOf(25, 25, clockFace)],
+  ['hl-door', 46, 114, outlineOf(44, 112, doorArt)],
+  ['hl-calendar', 30, 40, outlineOf(28, 38, (c, x, y) => calendarSmall(c, x, y + 2))],
+  ['hl-plant', 18, 33, outlineOf(16, 31, deskPlant)],
+  ['hl-phone', 28, 16, outlineOf(26, 14, (c, x, y) => phoneBase(c, x, y, true))],
+  ['hl-note', 12, 13, outlineOf(10, 11, (c, x, y) => note(c, x, y + 1))],
 ];
 
 export function drawDelegacia() {

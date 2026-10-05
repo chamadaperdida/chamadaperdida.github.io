@@ -2,9 +2,11 @@
 // objetos. O telefone toca; clicar atende e a ligação aparece na caixa de diálogo.
 // Quando todas as ligações do dia terminam, a porta leva para casa.
 //
-// Ligações-alucinação (GDD 3.5): a lâmpada pisca, o relógio trava em 23:41/23:44/23:47, o
-// cabo do telefone aparece fora da tomada, a tela ganha vinheta e granulado, e a voz de
-// quem liga sai "distorcida" na caixa de diálogo (texto tremendo, letras falhando).
+// Ligações-alucinação (GDD 3.5): a sala escurece e a lâmpada pisca, o relógio trava em
+// 23:41/23:44/23:47, a tela ganha vinheta e granulado, e a voz de quem liga sai
+// "distorcida" na caixa de diálogo (texto tremendo, letras falhando).
+//
+// Passando o mouse num objeto clicável, ele ganha um contorno claro.
 
 import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
@@ -19,7 +21,8 @@ const S = 3; // a arte é 320×180, ampliada 3×
 // Onde fica cada peça (coordenadas da arte, 320×180)
 const AT = {
   tube: [118, 3],
-  window: { x: 15, y: 25, w: 56, h: 52 },
+  window: { x: 15, y: 25, w: 56, h: 52 }, // vidro (onde chove)
+  windowFrame: { x: 10, y: 22, w: 66, h: 62 },
   clock: [160, 27],
   calendar: { x: 84, y: 30, w: 28, h: 36 },
   board: { x: 198, y: 26, w: 66, h: 46 },
@@ -46,9 +49,25 @@ const MINUTES_PER_CALL = 6;
 
 const FIRST_RING = 3; // s depois de entrar
 const BETWEEN_CALLS = [5, 9]; // s
-// Ninguém atendeu: o telefone para (chamada perdida) e a mesma pessoa liga de novo
+// Ninguém atendeu: o telefone para (chamada perdida) e a mesma pessoa liga de novo, uma vez
+// só; se cair de novo, a ligação se perde e o turno segue
 const RING_LIMIT = 20; // s tocando
 const CALL_BACK = 4; // s até ligar de novo
+const MAX_CALL_BACKS = 1;
+// Alucinação: a sala fica mais escura (e mais ainda quando a lâmpada falha)
+const HALLUCINATION_DARK = 0.32;
+const FLICKER_DARK = 0.62;
+
+// Contorno de destaque de cada objeto: quadro e canto (1 px antes do objeto)
+const HIGHLIGHTS = {
+  phone: ['hl-phone', 171, 109],
+  calendar: ['hl-calendar', 83, 27],
+  door: ['hl-door', 269, 17],
+  note: ['hl-note', 57, 91],
+  clock: ['hl-clock', 147, 14],
+  plant: ['hl-plant', 227, 92],
+  window: ['hl-window', 9, 21],
+};
 const MOUTH_EVERY = 0.09; // s entre abrir e fechar a boca falando
 
 const say = (text) => [{ speaker: 'Artur', text }];
@@ -68,7 +87,9 @@ export class DelegaciaScene extends Phaser.Scene {
     this.frozenTime = null;
     this.hallucination = false;
     this.leaving = false;
-    this.missed = 0; // ligações perdidas no dia
+    this.missed = 0; // vezes que o telefone parou sem ninguém atender, no dia
+    this.callBacks = 0; // quantas vezes a ligação atual já ligou de novo
+    this.lost = 0; // ligações perdidas de vez
     this.mouthIn = 0;
     this.mouthOpen = false;
 
@@ -97,9 +118,7 @@ export class DelegaciaScene extends Phaser.Scene {
     this.arms = img(...AT.arms, 'artur-arms-idle');
     this.phone = img(...AT.phone, 'phone');
     this.note = NOTES[day] ? img(...AT.note, 'note') : null;
-    this.cableFront = this.add.graphics();
-    this.plug = img(0, 0, 'plug').setVisible(false);
-    this.#drawCable(true);
+    this.#drawCable();
 
     // Lâmpada piscando (escurece a sala) e efeitos das alucinações
     this.dark = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000).setOrigin(0).setAlpha(0);
@@ -151,19 +170,35 @@ export class DelegaciaScene extends Phaser.Scene {
   // ---- Objetos clicáveis -------------------------------------------------------
 
   #buildHotspots() {
-    const zone = (x, y, w, h, label, use) => {
+    const zone = (x, y, w, h, label, key, use) => {
+      const [frame, hx, hy] = HIGHLIGHTS[key];
+      const outline = this.add
+        .image(hx * S, hy * S, 'delegacia', frame)
+        .setOrigin(0)
+        .setScale(S)
+        .setDepth(700)
+        .setVisible(false);
       const z = this.add.zone(x * S, y * S, w * S, h * S).setOrigin(0).setInteractive({ useHandCursor: true });
-      z.on('pointerover', () => this.hoverText.setText(label));
-      z.on('pointerout', () => this.hoverText.setText(''));
+      z.name = key;
+      z.on('pointerover', () => {
+        this.hoverText.setText(label);
+        outline.setVisible(true);
+      });
+      z.on('pointerout', () => {
+        this.hoverText.setText('');
+        outline.setVisible(false);
+      });
       z.on('use', use);
       return z;
     };
-    zone(AT.phone[0] - 2, AT.phone[1] - 4, 30, 20, 'Telefone', () => this.#answer());
-    zone(AT.calendar.x, AT.calendar.y, AT.calendar.w, AT.calendar.h, 'Calendário', () => this.#openCalendar());
-    zone(AT.door.x, AT.door.y, AT.door.w, AT.door.h, 'Porta', () => this.#door());
-    if (this.note) zone(AT.note[0] - 2, AT.note[1] - 2, 14, 14, 'Bilhete do Marcos', () => this.#readNote());
-    zone(AT.clock[0] - 12, AT.clock[1] - 12, 24, 24, 'Relógio', () => this.#lookAt(`Já são ${this.clockText}.`));
-    zone(AT.plant.x, AT.plant.y, AT.plant.w, AT.plant.h, 'Planta', () => this.#lookAt('Uma planta muito bonita.'));
+    const w = AT.windowFrame;
+    zone(w.x, w.y, w.w, w.h, 'Janela', 'window', () => this.#lookAt('Não para de chover.'));
+    zone(AT.phone[0] - 2, AT.phone[1] - 4, 30, 20, 'Telefone', 'phone', () => this.#answer());
+    zone(AT.calendar.x, AT.calendar.y - 2, AT.calendar.w, AT.calendar.h + 2, 'Calendário', 'calendar', () => this.#openCalendar());
+    zone(AT.door.x, AT.door.y, AT.door.w, AT.door.h, 'Porta', 'door', () => this.#door());
+    if (this.note) zone(AT.note[0] - 2, AT.note[1] - 2, 14, 14, 'Bilhete do Marcos', 'note', () => this.#readNote());
+    zone(AT.clock[0] - 12, AT.clock[1] - 12, 25, 25, 'Relógio', 'clock', () => this.#lookAt(`Já são ${this.clockText}.`));
+    zone(AT.plant.x, AT.plant.y, AT.plant.w, AT.plant.h, 'Planta', 'plant', () => this.#lookAt('Uma planta muito bonita.'));
   }
 
   /** Artur comenta o que está olhando (não durante uma ligação). */
@@ -217,14 +252,24 @@ export class DelegaciaScene extends Phaser.Scene {
 
   /**
    * Tocou demais sem ninguém atender: a ligação cai (chamada perdida) e a mesma pessoa liga
-   * de novo pouco depois. Na primeira vez do dia, Artur percebe.
+   * de novo pouco depois, uma vez só. Se cair de novo, a ligação se perde e o turno segue
+   * (o turno não fica se arrastando madrugada adentro). Artur percebe na primeira vez do dia.
    */
   #missCall() {
     this.#stopRinging();
     this.missed += 1;
-    this.state = 'waiting';
-    this.timer = CALL_BACK;
-    if (this.missed === 1 && !this.dialogue.isOpen && !this.calendarOpen) this.dialogue.show(say('...Parou de tocar.'));
+    const quiet = this.dialogue.isOpen || this.calendarOpen;
+    if (this.callBacks < MAX_CALL_BACKS) {
+      this.callBacks += 1;
+      this.state = 'waiting';
+      this.timer = CALL_BACK;
+      if (this.missed === 1 && !quiet) this.dialogue.show(say('...Parou de tocar.'));
+      return;
+    }
+    // Perdida de vez: passa para a próxima ligação
+    this.lost += 1;
+    if (!quiet) this.dialogue.show(say('...Perdi a ligação.'));
+    this.#nextCall();
   }
 
   #answer() {
@@ -249,7 +294,13 @@ export class DelegaciaScene extends Phaser.Scene {
     this.body.setFrame('artur-body-idle');
     this.arms.setFrame('artur-arms-idle');
     this.phone.setFrame('phone');
+    this.#nextCall();
+  }
+
+  /** Próxima ligação do dia (ou fim do turno). */
+  #nextCall() {
     this.callIndex += 1;
+    this.callBacks = 0;
     this.minutes += MINUTES_PER_CALL;
     if (this.callIndex >= this.calls.length) {
       this.state = 'done';
@@ -294,8 +345,8 @@ export class DelegaciaScene extends Phaser.Scene {
     this.hallucination = true;
     this.frozenTime = time;
     this.flickerIn = 0;
-    this.#drawCable(false); // o cabo aparece fora da tomada
     this.static = sfx.staticLoop(0.06);
+    this.tweens.add({ targets: this.dark, alpha: HALLUCINATION_DARK, duration: 600 });
     this.tweens.add({ targets: this.vignette, alpha: 1, duration: 500 });
     this.tweens.add({ targets: this.grain, alpha: 0.05, duration: 500 });
   }
@@ -307,9 +358,8 @@ export class DelegaciaScene extends Phaser.Scene {
     this.static?.stop();
     this.static = null;
     this.tube.setFrame('tube-on');
-    this.dark.setAlpha(0);
-    this.#drawCable(true);
-    this.tweens.add({ targets: [this.vignette, this.grain], alpha: 0, duration: 400 });
+    this.tweens.killTweensOf(this.dark);
+    this.tweens.add({ targets: [this.vignette, this.grain, this.dark], alpha: 0, duration: 500 });
   }
 
   /** Lâmpada piscando: fica acesa e apaga em piscadas curtas e irregulares. */
@@ -318,7 +368,8 @@ export class DelegaciaScene extends Phaser.Scene {
     if (this.flickerIn > 0) return;
     const off = this.tube.frame.name === 'tube-on' && Math.random() < 0.6;
     this.tube.setFrame(off ? 'tube-off' : 'tube-on');
-    this.dark.setAlpha(off ? 0.55 : 0);
+    if (this.tweens.isTweening(this.dark)) return; // ainda escurecendo
+    this.dark.setAlpha(off ? FLICKER_DARK : HALLUCINATION_DARK);
     this.flickerIn = off ? 0.04 + Math.random() * 0.12 : 0.15 + Math.random() * 0.9;
   }
 
@@ -341,30 +392,17 @@ export class DelegaciaScene extends Phaser.Scene {
 
   // ---- Cabo do telefone ---------------------------------------------------------
 
-  /**
-   * Cabo do telefone. Ligado: sai de trás do telefone, por trás da mesa, e sobe até a
-   * tomada. Solto (alucinação): jogado em cima da mesa, com o plugue à vista, e a tomada vazia.
-   */
-  #drawCable(plugged) {
-    this.cableBack.clear();
-    this.cableFront.clear();
-    const line = (g, from, to, sag) => {
-      g.fillStyle(0x141418, 1);
-      for (let t = 0; t <= 1.0001; t += 0.02) {
-        const x = from[0] + (to[0] - from[0]) * t;
-        const y = from[1] + (to[1] - from[1]) * t + Math.sin(Math.PI * t) * sag;
-        g.fillRect(Math.round(x) * S, Math.round(y) * S, S, S);
-      }
-    };
+  /** Cabo do telefone: sai de trás do telefone, por trás da mesa, e sobe até a tomada. */
+  #drawCable() {
+    const g = this.cableBack.clear();
     const from = [AT.phone[0] + 24, AT.phone[1] + 8];
-    if (plugged) {
-      line(this.cableBack, from, [AT.socket[0], AT.socket[1] + 1], 6);
-      this.plug.setVisible(false);
-      return;
+    const to = [AT.socket[0], AT.socket[1] + 1];
+    g.fillStyle(0x141418, 1);
+    for (let t = 0; t <= 1.0001; t += 0.02) {
+      const x = from[0] + (to[0] - from[0]) * t;
+      const y = from[1] + (to[1] - from[1]) * t + Math.sin(Math.PI * t) * 6;
+      g.fillRect(Math.round(x) * S, Math.round(y) * S, S, S);
     }
-    const end = [AT.phone[0] + 44, AT.phone[1] + 12];
-    line(this.cableFront, from, end, 2);
-    this.plug.setVisible(true).setPosition(end[0] * S, (end[1] - 2) * S);
   }
 
   /** Luz quente e suave da luminária (gradiente, sem borda). */
@@ -544,9 +582,9 @@ export class DelegaciaScene extends Phaser.Scene {
     this.#updateDebug();
   }
 
-  /** Artur mexe a boca enquanto a fala dele é digitada. */
+  /** Artur mexe a boca enquanto a fala dele numa ligação é digitada. */
   #updateMouth(dt) {
-    const talking = this.dialogue.isTyping && this.dialogue.speaker === 'Artur';
+    const talking = this.state === 'talking' && this.dialogue.isTyping && this.dialogue.speaker === 'Artur';
     if (talking) {
       this.mouthIn -= dt;
       if (this.mouthIn <= 0) {
@@ -569,7 +607,7 @@ export class DelegaciaScene extends Phaser.Scene {
       'Delegacia/Ligação',
       `${Math.min(this.callIndex + 1, this.calls.length)}/${this.calls.length} · ${this.state}${
         this.state === 'waiting' ? ` (toca em ${this.timer.toFixed(1)} s)` : ''
-      }${this.state === 'ringing' ? ` (cai em ${(RING_LIMIT - this.ringTime).toFixed(0)} s)` : ''} · perdidas ${this.missed}`,
+      }${this.state === 'ringing' ? ` (cai em ${(RING_LIMIT - this.ringTime).toFixed(0)} s)` : ''} · pararam ${this.missed} · perdidas ${this.lost}`,
     );
     debug.set('Delegacia/Relógio', `${this.clockText}${this.frozenTime ? ' (travado)' : ''}`);
   }

@@ -134,9 +134,10 @@ Tela preta, **todo texto em vermelho**.
 - O telefone toca; o jogador clica para atender. A ligação aparece na **caixa de diálogo** (seção 11.1), com o nome de quem fala.
 - Quando todas as ligações do dia terminam, a **porta** fica interativa (o vidro fosco brilha fraco). Antes disso, clicar nela: Artur diz *"Ainda não terminou o turno."*
 - O telefone toca 3 s depois de entrar e, entre uma ligação e outra, depois de 5 a 9 s (o aparelho treme).
-- **Demorou para atender:** depois de 20 s tocando, a ligação cai (chamada perdida) e a mesma pessoa liga de novo 4 s depois. Na primeira vez do dia, Artur diz *"...Parou de tocar."*
+- **Demorou para atender:** depois de 20 s tocando, a ligação cai e a mesma pessoa liga de novo 4 s depois (na primeira vez do dia, Artur diz *"...Parou de tocar."*). Só liga de novo **uma vez**: se cair de novo, a ligação se perde de vez (*"...Perdi a ligação."*) e o turno segue, para não se arrastar madrugada adentro.
 - **Fim do turno:** depois da última ligação, Artur diz *"Acabou o turno. Hora de ir pra casa."* e a porta fica interativa.
-- Artur **mexe a boca** enquanto a fala dele está sendo digitada.
+- Artur **mexe a boca** enquanto fala ao telefone (não nos comentários sobre os objetos).
+- **Passando o mouse** num objeto clicável, ele ganha um **contorno claro** seguindo a forma dele, e o nome aparece pequeno no canto inferior direito.
 - Passando o mouse num objeto, o nome dele aparece pequeno no canto inferior direito; o cursor vira mãozinha.
 - Durante uma ligação, os outros objetos não respondem. Clique também avança o diálogo.
 
@@ -147,6 +148,7 @@ Tela preta, **todo texto em vermelho**.
 | Telefone | Ligações do dia |
 | Calendário | Clicando, abre grande: dias que já passaram riscados, hoje em destaque, o dia 27 (dia 7 do jogo; dia 1 = 21) circulado com "Aniversário da Clara" |
 | Planta | Artur: *"Uma planta muito bonita."* |
+| Janela | Artur: *"Não para de chover."* |
 | Relógio de parede | Clicando, Artur diz a hora (*"Já são 23:12."*). Mostra a hora do turno (começa às 22:58, anda 1 min a cada 4 s e +6 min a cada ligação); **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
 | Bilhete do Marcos | Aparece na mesa nos dias 1–6 |
 | Porta | Leva para casa ao fim das ligações |
@@ -183,9 +185,8 @@ Só nas alucinações (nunca nas reais):
 
 - Voz distorcida (eco, tom oscilando, cortes, trechos invertidos quase imperceptíveis).
 - Ruídos da noite da tragédia: gerador falhando, porta rangendo, "parabéns pra você" quase inaudível, chiado de balão.
-- **Lâmpada da delegacia pisca** durante a ligação.
+- **A sala escurece** e a **lâmpada da delegacia pisca** durante a ligação.
 - **Relógio trava** em 23:41 / 23:44 / 23:47.
-- **Cabo do telefone aparece fora da tomada** enquanto a ligação acontece.
 - Quem liga chama Artur pelo nome sem ele ter se apresentado.
 - Tela com vinheta escura e granulado leve.
 - **Voz distorcida na caixa de diálogo (sem áudio):** só nas falas de quem liga (Artur fala normal). O texto treme de leve, letras falham por um instante (viram símbolos ou somem) e a digitação sai irregular, travando e correndo. Efeitos sonoros e ações aparecem em cinza, sem nome.
@@ -772,7 +773,9 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Porta da delegacia antes da hora | "Ainda não terminou o turno." |
 | Relógio da delegacia | "Já são HH:MM." |
 | Planta da delegacia | "Uma planta muito bonita." |
+| Janela da delegacia | "Não para de chover." |
 | Telefone parou sem ninguém atender (1ª vez no dia) | "...Parou de tocar." |
+| Ligação perdida de vez (caiu duas vezes) | "...Perdi a ligação." |
 | Fim das ligações do dia | "Acabou o turno. Hora de ir pra casa." |
 | Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
