@@ -154,93 +154,162 @@ export function distortedFrames() {
   return frames;
 }
 
-// ---- Clara: corre de quatro como uma aranha, rápida e desconjuntada -----------------
+// ---- Clara: criança possuída de quatro — quadril alto, braços com o cotovelo dobrado ao
+// contrário, a cabeça virada para trás num ângulo impossível olhando para o Artur, o
+// cabelo escuro caindo pelo rosto; passada mancando, com trancos (não é aranha: só quatro
+// membros por baixo do corpo, nada de joelhos para cima nem patas abertas) -------------
 
 const CLA = {
   dress: '#c8b8b0',
-  dressShade: '#a89890',
+  dressShade: '#9c8c84',
   stain: '#6a3030',
-  skin: '#d8d0c4',
-  limb: '#bcb2a6',
-  limbFar: '#8e867c',
+  skin: '#e2dace',
+  skinShade: '#b4aca0',
+  limb: '#c4baae',
+  limbFar: '#857d74',
+  hair: '#24180f',
+  shoe: '#2a1a1a',
   hat: '#b3161d',
   crack: '#8a8478',
 };
 
-// Patas: [ombro/quadril], [joelho no alto], [pé/mão no chão] — duas fases alternando
-const CRAWL = [
-  { a: 0, b: 1 },
-  { a: 1, b: 0.5 },
-  { a: 0.5, b: 0 },
-  { a: 0, b: 0.5 },
+// Passada de 6 quadros: [avanço do pé/mão, quanto ergue]. Cada membro começa numa fase
+// diferente; a perna de trás mais perto arrasta (não ergue) — ela "manca".
+const GAIT = [
+  [3, 0],
+  [1, 0],
+  [-1, 0],
+  [-3, 0],
+  [-1, 2],
+  [2, 1],
 ];
+const PHASE = { farHind: 0, farFront: 2, nearHind: 3, nearFront: 5 };
+// Corpo descendo/subindo e trancos da cabeça (fora do ritmo dos passos)
+const BOB = [0, 1, 0, 0, 1, 1];
+const TWITCH = [
+  [0, 0],
+  [0, 0],
+  [1, -1],
+  [0, 0],
+  [-1, 1],
+  [0, 0],
+];
+// Inclinação da cabeça por quadro (olhos em alturas diferentes); no quadro 4 ela tomba
+const TILT = [1, 1, 0, 1, -1, 1];
 
-function claraHead(c, x, y, hx, hy, view) {
-  ellipse(c, x, y, hx, hy, 3, 3, CLA.skin); // porcelana
-  if (view !== 'up') {
-    c.px(x + hx - 1, y + hy, B); // olhos totalmente pretos
-    c.px(x + hx + 1, y + hy, B);
-    c.px(x + hx, y + hy - 2, CLA.crack);
-    c.px(x + hx + 2, y + hy + 2, CLA.crack);
-  } else {
-    c.rect(x + hx - 2, y + hy - 2, 5, 3, '#3a2a1e'); // cabelo
+const gait = (n, phase, drag = false) => {
+  const [dx, lift] = GAIT[(n + phase) % 6];
+  return drag ? [Math.round(dx / 2), 0] : [dx, lift];
+};
+
+/** Rosto de porcelana virado para quem olha, inclinado; cabelo caindo dos lados. */
+function claraFace(c, x, y, hx, hy, tilt, { hairLen = 6, back = false } = {}) {
+  // cabelo atrás da cabeça, escorrendo dos dois lados
+  c.rect(x + hx - 4, y + hy - 2, 2, hairLen + 1, CLA.hair);
+  c.rect(x + hx + 3, y + hy - 2, 2, hairLen + 1 - (tilt > 0 ? 1 : 0), CLA.hair);
+  c.px(x + hx - 4, y + hy + hairLen, CLA.hair);
+  ellipse(c, x, y, hx, hy, 3, 3, back ? CLA.hair : CLA.skin);
+  c.rect(x + hx - 3, y + hy - 3, 7, 2, CLA.hair); // franja
+  if (!back) {
+    // olhos todos pretos, um mais alto que o outro (cabeça tombada)
+    c.rect(x + hx - 2, y + hy - (tilt < 0 ? 1 : 0), 1, 2, B);
+    c.rect(x + hx + 1, y + hy - (tilt > 0 ? 1 : 0), 1, 2, B);
+    // boca aberta demais, torta
+    c.rect(x + hx - 1, y + hy + 2, 2, 1, B);
+    c.px(x + hx + (tilt > 0 ? 1 : -2), y + hy + (tilt > 0 ? 1 : 3), B);
+    // porcelana rachada
+    c.px(x + hx + 2, y + hy - 2, CLA.crack);
+    c.px(x + hx + 3, y + hy - 1, CLA.crack);
+    c.px(x + hx - 3, y + hy + 1, CLA.skinShade);
   }
-  c.rect(x + hx + 1, y + hy - 5, 2, 2, CLA.hat); // chapéu torto
-  c.px(x + hx + 3, y + hy - 6, '#e0c34a');
+  // chapéu de aniversário torto
+  const hs = tilt >= 0 ? 1 : -1;
+  c.rect(x + hx + hs, y + hy - 5, 2, 2, CLA.hat);
+  c.px(x + hx + hs * 2, y + hy - 6, CLA.hat);
+  c.px(x + hx + hs * 3, y + hy - 7, '#e0c34a');
 }
 
 export function claraFrames() {
   const frames = {};
-  // Perfil (24×16): corpo baixo e horizontal, joelhos acima do corpo
-  frames.side = CRAWL.map((ph, n) => (c, x, y) => {
-    const step = (t, dir) => Math.round((t - 0.5) * 6 * dir);
-    const body = [[7, 8], [17, 8]];
-    // patas de trás (quadril em 7,8) e da frente (ombro em 16,8)
-    const legs = [
-      { root: [7, 8], t: ph.a, far: true },
-      { root: [7, 8], t: ph.b, far: false },
-      { root: [16, 8], t: ph.b, far: true },
-      { root: [16, 8], t: ph.a, far: false },
-    ];
-    for (const L of legs.filter((l) => l.far)) {
-      const knee = [L.root[0] + step(L.t, 1) - 2, 2 + Math.round(L.t * 2)];
-      const foot = [L.root[0] + step(L.t, 1) + 1, 15 - Math.round((1 - L.t) * 2)];
-      limb(c, x, y, L.root, knee, 1, CLA.limbFar);
-      limb(c, x, y, knee, foot, 1, CLA.limbFar);
-    }
-    limb(c, x, y, body[0], body[1], 4, CLA.dress);
-    c.px(x + 10, y + 8, CLA.stain);
-    c.px(x + 13, y + 7, CLA.stain);
-    c.rect(x + 6, y + 9, 3, 2, CLA.dressShade); // saia do vestido caída
-    for (const L of legs.filter((l) => !l.far)) {
-      const knee = [L.root[0] + step(L.t, 1) - 1, 1 + Math.round(L.t * 2)];
-      const foot = [L.root[0] + step(L.t, 1) + 2, 15 - Math.round((1 - L.t) * 2)];
-      limb(c, x, y, L.root, knee, 1, CLA.limb);
-      limb(c, x, y, knee, foot, 1, CLA.limb);
-    }
-    // Cabeça virada num ângulo impossível, à frente e um pouco abaixo
-    claraHead(c, x, y, 20, 9 + (n % 2), 'side');
+  const N = GAIT.length;
+  const FLOOR = 17;
+
+  // Perfil (26×18), andando para a direita; o rosto vira para quem olha
+  frames.side = Array.from({ length: N }, (_, n) => (c, x, y) => {
+    const b = BOB[n];
+    const [tx, ty] = TWITCH[n];
+    const hip = [5, 3 + b];
+    const sh = [15, 8 + b];
+    const leg = ([dx, lift], color, off) => {
+      const root = [hip[0] + off, hip[1]];
+      const foot = [root[0] + dx, FLOOR - lift];
+      const knee = [Math.round((root[0] + foot[0]) / 2) + 1, Math.round((root[1] + foot[1]) / 2)];
+      limb(c, x, y, root, knee, 1, color);
+      limb(c, x, y, knee, foot, 1, color);
+      c.rect(x + foot[0], y + foot[1], 2, 1, CLA.shoe);
+    };
+    // braço: o cotovelo dobra para a frente (ao contrário)
+    const arm = ([dx, lift], color) => {
+      const hand = [sh[0] + dx, FLOOR - lift];
+      const elbow = [Math.round((sh[0] + hand[0]) / 2) + 2, Math.round((sh[1] + hand[1]) / 2)];
+      limb(c, x, y, sh, elbow, 1, color);
+      limb(c, x, y, elbow, hand, 1, color);
+      c.px(x + hand[0] + 1, y + hand[1], color); // dedos compridos no chão
+    };
+    leg(gait(n, PHASE.farHind), CLA.limbFar, -2);
+    arm(gait(n, PHASE.farFront), CLA.limbFar);
+    // vestido de festa: tronco e a saia caindo em volta das coxas
+    limb(c, x, y, hip, sh, 3, CLA.dress);
+    poly(c, x, y, [[hip[0] - 1, hip[1] - 1], [hip[0] + 3, hip[1]], [hip[0] + 3, hip[1] + 5], [hip[0] - 3, hip[1] + 4]], CLA.dress);
+    c.rect(x + hip[0] - 3, y + hip[1] + 5, 6, 1, CLA.dressShade); // barra
+    c.px(x + 10, y + 7 + b, CLA.stain);
+    c.px(x + 4, y + 8 + b, CLA.stain);
+    c.px(x + 13, y + 8 + b, CLA.stain);
+    leg(gait(n, PHASE.nearHind, true), CLA.limb, 1);
+    arm(gait(n, PHASE.nearFront), CLA.limb);
+    // cabeça erguida e virada para trás, olhando para o Artur
+    claraFace(c, x, y, 19 + tx, 5 + b + ty, TILT[n], { hairLen: 6 });
   });
-  // De frente/de costas (18×18): patas abertas dos dois lados, como aranha
-  const front = (view) =>
-    CRAWL.map((ph, n) => (c, x, y) => {
-      const lift = (t) => Math.round(t * 3);
-      const sides = [
-        [ [6, 7], [1, 3 - lift(ph.a)], [2, 15 - lift(ph.a)] ],
-        [ [12, 7], [17, 3 - lift(ph.b)], [16, 15 - lift(ph.b)] ],
-        [ [6, 11], [1, 8 - lift(ph.b)], [3, 17 - lift(ph.b)] ],
-        [ [12, 11], [17, 8 - lift(ph.a)], [15, 17 - lift(ph.a)] ],
-      ];
-      for (const [root, knee, foot] of sides) {
-        limb(c, x, y, root, knee, 1, CLA.limb);
-        limb(c, x, y, knee, foot, 1, CLA.limb);
-      }
-      c.rect(x + 6, y + 6, 7, 7, CLA.dress);
-      c.px(x + 8, y + 9, CLA.stain);
-      claraHead(c, x, y, 9, view === 'down' ? 14 + (n % 2) : 5, view);
-    });
-  frames.down = front('down');
-  frames.up = front('up');
+
+  // De frente (vindo para baixo), 18×18: o rosto encara o jogador, o quadril alto atrás,
+  // os braços descem retos (cotovelos virados para dentro), não abertos para os lados
+  frames.down = Array.from({ length: N }, (_, n) => (c, x, y) => {
+    const b = BOB[n];
+    const [tx, ty] = TWITCH[n];
+    c.rect(x + 6, y + 1 + b, 6, 3, CLA.dressShade); // quadril, lá atrás
+    poly(c, x, y, [[5, 3 + b], [12, 3 + b], [13, 10 + b], [4, 10 + b]], CLA.dress);
+    c.px(x + 11, y + 7 + b, CLA.stain);
+    for (const [sx, ex, ph] of [[4, 6, PHASE.farFront], [13, 11, PHASE.nearFront]]) {
+      const [dx, lift] = gait(n, ph);
+      const hy = FLOOR - lift - (dx > 0 ? 0 : 1);
+      limb(c, x, y, [sx, 9 + b], [ex, 13 + b], 1, CLA.limb);
+      limb(c, x, y, [ex, 13 + b], [sx - (sx < 9 ? 1 : -1), hy], 1, CLA.limb);
+    }
+    claraFace(c, x, y, 9 + tx, 9 + b + ty, TILT[n], { hairLen: 5 });
+  });
+
+  // De costas (indo para cima), 18×18: quadril e pernas mais perto (embaixo), a nuca e o
+  // cabelo lá em cima, braços dos lados
+  frames.up = Array.from({ length: N }, (_, n) => (c, x, y) => {
+    const b = BOB[n];
+    const [tx] = TWITCH[n];
+    for (const [sx, ex, ph] of [[5, 3, PHASE.farFront], [12, 14, PHASE.nearFront]]) {
+      const [, lift] = gait(n, ph);
+      limb(c, x, y, [sx, 5 + b], [ex, 7 + b], 1, CLA.limbFar);
+      limb(c, x, y, [ex, 7 + b], [sx - (sx < 9 ? 1 : -1), 10 - lift], 1, CLA.limbFar);
+    }
+    claraFace(c, x, y, 9 + tx, 4 + b, TILT[n], { hairLen: 4, back: true });
+    c.rect(x + 6, y + 6 + b, 6, 2, CLA.dress); // costas
+    poly(c, x, y, [[5, 7 + b], [12, 7 + b], [13, 12 + b], [4, 12 + b]], CLA.dress); // saia
+    c.rect(x + 4, y + 12 + b, 10, 1, CLA.dressShade);
+    c.px(x + 10, y + 9 + b, CLA.stain);
+    for (const [hx0, fx, ph, drag] of [[7, 6, PHASE.farHind, false], [10, 11, PHASE.nearHind, true]]) {
+      const [, lift] = gait(n, ph, drag);
+      const fy = FLOOR - lift;
+      limb(c, x, y, [hx0, 12 + b], [fx, fy], 1, CLA.limb);
+      c.px(x + fx, y + fy, CLA.shoe);
+    }
+  });
   return frames;
 }
 

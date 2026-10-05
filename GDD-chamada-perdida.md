@@ -700,7 +700,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 - Jumpscare: o cabelo se abre — pele cinza, olhos sem íris, **marcas de lágrimas pretas e secas** do olho ao queixo, de quem chorou muito. Maxilar desloca além do normal. Grito misturado com **tom de linha ocupada**.
 
 **Clara**
-- No jogo: menina pequena, vestido de festa manchado, chapéu de aniversário torto, rosto de **boneca de porcelana rachada**, olhos totalmente pretos, cabeça num ângulo impossível, segura o barbante de um **balão estourado**. Na perseguição, **corre de quatro como uma aranha**, rápido e desconjuntado, com estalos.
+- No jogo: menina pequena, vestido de festa manchado, chapéu de aniversário torto, rosto de **boneca de porcelana rachada**, olhos totalmente pretos, cabeça num ângulo impossível, segura o barbante de um **balão estourado**. Na perseguição, **corre de quatro como uma criança possuída — não como aranha**: só os quatro membros por baixo do corpo (nada de joelhos para cima nem patas abertas), quadril bem alto, pernas quase retas, braços com o **cotovelo dobrado ao contrário**, a cabeça **virada para trás encarando o Artur**, tombando de um lado para o outro, cabelo escuro caindo pelo rosto. Passada **mancando** (uma perna arrasta) e com trancos fora do ritmo, rápido e desconjuntado, com estalos. Sprite em `scripts/sprites/monsters.mjs` (6 quadros por direção).
 - Jumpscare: aparece de costas; a cabeça gira para trás com estalo seco; a porcelana racha mais; a boca abre larga demais; a risada distorce até virar grito.
 
 ### 13.6 Estrutura dos jumpscares (~1,2 s)

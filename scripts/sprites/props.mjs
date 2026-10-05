@@ -1180,7 +1180,7 @@ const PROPS = [
   ...animated('shadow-run', shadowRunFrames(), 22, 32),
   ...views('invader', invaderFrames(), { side: [20, 32], down: [20, 32], up: [20, 32] }),
   ...views('distorted', distortedFrames(), { side: [22, 36], down: [18, 36], up: [18, 36] }),
-  ...views('clara', claraFrames(), { side: [24, 16], down: [18, 18], up: [18, 18] }, true),
+  ...views('clara', claraFrames(), { side: [26, 18], down: [18, 18], up: [18, 18] }, true),
   ...[0, 1, 2].flatMap((head) => [0, 1].map((sway) => [`helena-${head}-${sway}`, 16, 32, helena(head, sway)])),
 ];
 
