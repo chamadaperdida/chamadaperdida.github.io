@@ -151,7 +151,7 @@ export const BALANCE = {
 
   timings: {
     doorCloseChaseDelay: 1.2, // atraso do perseguidor ao fechar porta
-    claraLaughGrace: 1.2, // delay entre o início da risada e a proibição de mexer
+    claraLaughGrace: 1.8, // delay entre o início da risada e a proibição de mexer
     claraLaughMin: 4, // duração da risada: 4 a 6 s
     claraLaughMax: 6,
     helenaRevealSeconds: 2.5, // luz contínua para Helena aparecer por completo

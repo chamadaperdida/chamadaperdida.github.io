@@ -23,7 +23,7 @@
 | Publicação | **GitHub Pages** (gratuito, link público para jogar no navegador) |
 | Sem Lovable | O projeto é só Phaser + Vite, sem React |
 | Arte | Pixel art feita pelo Claude Code (sprites gerados por código/scripts, exportados como spritesheets PNG) |
-| Sons e efeitos | Gravações reais de domínio público (CC0): BigSoundBank (Joseph Sardin) e Wikimedia Commons, cortadas e comprimidas por `npm run audio` (ffmpeg) e tratadas no jogo com Web Audio (eco, reverberação, filtros, velocidade, som invertido). Sintetizados só o chiado/estática, o bipe da máquina, a digitação da caixa de diálogo, o clique dos menus e o "parabéns pra você" da delegacia |
+| Sons e efeitos | Gravações reais de domínio público (CC0): BigSoundBank (Joseph Sardin) e Wikimedia Commons, cortadas e comprimidas por `npm run audio` (ffmpeg) e tratadas no jogo com Web Audio (eco, reverberação, filtros, velocidade, som invertido). Sintetizados só o chiado/estática, o bipe da máquina, a água e a bucha da louça (preferidos às gravações), a digitação da caixa de diálogo, o clique dos menus e o "parabéns pra você" da delegacia |
 | Falas | **Caixa de diálogo** com nome de quem fala e texto sendo digitado (seção 11.1). Não há voz por IA; áudio de voz só em momentos específicos (a definir) |
 | Save | `localStorage` do navegador |
 
@@ -520,7 +520,7 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Artur distorcido | 1,08× Artur correndo |
 | Clara | 1,6× Artur correndo, de quatro (era 1,12×; aumentado no protótipo) |
 | Atraso ao fechar porta numa perseguição | 1,2 s |
-| Clara: delay entre o início da risada e a proibição de mexer | 1,2 s |
+| Clara: delay entre o início da risada e a proibição de mexer | 1,8 s (era 1,2 s; pouco tempo para perceber a risada) |
 | Clara: duração da risada | 4 a 6 s |
 | Helena: luz contínua para aparecer por completo | Diminui a cada noite: 2,5 / 2,3 / 2,1 / 1,9 / 1,7 / 1,5 / 1,3 s (some 2× mais rápido) |
 | Artur distorcido: luz para virar cinzas | 0,6 s (sem luz, desconta 1,5× mais rápido) |
@@ -750,12 +750,12 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando do Invasor (posicional, a cada passo), sussurro distorcido do Artur distorcido (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
 
-**Feito na etapa 13 (refeito com gravações reais):** passos do Artur conforme o chão (taco, concreto/azulejo, lama), respiração ofegante, portas abrindo e fechando, tranca, chave na fechadura e maçaneta travada, gerador tentando ligar e morrendo / fusível encaixando e motor pegando, pilha (dois cliques), remédio (comprimido saindo da cartela), interruptor da lanterna e estalo quando ela falha, TV de tubo ligando/desligando, celular e fusível pegos do móvel, telefone fixo de campainha (casa e delegacia), fone saindo e voltando ao gancho, linha ocupada, papel (lista da geladeira, bilhetes) e página do calendário, sacola plástica (lixo, marmita), caixinha de música (urso), gotas na poça, balão estourando, trovão.
+**Feito na etapa 13 (refeito com gravações reais):** passos do Artur conforme o chão (taco, concreto/azulejo, lama; mais baixos), respiração ofegante (quando o fôlego volta, ela vai sumindo aos poucos em vez de cortar), portas abrindo e fechando, tranca, chave na fechadura e maçaneta travada, gerador tentando ligar e morrendo / fusível encaixando e motor pegando, pilha (dois cliques), remédio (comprimido saindo da cartela), interruptor da lanterna e estalo quando ela falha, TV de tubo ligando/desligando, celular e fusível pegos do móvel, telefone fixo de campainha (casa e delegacia), fone saindo e voltando ao gancho, linha ocupada, papel (lista da geladeira, bilhetes) e página do calendário, sacola plástica (lixo, marmita), caixinha de música (urso), gotas na poça, balão estourando, trovão.
 
 **Monstros e vozes (macabros):**
-- **Invasor:** chaveiro de verdade tilintando a cada passo; jumpscare com um rugido rouco mais grave.
+- **Invasor:** chaveiro de verdade tilintando a cada passo; jumpscare com um berro em camadas: um berro rasgado comprido, dois golpes curtos por cima no começo e um grito grave por baixo, tudo saturado (o rugido sozinho ficava fraco).
 - **Artur distorcido:** passos pesados no taco, bem mais graves e arrastados, com eco; sussurro de homem mais lento, grave e rasgado, com outro sussurro invertido por baixo; jumpscare com outro rugido, ainda mais grave.
-- **Clara:** risada de menina mais lenta e grave que o normal, com eco e reverberação, às vezes invertida, misturada de vez em quando com risada de crianças desacelerada; estalos de ossos de verdade quando ela corre de quatro; jumpscare com grito de menina.
+- **Clara:** risadas de verdade de criança (seis gravações diferentes, sorteadas sem repetir a mesma em seguida), um pouco mais lentas e graves, com eco leve; começam altas na hora (são o aviso) e emendam uma na outra sem silêncio até o fim da risada — às vezes uma volta invertida; estalos de ossos de verdade quando ela corre de quatro; jumpscare com grito de menina.
 - **Helena:** choro de mulher baixinho, mais lento e grave, com eco, e o mesmo choro invertido e bem grave por baixo; jumpscare com grito demoníaco de mulher + tom de linha ocupada.
 - **Luz piscando com Helena:** grito de mulher invertido e lento crescendo até ela aparecer, sopro de sussurro grave com eco longo e estalos de lâmpada.
 - **Sono:** quatro sussurros (dois de homem, um suave, um invertido), lentos, com eco longo, de lados diferentes, aumentando; no fim, silêncio na hora (o eco também corta).

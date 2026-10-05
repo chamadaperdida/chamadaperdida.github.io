@@ -73,7 +73,7 @@ class Foley {
   /** Passo do Artur: 'wood' (taco), 'tile' (azulejo, cozinha, concreto) ou 'mud' (lama). */
   footstep(surface, volume = 0.2, pan = 0) {
     const name = { wood: 'step-wood-*', tile: 'step-hard-*', mud: 'step-mud-*' }[surface] ?? 'step-wood-*';
-    const level = { wood: 3.2, tile: 5, mud: 5 }[surface] ?? 3.2; // iguala as gravações
+    const level = { wood: 2, tile: 3.1, mud: 3.1 }[surface] ?? 2; // iguala as gravações
     sfx.play(name, { volume: volume * level, pan, vary: 0.06 });
   }
 
@@ -238,6 +238,50 @@ class Foley {
   /** Água corrente: tone > 1000 = torneira da pia; senão, regador nos vasos. */
   waterLoop(tone = 1800) {
     return sfx.play(tone > 1000 ? 'faucet' : 'watering', { loop: true, volume: 0, fadeIn: 0.15 });
+  }
+
+  /**
+   * Lavando a louça (som sintetizado, preferido às gravações): água correndo na pia,
+   * borbulhando. Handle de loop.
+   */
+  dishWaterLoop() {
+    if (!this.ok) return sfx.silentHandle();
+    const ctx = sfx.ctx;
+    const { gain, panner } = sfx.out(0);
+    const water = ctx.createGain();
+    water.gain.value = 0.8;
+    water.connect(gain);
+    const nodes = [];
+    for (const { type, freq, q, level } of [
+      { type: 'bandpass', freq: 1800, q: 0.8, level: 1.2 },
+      { type: 'highpass', freq: 5000, q: 0.5, level: 0.15 },
+    ]) {
+      const n = sfx.noiseSource();
+      const f = ctx.createBiquadFilter();
+      f.type = type;
+      f.frequency.value = freq;
+      f.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.value = level;
+      n.connect(f).connect(g).connect(water);
+      n.start();
+      nodes.push(n);
+    }
+    // borbulhando
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = 7;
+    const depth = ctx.createGain();
+    depth.gain.value = 0.2;
+    lfo.connect(depth).connect(water.gain);
+    lfo.start();
+    nodes.push(lfo);
+    return sfx.loopHandle(gain, panner, nodes);
+  }
+
+  /** Bucha no prato (sintetizado, junto com dishWaterLoop). */
+  dishScrub(volume = 0.3, pan = 0) {
+    if (!this.ok) return;
+    sfx.burst(sfx.now, sfx.out(volume * 3, pan).gain, { filter: { type: 'bandpass', freq: rnd(2200, 3000), q: 1.5 }, attack: 0.04, decay: 0.1, level: 0.7 });
   }
 
   /** Esfregando (bucha no prato). */

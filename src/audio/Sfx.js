@@ -21,6 +21,17 @@ const AUDIO_DIR = 'assets/audio/';
 
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const rnd = (a, b) => a + Math.random() * (b - a);
+const shuffle = (arr) => {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+// Risadas da Clara e o volume de cada uma (iguala as gravações)
+const LAUGHS = ['laugh-1', 'laugh-2', 'laugh-3', 'laugh-4', 'laugh-5', 'laugh-girl'];
+const LAUGH_LEVEL = { 'laugh-2': 0.8, 'laugh-3': 1.1, 'laugh-4': 0.7, 'laugh-girl': 1.15 };
 
 class Sfx {
   constructor() {
@@ -605,28 +616,36 @@ class Sfx {
   }
 
   /**
-   * Risada da Clara: menina rindo, mais lenta e grave do que o normal, com eco; às vezes
-   * a risada volta invertida. Toca por `seconds` e para sozinha.
+   * Risada da Clara: risadas de verdade de criança, um pouco mais lentas e graves, com eco.
+   * Começa alta na hora (é o aviso para parar) e emenda uma risada na outra, sem silêncio
+   * no meio, até `seconds` — quando ela acaba, acabou mesmo. Nunca repete a mesma risada
+   * em seguida.
    */
   laugh(seconds = 5, volume = 0.6, pan = 0) {
     if (!this.ready) return this.silentHandle();
-    const t0 = this.ctx.currentTime + 0.05;
+    const t0 = this.ctx.currentTime + 0.02;
     const parts = [];
+    const bag = [];
+    let last = null;
     let t = 0;
-    while (t < seconds) {
-      const kids = Math.random() < 0.3;
-      const h = this.play(kids ? 'laugh-kids' : 'laugh-girl', {
+    while (t < seconds - 0.3) {
+      if (!bag.length) bag.push(...shuffle(LAUGHS.filter((n) => n !== last)));
+      const name = bag.pop();
+      last = name;
+      const rate = rnd(0.8, 0.88);
+      const left = seconds - t;
+      const h = this.play(name, {
         when: t0 + t,
-        volume,
+        volume: volume * (LAUGH_LEVEL[name] ?? 1),
         pan,
-        rate: kids ? 0.72 : rnd(0.78, 0.9),
-        reverse: Math.random() < 0.25,
-        reverb: 0.55,
-        echo: { time: 0.32, feedback: 0.35, mix: 0.4 },
-        duration: kids ? Math.min(2.5, seconds - t) : undefined,
+        rate,
+        reverse: t > 1.5 && Math.random() < 0.15,
+        reverb: 0.35,
+        echo: { time: 0.28, feedback: 0.25, mix: 0.22 },
+        duration: left * rate, // (em tempo da gravação)
       });
       parts.push(h);
-      t += Math.min(h.duration || 1.2, 2.5) + rnd(0.3, 1.1);
+      t += Math.min(h.duration || 1.5, left) + rnd(0.05, 0.2);
     }
     return this.group(parts);
   }
@@ -655,9 +674,23 @@ class Sfx {
    * trecho escondido nos jumpscares, GDD 13.6).
    */
   scream(volume = 0.9, phone = false, kind = 'woman') {
+    if (kind === 'roar1' && !phone) return this.#invaderScream(volume);
     const name = { woman: 'scream-woman', girl: 'scream-girl', roar1: 'roar-1', roar2: 'roar-2' }[kind] ?? 'scream-woman';
     const rate = { roar1: 0.8, roar2: 0.7 }[kind] ?? 1;
     this.play(name, { volume, phone, rate, distort: phone ? 0.3 : 0.15, reverb: phone ? 0.1 : 0.35 });
+  }
+
+  /**
+   * Grito do Invasor: um berro rasgado e comprido, com dois golpes curtos por cima no
+   * começo e um grito grave por baixo, tudo saturado — alto e agressivo.
+   */
+  #invaderScream(volume) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.play('roar-3', { when: t, volume, rate: 0.85, distort: 0.35, reverb: 0.3 });
+    this.play('roar-4', { when: t, volume: volume * 0.9, rate: 0.75, distort: 0.45, reverb: 0.25 });
+    this.play('roar-5', { when: t + 0.55, volume: volume * 0.7, rate: 0.8, distort: 0.4, reverb: 0.3 });
+    this.play('scream-woman', { when: t + 0.05, volume: volume * 0.45, rate: 0.55, distort: 0.5, filter: { type: 'lowpass', freq: 2600 }, reverb: 0.3 });
   }
 
   /**

@@ -107,6 +107,26 @@
   "duration": 4.83,
   "loop": false
  },
+ "laugh-1": {
+  "duration": 2.8,
+  "loop": false
+ },
+ "laugh-2": {
+  "duration": 2.1,
+  "loop": false
+ },
+ "laugh-3": {
+  "duration": 2.35,
+  "loop": false
+ },
+ "laugh-4": {
+  "duration": 4,
+  "loop": false
+ },
+ "laugh-5": {
+  "duration": 4.85,
+  "loop": false
+ },
  "crack-1": {
   "duration": 0.85,
   "loop": false
@@ -157,6 +177,18 @@
  },
  "roar-2": {
   "duration": 2.8,
+  "loop": false
+ },
+ "roar-3": {
+  "duration": 3,
+  "loop": false
+ },
+ "roar-4": {
+  "duration": 1.399,
+  "loop": false
+ },
+ "roar-5": {
+  "duration": 2.19,
   "loop": false
  },
  "heart": {

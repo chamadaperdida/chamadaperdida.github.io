@@ -1,5 +1,5 @@
 // Clara (GDD 6): do nada, risadas de criança diabólicas. A risada é um AVISO: depois de
-// 1,2 s, se Artur se mexer, ela aparece e corre atrás dele de quatro, muito rápida (1,6×
+// 1,8 s, se Artur se mexer, ela aparece e corre atrás dele de quatro, muito rápida (1,6×
 // Artur correndo) — fuga impossível. A risada sumir é o aviso de que pode voltar a se mexer.
 // Sobreviver: ficar parado durante as risadas.
 

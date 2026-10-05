@@ -746,7 +746,7 @@ export class HouseScene extends Phaser.Scene {
     const tired = this.player.exhausted;
     if (tired && !this.breath) this.breath = foley.breathLoop();
     else if (!tired && this.breath) {
-      this.breath.stop();
+      this.breath.stop(3); // vai recuperando o fôlego aos poucos (não corta no meio)
       this.breath = null;
     }
   }
@@ -777,9 +777,9 @@ export class HouseScene extends Phaser.Scene {
       this.holdSound?.loop?.stop();
       this.holdSound = null;
       if (!task) return;
-      const loops = { louca: () => foley.waterLoop(1800), regar: () => foley.waterLoop(800), uniforme: () => foley.steamLoop() };
+      const loops = { louca: () => foley.dishWaterLoop(), regar: () => foley.waterLoop(800), uniforme: () => foley.steamLoop() };
       const loop = loops[task]?.() ?? null;
-      loop?.setVolume({ uniforme: 0.4, louca: 0.6, regar: 0.9 }[task] ?? 0.5);
+      loop?.setVolume({ uniforme: 0.4, louca: 0.35, regar: 0.9 }[task] ?? 0.5);
       if (task === 'jantar') foley.chair(0.3);
       else if (task === 'janelas') foley.windowSlide(0.4, 0, BALANCE.tasks.closeWindowSeconds);
       else if (task === 'roupa') foley.wetCloth(0.35);
@@ -790,7 +790,7 @@ export class HouseScene extends Phaser.Scene {
     if (h.tick > 0) return;
     h.tick = 1;
     if (task === 'louca') {
-      foley.scrub();
+      foley.dishScrub();
       h.tick = 0.35 + Math.random() * 0.2;
     } else if (task === 'jantar') {
       foley.cutlery();
