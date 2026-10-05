@@ -1,8 +1,8 @@
 // Ligações da delegacia (GDD 3.4 e Apêndice A) e bilhetes do Marcos (GDD 3.3).
 //
 // Cada ligação: { kind: 'real' | 'hallucination', time?: '23:41' (relógio trava nas
-// alucinações), noise?: ruído de fundo da alucinação ('balloon', 'generator', 'creak',
-// 'birthday' — GDD 3.5), lines: [...] }. Uma fala é { speaker, text }; um efeito sonoro ou ação
+// alucinações), noise?: 'birthday' ("parabéns pra você" ao fundo até a ligação acabar,
+// GDD 3.5), lines: [...] }. Uma fala é { speaker, text }; um efeito sonoro ou ação
 // entre parênteses é { fx: 'texto' } (aparece na caixa de diálogo, em cinza, sem nome).
 
 const fx = (text) => ({ fx: text });
@@ -67,7 +67,6 @@ export const CALLS = {
     {
       kind: 'hallucination',
       time: '23:41',
-      noise: 'balloon',
       lines: [
         s('Artur', 'Delegacia de Vale Sereno, boa noite.'),
         fx('(uma respiração do outro lado da linha)'),
@@ -112,7 +111,6 @@ export const CALLS = {
     {
       kind: 'hallucination',
       time: '23:41',
-      noise: 'generator',
       lines: [
         s('Artur', 'Delegacia, boa noite.'),
         s('Voz de mulher', '...Artur?'),
@@ -147,7 +145,6 @@ export const CALLS = {
     {
       kind: 'hallucination',
       time: '23:44',
-      noise: 'creak',
       lines: [
         s('Voz de homem', 'Quero denunciar uma invasão.'),
         s('Artur', 'Qual o endereço, senhor?'),
@@ -194,7 +191,6 @@ export const CALLS = {
     {
       kind: 'hallucination',
       time: '23:44',
-      noise: 'generator',
       lines: [
         fx('(ao fundo, um gerador tentando ligar)'),
         s('Artur', 'Delegacia, boa noite.'),
@@ -232,7 +228,6 @@ export const CALLS = {
       time: '23:47',
       noise: 'birthday',
       lines: [
-        fx('(ao fundo, alguém cantando "parabéns pra você")'),
         s('Artur', 'Delegacia, boa noite.'),
         fx('(uma respiração pequena)'),
         s('Artur', 'Tem alguém aí?'),

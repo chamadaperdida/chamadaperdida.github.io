@@ -680,100 +680,67 @@ class Foley {
   // ---- Ligações-alucinação (GDD 3.5) -----------------------------------------------
 
   /**
-   * Ruído da noite da tragédia ao fundo de uma ligação-alucinação, baixo e abafado como
-   * se viesse pela linha: 'generator' (gerador tentando ligar), 'creak' (porta rangendo),
-   * 'birthday' ("parabéns pra você" quase inaudível), 'balloon' (balão sendo apertado).
-   * Toca por ~25 s ou até stop().
+   * "Parabéns pra você" ao fundo da ligação-alucinação do dia 6: melodia tradicional, lenta,
+   * grave, desafinada e abafada pela linha, repetindo até stop() (fim da ligação).
+   * Agenda uma volta de cada vez pelo relógio do áudio (a pausa do jogo congela junto).
    */
   callNoise(kind) {
-    if (!this.ok) return sfx.silentHandle();
+    if (!this.ok || kind !== 'birthday') return sfx.silentHandle();
     const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0);
+    const { gain, panner } = sfx.out(0.5);
     const line = ctx.createBiquadFilter(); // filtro de telefone
     line.type = 'bandpass';
     line.frequency.value = 1000;
     line.Q.value = 0.8;
     line.connect(gain);
-    const at = ctx.currentTime + 0.3;
-    const nodes = [];
-    if (kind === 'generator') {
-      // Motor engasgando: tentativas de partida que não pegam
-      for (let k = 0; k < 6; k++) {
-        const t0 = at + 0.5 + k * 4;
-        for (let i = 0; i < 5; i++) this.#thumpInto(line, t0 + i * 0.16, 70 - i * 3, 0.12, 0.9 - i * 0.12);
-      }
-      gain.gain.value = 1.1;
-    } else if (kind === 'creak') {
-      for (const t of [1, 6.5, 13]) this.#creak(at + t, line, 1.2);
-      gain.gain.value = 1.4;
-    } else if (kind === 'birthday') {
-      // "Parabéns pra você" (melodia tradicional), lento, desafinado e quase inaudível
-      const C = 392; // sol
-      const notes = [
-        [0, 0.75], [0, 0.25], [2, 1], [0, 1], [5, 1], [4, 2],
-        [0, 0.75], [0, 0.25], [2, 1], [0, 1], [7, 1], [5, 2],
-      ];
-      let t = at + 0.8;
+    const ROOT = 294; // ré, grave
+    const BEAT = 0.62; // s por tempo (lento)
+    const notes = [
+      [0, 0.75], [0, 0.25], [2, 1], [0, 1], [5, 1], [4, 2],
+      [0, 0.75], [0, 0.25], [2, 1], [0, 1], [7, 1], [5, 2],
+      [0, 0.75], [0, 0.25], [12, 1], [9, 1], [5, 1], [4, 1], [2, 2],
+      [10, 0.75], [10, 0.25], [9, 1], [5, 1], [7, 1], [5, 2.5],
+    ];
+    const lapLength = notes.reduce((t, [, beats]) => t + beats * BEAT, 0) + 1.5;
+    const scheduleLap = (start) => {
+      let t = start;
       for (const [semi, beats] of notes) {
+        const len = beats * BEAT;
+        // Desafina um pouco a cada nota e arrasta para baixo no fim (fita velha)
+        const f = ROOT * 2 ** (semi / 12) * rnd(0.98, 1.02);
         const o = ctx.createOscillator();
         o.type = 'triangle';
-        o.frequency.value = C * 2 ** (semi / 12) * rnd(0.985, 1.015);
-        const env = ctx.createGain();
-        const len = beats * 0.42;
-        env.gain.setValueAtTime(0.0001, t);
-        env.gain.exponentialRampToValueAtTime(0.25, t + 0.03);
-        env.gain.exponentialRampToValueAtTime(0.0001, t + len);
-        o.connect(env).connect(line);
-        o.start(t);
-        o.stop(t + len + 0.05);
-        nodes.push(o);
-        t += len + 0.05;
-      }
-      gain.gain.value = 0.5;
-    } else if (kind === 'balloon') {
-      // Borracha de balão sendo esfregada: guinchos curtos que sobem e descem
-      for (let k = 0; k < 7; k++) {
-        const t = at + 1 + k * rnd(1.8, 3.2);
-        const o = ctx.createOscillator();
-        o.type = 'sawtooth';
-        o.frequency.setValueAtTime(rnd(500, 700), t);
-        o.frequency.linearRampToValueAtTime(rnd(900, 1300), t + 0.25);
-        o.frequency.linearRampToValueAtTime(rnd(600, 800), t + 0.45);
+        o.frequency.setValueAtTime(f, t);
+        o.frequency.linearRampToValueAtTime(f * 0.97, t + len);
         const env = ctx.createGain();
         env.gain.setValueAtTime(0.0001, t);
-        env.gain.exponentialRampToValueAtTime(0.12, t + 0.05);
-        env.gain.exponentialRampToValueAtTime(0.0001, t + 0.45);
+        env.gain.exponentialRampToValueAtTime(0.22, t + 0.04);
+        env.gain.exponentialRampToValueAtTime(0.0001, t + len * 0.95);
         o.connect(env).connect(line);
         o.start(t);
-        o.stop(t + 0.5);
-        nodes.push(o);
+        o.stop(t + len);
+        t += len;
       }
-      gain.gain.value = 0.6;
-    }
-    // Para o loopHandle: um nó "relógio" que dura o tempo do ruído
-    const keep = ctx.createConstantSource();
-    keep.offset.value = 0;
-    keep.connect(gain);
-    keep.start();
-    keep.stop(at + 26);
-    nodes.push(keep);
-    return sfx.loopHandle(gain, panner, [keep]); // parar zera o volume (os sons já agendados ficam mudos)
-  }
-
-  /** Batida grave ligada a uma saída própria (o thump do Sfx vai direto para os efeitos). */
-  #thumpInto(out, at, freq, dur, level) {
-    const ctx = sfx.ctx;
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(freq * 1.6, at);
-    o.frequency.exponentialRampToValueAtTime(freq, at + dur * 0.6);
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(level, at + 0.01);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-    o.connect(env).connect(out);
-    o.start(at);
-    o.stop(at + dur + 0.02);
+    };
+    let next = ctx.currentTime + 0.8;
+    let running = true;
+    const tick = () => {
+      if (!running) return;
+      if (next - ctx.currentTime < 2) {
+        scheduleLap(next);
+        next += lapLength;
+      }
+    };
+    tick();
+    const timer = setInterval(tick, 250);
+    return {
+      setVolume: (v) => gain.gain.setTargetAtTime(v, ctx.currentTime, 0.05),
+      stop: () => {
+        running = false;
+        clearInterval(timer);
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+      },
+    };
   }
 
   // ---- Sono --------------------------------------------------------------------------

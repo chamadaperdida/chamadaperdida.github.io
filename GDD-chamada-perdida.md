@@ -200,8 +200,8 @@ Só nas alucinações (nunca nas reais):
 - Quem liga chama Artur pelo nome sem ele ter se apresentado.
 - Tela com vinheta escura e granulado leve.
 - **Voz distorcida na caixa de diálogo (sem áudio):** só nas falas de quem liga (Artur fala normal). O texto treme de leve, letras falham por um instante (viram símbolos ou somem) e a digitação sai irregular, travando e correndo. Efeitos sonoros e ações aparecem em cinza, sem nome.
-- Os efeitos entre parênteses na caixa de diálogo ficam só para o que o jogador não vê nem ouve de outro jeito e que é pista (respiração, gerador, "parabéns", a linha caindo); o chiado e a lâmpada piscando já aparecem no som e na tela.
-- Ruídos ao fundo de cada ligação-alucinação, baixos e abafados pelo filtro de telefone (além do chiado): dia 2 — balão sendo apertado; dia 3 — gerador tentando ligar; dia 4 — porta rangendo; dia 5 — gerador tentando ligar; dia 6 — "parabéns pra você" lento e desafinado.
+- Os efeitos entre parênteses na caixa de diálogo ficam só para o que o jogador não vê nem ouve de outro jeito e que é pista (respiração, gerador, a linha caindo); o chiado e a lâmpada piscando já aparecem no som e na tela.
+- Na ligação-alucinação do dia 6, "parabéns pra você" toca ao fundo do começo ao fim, lento, grave, desafinado e abafado pela linha, sem legenda. As outras ligações-alucinação têm só o chiado.
 
 ---
 
