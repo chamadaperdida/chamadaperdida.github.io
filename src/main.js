@@ -6,6 +6,9 @@ import { HudScene } from './scenes/HudScene.js';
 import { TransitionScene } from './scenes/TransitionScene.js';
 import { DeathScene } from './scenes/DeathScene.js';
 import { DelegaciaScene } from './scenes/DelegaciaScene.js';
+import { TitleScene } from './scenes/TitleScene.js';
+import { PauseScene } from './scenes/PauseScene.js';
+import { options } from './systems/Save.js';
 import { debug } from './debug/debug.js';
 import './style.css';
 
@@ -29,8 +32,22 @@ document.fonts.load('20px VT323').finally(() => {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 0 }, debug: false },
     },
-    scene: [BootScene, HouseScene, HudScene, TransitionScene, DeathScene, DelegaciaScene],
+    scene: [BootScene, TitleScene, HouseScene, HudScene, TransitionScene, DeathScene, DelegaciaScene, PauseScene],
   });
+  // Tela cheia fica salva nas opções. O navegador só deixa entrar em tela cheia num clique
+  // ou tecla, então, se estava ligada, ela volta no primeiro toque do jogador.
+  const remember = () => options.save({ ...options.load(), fullscreen: game.scale.isFullscreen });
+  game.events.once(Phaser.Core.Events.READY, () => {
+    game.scale.on(Phaser.Scale.Events.ENTER_FULLSCREEN, remember);
+    game.scale.on(Phaser.Scale.Events.LEAVE_FULLSCREEN, remember);
+  });
+  const restoreFullscreen = () => {
+    window.removeEventListener('pointerup', restoreFullscreen);
+    window.removeEventListener('keyup', restoreFullscreen);
+    if (options.load().fullscreen && !game.scale.isFullscreen) game.scale.startFullscreen();
+  };
+  window.addEventListener('pointerup', restoreFullscreen);
+  window.addEventListener('keyup', restoreFullscreen);
   // Só no `npm run dev`: facilita inspecionar o jogo pelo console do navegador.
   if (import.meta.env.DEV) window.game = game;
 });

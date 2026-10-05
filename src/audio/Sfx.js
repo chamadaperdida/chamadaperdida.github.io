@@ -3,10 +3,20 @@
 //
 // O navegador só libera áudio depois de uma tecla ou clique: o contexto liga sozinho
 // no primeiro toque do jogador.
+//
+// Volumes (opções, GDD 2.1): geral → { ambiente, efeitos }. Os sons de ambiente (chuva,
+// telefone ao longe da tela inicial) vão para o canal do ambiente; o resto, para os efeitos.
+// Pausa (GDD 2.4): o contexto de áudio inteiro congela e volta de onde parou.
+
+import { options } from '../systems/Save.js';
+
+const MASTER_LEVEL = 0.7;
 
 class Sfx {
   constructor() {
     this.ctx = null;
+    this.paused = false;
+    this.volumes = options.load();
     const unlock = () => this.#ensure();
     window.addEventListener('keydown', unlock);
     window.addEventListener('pointerdown', unlock);
@@ -18,15 +28,19 @@ class Sfx {
       if (!AC) return null;
       this.ctx = new AC();
       this.master = this.ctx.createGain();
-      this.master.gain.value = 0.7;
       this.master.connect(this.ctx.destination);
+      this.effects = this.ctx.createGain();
+      this.effects.connect(this.master);
+      this.ambient = this.ctx.createGain();
+      this.ambient.connect(this.master);
+      this.#applyVolumes();
       // 2 s de ruído branco, reaproveitado por todos os sons
       const len = this.ctx.sampleRate * 2;
       this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
       const data = this.noise.getChannelData(0);
       for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume();
+    if (this.ctx.state === 'suspended' && !this.paused) this.ctx.resume();
     return this.ctx;
   }
 
@@ -34,14 +48,110 @@ class Sfx {
     return !!this.#ensure() && this.ctx.state === 'running';
   }
 
+  /** Volumes das opções: { master, ambient, effects } de 0 a 1. */
+  setVolumes(v) {
+    this.volumes = { ...this.volumes, ...v };
+    if (this.ctx) this.#applyVolumes();
+  }
+
+  #applyVolumes() {
+    const t = this.ctx.currentTime;
+    this.master.gain.setTargetAtTime(MASTER_LEVEL * this.volumes.master, t, 0.02);
+    this.effects.gain.setTargetAtTime(this.volumes.effects, t, 0.02);
+    this.ambient.gain.setTargetAtTime(this.volumes.ambient, t, 0.02);
+  }
+
+  /** Congela todo o som do jogo (pausa). */
+  pause() {
+    this.paused = true;
+    if (this.ctx?.state === 'running') this.ctx.suspend();
+  }
+
+  resume() {
+    this.paused = false;
+    if (this.ctx?.state === 'suspended') this.ctx.resume();
+  }
+
   /** Saída com volume e lado (pan −1 esquerda … 1 direita). */
-  #out(volume = 1, pan = 0) {
+  #out(volume = 1, pan = 0, bus = this.effects) {
     const gain = this.ctx.createGain();
     gain.gain.value = volume;
     const panner = this.ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    gain.connect(panner).connect(this.master);
+    gain.connect(panner).connect(bus);
     return { gain, panner };
+  }
+
+  // ---- Ambiente (tela inicial) ------------------------------------------------
+
+  /** Chuva contínua (ruído filtrado, com intensidade oscilando devagar). */
+  rainLoop(volume = 0.5) {
+    if (!this.ready) return this.#silentHandle();
+    const { gain, panner } = this.#out(volume, 0, this.ambient);
+    const layers = [
+      { type: 'lowpass', freq: 900, q: 0.4, level: 0.9 },
+      { type: 'bandpass', freq: 2400, q: 0.6, level: 0.35 },
+      { type: 'highpass', freq: 6000, q: 0.5, level: 0.12 },
+    ];
+    const nodes = [];
+    for (const l of layers) {
+      const n = this.#noiseSource();
+      const f = this.ctx.createBiquadFilter();
+      f.type = l.type;
+      f.frequency.value = l.freq;
+      f.Q.value = l.q;
+      const g = this.ctx.createGain();
+      g.gain.value = l.level;
+      n.connect(f).connect(g).connect(gain);
+      n.start();
+      nodes.push(n);
+    }
+    // Rajadas: a chuva engrossa e afina devagar
+    const lfo = this.ctx.createOscillator();
+    lfo.frequency.value = 0.07;
+    const depth = this.ctx.createGain();
+    depth.gain.value = volume * 0.3;
+    lfo.connect(depth).connect(gain.gain);
+    lfo.start();
+    nodes.push(lfo);
+    return this.#loopHandle(gain, panner, nodes);
+  }
+
+  /** Um telefone antigo tocando três vezes, ao longe (abafado, com eco). */
+  distantRing(volume = 0.25, pan = 0) {
+    if (!this.ready) return;
+    const { gain } = this.#out(volume, pan, this.ambient);
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1100;
+    const ring = this.ctx.createGain();
+    ring.gain.value = 0;
+    ring.connect(lp).connect(gain);
+    // Eco de corredor
+    const delay = this.ctx.createDelay();
+    delay.delayTime.value = 0.23;
+    const fb = this.ctx.createGain();
+    fb.gain.value = 0.35;
+    lp.connect(delay).connect(fb).connect(delay);
+    fb.connect(gain);
+    const t0 = this.ctx.currentTime + 0.05;
+    const end = t0 + 3 * 3;
+    for (const f of [880, 1040]) {
+      const o = this.ctx.createOscillator();
+      o.type = 'square';
+      o.frequency.value = f;
+      const g = this.ctx.createGain();
+      g.gain.value = 0.08;
+      o.connect(g).connect(ring);
+      o.start(t0);
+      o.stop(end);
+    }
+    for (let cycle = 0; cycle < 3; cycle++) {
+      const start = t0 + cycle * 3;
+      for (let k = 0; k < 20; k++) ring.gain.setValueAtTime(k % 2 ? 0 : 1, start + k * 0.05);
+      ring.gain.setValueAtTime(0, start + 1);
+    }
+    return { stop: () => gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05) };
   }
 
   #noiseSource() {
@@ -498,7 +608,7 @@ class Sfx {
     const t = this.ctx.currentTime;
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setValueAtTime(0, t);
-    this.master.gain.setValueAtTime(0.7, t + seconds);
+    this.master.gain.setValueAtTime(MASTER_LEVEL * this.volumes.master, t + seconds);
   }
 
   /** Voz "sintética" com formantes (base da risada e do choro). Devolve nós para controlar. */

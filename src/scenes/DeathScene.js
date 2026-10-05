@@ -3,13 +3,12 @@
 // 2. Jumpscare (~1,2 s): o monstro toma a tela, 3 quadros, tremor e glitch, grito.
 // 3. Tela preta com chiado e estática vermelha que vai diminuindo até o preto total.
 // 4. Frase do monstro em vermelho.
-// 5. Volta (por enquanto recomeça a noite; a tela inicial é da etapa 9):
-//    "Faltam X dias" → "Casa" → casa, pulando a delegacia (GDD 2.3).
+// 5. Volta para a tela inicial. O Continuar leva de volta para a casa, pulando a delegacia
+//    (GDD 2.3).
 
 import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
-import { daysLeftText } from './TransitionScene.js';
 
 const FONT = 'VT323, monospace';
 const RED = '#b3161d';
@@ -93,13 +92,8 @@ export class DeathScene extends Phaser.Scene {
     this.time.delayedCall(3800, () => this.tweens.add({ targets: phrase, alpha: 1, duration: 900 }));
     this.time.delayedCall(7500, () => this.tweens.add({ targets: phrase, alpha: 0, duration: 700 }));
 
-    // 5. Recomeça a noite
-    this.time.delayedCall(8500, () =>
-      this.scene.start('Transition', {
-        screens: [daysLeftText(day), 'Casa'],
-        next: { scene: 'House', data: { day } },
-      }),
-    );
+    // 5. Tela inicial
+    this.time.delayedCall(8500, () => this.scene.start('Title'));
 
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.static?.stop());
   }

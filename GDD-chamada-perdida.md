@@ -74,8 +74,10 @@ A história **nunca é contada de forma direta**. O jogador recebe peças soltas
 - Som: chuva; de tempos em tempos, um telefone tocando três vezes ao longe.
 - **Apenas 3 botões:**
   - **Novo jogo** — se houver save, confirma: *"Isso apaga seu progresso. Continuar?"*
-  - **Continuar** — mostra o dia salvo; desativado se não houver save ou se o jogo foi zerado.
-  - **Opções** — volume geral, volume do ambiente, volume dos efeitos, tela cheia.
+  - **Continuar** — mostra o dia salvo (*"Continuar — dia 3"*); desativado se não houver save ou se o jogo foi zerado.
+  - **Opções** — volume geral, volume do ambiente, volume dos efeitos, tela cheia. **Ficam salvas entre sessões** (a tela cheia volta no primeiro clique ou tecla, porque o navegador só permite entrar nela assim).
+- Menus funcionam com mouse (passar por cima destaca, clicar escolhe) e teclado (↑/↓, Enter, ←/→ nos volumes, Esc volta).
+- O som só começa depois do primeiro clique ou tecla (regra do navegador).
 
 ### 2.2 Telas de transição
 
@@ -107,8 +109,9 @@ Tela preta, **todo texto em vermelho**.
 
 ### 2.4 Pausa (Esc)
 
-- Congela tudo (tempo, medo, chances, monstros, sons de jogo).
-- Botões: **Voltar ao jogo**, **Opções**, **Sair para o menu** (avisa que o progresso da noite atual será perdido).
+- Funciona **na casa e na delegacia**.
+- Congela tudo (tempo, medo, chances, monstros, ligações, relógio, sons de jogo).
+- Botões: **Voltar ao jogo**, **Opções**, **Sair para o menu**. Sair pede confirmação: na casa, avisa que o progresso da noite atual será perdido; na delegacia, que o turno de hoje recomeça do zero.
 
 ### 2.5 Morte
 
@@ -119,7 +122,8 @@ Tela preta, **todo texto em vermelho**.
 
 ### 2.6 Save
 
-- Salva ao terminar cada noite (ao dormir), no `localStorage`.
+- Salva no `localStorage`: no **Novo jogo** (dia 1), ao **sair pela porta da delegacia** e ao terminar cada noite (**ao dormir**).
+- Sair no meio da delegacia: ao continuar, o turno daquele dia **recomeça do zero**.
 - Guarda: dia atual e se a delegacia desse dia já foi concluída.
 - Após zerar o jogo, o save é marcado como concluído e **Continuar fica desativado**.
 

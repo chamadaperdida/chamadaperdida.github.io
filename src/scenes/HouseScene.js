@@ -39,6 +39,8 @@ import { FakeStepsHallucination } from '../hallucinations/FakeSteps.js';
 import { TvHallucination } from '../hallucinations/Tv.js';
 import { LandlineHallucination } from '../hallucinations/Landline.js';
 import { toDelegacia } from './DelegaciaScene.js';
+import { openPause } from './PauseScene.js';
+import { save } from '../systems/Save.js';
 import { NavGrid } from '../world/nav.js';
 import { MONSTER_KINDS, MonsterDirector } from '../systems/MonsterDirector.js';
 import { fearDecayPerSecond, hallucinationGap } from '../systems/formulas.js';
@@ -196,6 +198,7 @@ export class HouseScene extends Phaser.Scene {
     this.events.on(Phaser.Scenes.Events.POST_UPDATE, placeIcon);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.events.off(Phaser.Scenes.Events.POST_UPDATE, placeIcon));
     this.keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
+    this.input.keyboard.on('keydown-ESC', () => openPause(this));
     this.input.on('pointerdown', (pointer) => {
       if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep) this.flashlight.toggle(!this.generator.on);
     });
@@ -658,15 +661,17 @@ export class HouseScene extends Phaser.Scene {
     this.hud.clearFade(0.25);
   }
 
-  /** Noite terminou: delegacia do dia seguinte (GDD 2.3; o save entra na etapa 11). */
+  /** Noite terminou: salva e vai para a delegacia do dia seguinte (GDD 2.3 e 2.6). */
   endNight() {
     this.sleep = null;
     const day = this.clock.day;
     if (day >= 7) {
       // O final (GDD 10) entra na etapa 12
-      this.scene.start('Transition', { screens: ['O final entra na etapa 12'], next: { scene: 'House', data: { day: 1 } } });
+      save.completed();
+      this.scene.start('Transition', { screens: ['O final entra na etapa 12'], next: { scene: 'Title' } });
       return;
     }
+    save.nightDone(day);
     this.scene.start('Transition', toDelegacia(day + 1));
   }
 

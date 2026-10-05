@@ -14,6 +14,8 @@ import { CALLS, NOTES } from '../data/calls.js';
 import { sfx } from '../audio/Sfx.js';
 import { debug } from '../debug/debug.js';
 import { daysLeftText } from './TransitionScene.js';
+import { openPause } from './PauseScene.js';
+import { save } from '../systems/Save.js';
 
 const FONT = 'VT323, monospace';
 const S = 3; // a arte é 320×180, ampliada 3×
@@ -153,6 +155,7 @@ export class DelegaciaScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-SPACE', () => {
       if (this.calendarOpen) this.#closeCalendar();
     });
+    this.input.keyboard.on('keydown-ESC', () => openPause(this));
 
     this.#setupDebugKeys();
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
@@ -219,6 +222,7 @@ export class DelegaciaScene extends Phaser.Scene {
       return;
     }
     this.leaving = true;
+    save.delegaciaDone(this.day); // se morrer nessa noite, o Continuar volta direto para a casa
     sfx.lockClick(0.4);
     this.cameras.main.fadeOut(600, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () =>

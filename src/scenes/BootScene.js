@@ -1,9 +1,7 @@
-// Carrega os sprites e cria as animações, depois começa o dia 1 pela delegacia (GDD 2.3;
-// a tela inicial e o aviso de fone entram na etapa 11).
+// Carrega os sprites e cria as animações, depois abre a tela inicial (GDD 2.1).
 
 import Phaser from 'phaser';
 import { createArturAnimations } from '../entities/Player.js';
-import { toDelegacia } from './DelegaciaScene.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -26,6 +24,6 @@ export class BootScene extends Phaser.Scene {
     createArturAnimations(this.anims);
     // O HUD sobe junto (e antes) da casa, para já existir no primeiro quadro dela.
     this.scene.launch('Hud');
-    this.scene.start('Transition', toDelegacia(1));
+    this.scene.start('Title');
   }
 }

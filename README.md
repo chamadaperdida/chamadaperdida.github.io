@@ -25,16 +25,18 @@ npm run dev
 | Religar o gerador (com um fusível novo) | F (segurar 3 s) |
 | Soltar o que está carregando | Q |
 | Avançar diálogo | Espaço |
+| Pausa (casa e delegacia) | Esc |
 
 ## Estrutura
 
 | Caminho | O que é |
 |---|---|
 | `src/config/balance.js` | Todos os valores de balanceamento (GDD seção 9). Ajuste aqui. |
-| `src/systems/` | Fórmulas (GDD 9.2), relógio da noite, medo, gerador, lanterna, iluminação, itens, tarefas (`Tasks.js`) e ursos (`Bears.js`). |
+| `src/systems/` | Fórmulas (GDD 9.2), relógio da noite, medo, gerador, lanterna, iluminação, itens, tarefas (`Tasks.js`) e ursos (`Bears.js`), save e opções (`Save.js`). |
 | `src/world/houseMap.js` | Mapa da casa em metros (cômodos, portas, móveis), feito a partir da planta. |
 | `src/entities/` | Artur (`Player.js`) e portas (`Door.js`). |
-| `src/scenes/` | Cenas do Phaser (carregamento, delegacia, casa, HUD, transições, morte). |
+| `src/scenes/` | Cenas do Phaser (carregamento, tela inicial, delegacia, casa, HUD, transições, morte, pausa). |
+| `src/ui/` | Caixa de diálogo e menus (botões, opções, confirmação). |
 | `src/data/calls.js` | Ligações da delegacia de cada dia e bilhetes do Marcos (GDD 3 e Apêndice A). |
 | `src/debug/` | Modo debug. |
 | `scripts/sprites/` | Pixel art desenhada por código. `npm run sprites` gera os PNG em `public/assets/sprites`. |
@@ -62,7 +64,7 @@ npm run dev
 - [x] 8. Sistemas novos (lista e tarefas, ursos, fusível)
 - [x] 9. Portas e chave
 - [x] 10. Delegacia
-- [ ] 11. Fluxo completo
+- [x] 11. Fluxo completo
 - [ ] 12. Final
 - [ ] 13. Áudio
 - [ ] 14. Arte final e polimento
