@@ -326,10 +326,7 @@ function desk(c, x, y) {
   c.rect(x + 92, y + 14, 14, 5, C.paperOld);
   c.rect(x + 148, y + 13, 10, 6, C.paper);
   c.rect(x + 150, y + 15, 6, 1, '#7a7468');
-  // Caneca de café
-  c.rect(x + 76, y + 6, 6, 8, '#6a3a32');
-  c.rect(x + 76, y + 6, 6, 1, '#2a1a12');
-  c.rect(x + 82, y + 8, 2, 4, '#6a3a32');
+  mug(c, x + 76, y + 6);
 
   // Luminária de mesa (o bilhete é peça separada)
   c.rect(x + 18, y + 14, 14, 4, C.metalDark); // base
@@ -340,6 +337,13 @@ function desk(c, x, y) {
 
   // Planta no canto da mesa
   deskPlant(c, x + 198, y - 15);
+}
+
+function mug(c, x, y) {
+  // 8×8: caneca de café
+  c.rect(x, y, 6, 8, '#6a3a32');
+  c.rect(x, y, 6, 1, '#2a1a12');
+  c.rect(x + 6, y + 2, 2, 4, '#6a3a32');
 }
 
 function deskPlant(c, x, y) {
@@ -436,6 +440,7 @@ const PIECES = [
   ['hl-calendar', 30, 40, outlineOf(28, 38, (c, x, y) => calendarSmall(c, x, y + 2))],
   ['hl-plant', 18, 33, outlineOf(16, 31, deskPlant)],
   ['hl-phone', 28, 16, outlineOf(26, 14, (c, x, y) => phoneBase(c, x, y, true))],
+  ['hl-mug', 10, 10, outlineOf(8, 8, mug)],
   ['hl-note', 12, 13, outlineOf(10, 11, (c, x, y) => note(c, x, y + 1))],
 ];
 

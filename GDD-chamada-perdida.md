@@ -134,7 +134,7 @@ Tela preta, **todo texto em vermelho**.
 - O telefone toca; o jogador clica para atender. A ligação aparece na **caixa de diálogo** (seção 11.1), com o nome de quem fala.
 - Quando todas as ligações do dia terminam, a **porta** fica interativa (o vidro fosco brilha fraco). Antes disso, clicar nela: Artur diz *"Ainda não terminou o turno."*
 - O telefone toca 3 s depois de entrar e, entre uma ligação e outra, depois de 5 a 9 s (o aparelho treme).
-- **Demorou para atender:** depois de 20 s tocando, a ligação cai e a mesma pessoa liga de novo 4 s depois (na primeira vez do dia, Artur diz *"...Parou de tocar."*). Só liga de novo **uma vez**: se cair de novo, a ligação se perde de vez (*"...Perdi a ligação."*) e o turno segue, para não se arrastar madrugada adentro.
+- **Demorou para atender:** o telefone toca até ser atendido (nenhuma ligação se perde) e, enquanto toca, **o relógio fica parado**. Cada ligação gasta no máximo 6 min no relógio, por mais que o jogador demore lendo, e depois do fim do turno o relógio anda só mais 2 min e para. Assim o turno nunca vira madrugada, por mais que o jogador demore.
 - **Fim do turno:** depois da última ligação, Artur diz *"Acabou o turno. Hora de ir pra casa."* e a porta fica interativa.
 - Artur **mexe a boca** enquanto fala ao telefone (não nos comentários sobre os objetos).
 - **Passando o mouse** num objeto clicável, ele ganha um **contorno claro** seguindo a forma dele, e o nome aparece pequeno no canto inferior direito.
@@ -146,10 +146,11 @@ Tela preta, **todo texto em vermelho**.
 | Objeto | Função |
 |---|---|
 | Telefone | Ligações do dia |
-| Calendário | Clicando, abre grande: dias que já passaram riscados, hoje em destaque, o dia 27 (dia 7 do jogo; dia 1 = 21) circulado com "Aniversário da Clara" |
+| Calendário | Clicando, abre grande: todos os dias do mês que já passaram riscados (do dia 1 em diante), hoje em destaque, o dia 27 (dia 7 do jogo; dia 1 = 21) circulado com "Aniversário da Clara" |
 | Planta | Artur: *"Uma planta muito bonita."* |
 | Janela | Artur: *"Não para de chover."* |
-| Relógio de parede | Clicando, Artur diz a hora (*"Já são 23:12."*). Mostra a hora do turno (começa às 22:58, anda 1 min a cada 4 s e +6 min a cada ligação); **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
+| Caneca de café | Artur: *"O café está frio."* |
+| Relógio de parede | Clicando, Artur diz a hora (*"Já são 23:12."*). Mostra a hora do turno (começa às 22:58, anda 1 min a cada 4 s, para enquanto o telefone toca, cada ligação conta 6 min e, acabado o turno, para 2 min depois); **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
 | Bilhete do Marcos | Aparece na mesa nos dias 1–6 |
 | Porta | Leva para casa ao fim das ligações |
 
@@ -774,8 +775,7 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Relógio da delegacia | "Já são HH:MM." |
 | Planta da delegacia | "Uma planta muito bonita." |
 | Janela da delegacia | "Não para de chover." |
-| Telefone parou sem ninguém atender (1ª vez no dia) | "...Parou de tocar." |
-| Ligação perdida de vez (caiu duas vezes) | "...Perdi a ligação." |
+| Caneca de café da delegacia | "O café está frio." |
 | Fim das ligações do dia | "Acabou o turno. Hora de ir pra casa." |
 | Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |

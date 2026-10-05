@@ -34,6 +34,7 @@ const AT = {
   note: [58, 92],
   socket: [258, 104],
   plant: { x: 226, y: 92, w: 20, h: 32 },
+  mug: [106, 114],
   lampGlow: [56, 96],
 };
 
@@ -42,18 +43,16 @@ const AT = {
 const BIRTHDAY_DATE = 27;
 const dateOfDay = (day) => BIRTHDAY_DATE - (7 - day);
 
-// Relógio do turno: começa às 22:58, anda 1 min a cada 4 s e +6 min a cada ligação
+// Relógio do turno: começa às 22:58 e anda 1 min a cada 4 s, mas nunca dispara: para
+// enquanto o telefone toca, cada ligação dura no máximo 6 min e, acabado o turno, ele para
+// 2 min depois (o jogador pode demorar à vontade sem o turno virar madrugada)
 const SHIFT_START = 22 * 60 + 58;
 const SECONDS_PER_MINUTE = 4;
 const MINUTES_PER_CALL = 6;
+const MINUTES_AFTER_SHIFT = 2;
 
 const FIRST_RING = 3; // s depois de entrar
 const BETWEEN_CALLS = [5, 9]; // s
-// Ninguém atendeu: o telefone para (chamada perdida) e a mesma pessoa liga de novo, uma vez
-// só; se cair de novo, a ligação se perde e o turno segue
-const RING_LIMIT = 20; // s tocando
-const CALL_BACK = 4; // s até ligar de novo
-const MAX_CALL_BACKS = 1;
 // Alucinação: a sala fica mais escura (e mais ainda quando a lâmpada falha)
 const HALLUCINATION_DARK = 0.32;
 const FLICKER_DARK = 0.62;
@@ -67,6 +66,7 @@ const HIGHLIGHTS = {
   clock: ['hl-clock', 147, 14],
   plant: ['hl-plant', 227, 92],
   window: ['hl-window', 9, 21],
+  mug: ['hl-mug', 105, 113],
 };
 const MOUTH_EVERY = 0.09; // s entre abrir e fechar a boca falando
 
@@ -87,9 +87,7 @@ export class DelegaciaScene extends Phaser.Scene {
     this.frozenTime = null;
     this.hallucination = false;
     this.leaving = false;
-    this.missed = 0; // vezes que o telefone parou sem ninguém atender, no dia
-    this.callBacks = 0; // quantas vezes a ligação atual já ligou de novo
-    this.lost = 0; // ligações perdidas de vez
+    this.clockLimit = Infinity; // o relógio não passa daqui (minutos)
     this.mouthIn = 0;
     this.mouthOpen = false;
 
@@ -199,6 +197,7 @@ export class DelegaciaScene extends Phaser.Scene {
     if (this.note) zone(AT.note[0] - 2, AT.note[1] - 2, 14, 14, 'Bilhete do Marcos', 'note', () => this.#readNote());
     zone(AT.clock[0] - 12, AT.clock[1] - 12, 25, 25, 'Relógio', 'clock', () => this.#lookAt(`Já são ${this.clockText}.`));
     zone(AT.plant.x, AT.plant.y, AT.plant.w, AT.plant.h, 'Planta', 'plant', () => this.#lookAt('Uma planta muito bonita.'));
+    zone(AT.mug[0] - 2, AT.mug[1] - 2, 12, 12, 'Café', 'mug', () => this.#lookAt('O café está frio.'));
   }
 
   /** Artur comenta o que está olhando (não durante uma ligação). */
@@ -229,9 +228,10 @@ export class DelegaciaScene extends Phaser.Scene {
 
   // ---- Ligações -----------------------------------------------------------------
 
+  /** O telefone toca até alguém atender; enquanto isso, o relógio fica parado. */
   #ringNow() {
     this.state = 'ringing';
-    this.ringTime = 0;
+    this.clockLimit = this.minutes;
     this.ring = sfx.phoneRing(0.5);
     this.ringShake = this.tweens.add({
       targets: this.phone,
@@ -250,33 +250,12 @@ export class DelegaciaScene extends Phaser.Scene {
     this.phone.x = AT.phone[0] * S;
   }
 
-  /**
-   * Tocou demais sem ninguém atender: a ligação cai (chamada perdida) e a mesma pessoa liga
-   * de novo pouco depois, uma vez só. Se cair de novo, a ligação se perde e o turno segue
-   * (o turno não fica se arrastando madrugada adentro). Artur percebe na primeira vez do dia.
-   */
-  #missCall() {
-    this.#stopRinging();
-    this.missed += 1;
-    const quiet = this.dialogue.isOpen || this.calendarOpen;
-    if (this.callBacks < MAX_CALL_BACKS) {
-      this.callBacks += 1;
-      this.state = 'waiting';
-      this.timer = CALL_BACK;
-      if (this.missed === 1 && !quiet) this.dialogue.show(say('...Parou de tocar.'));
-      return;
-    }
-    // Perdida de vez: passa para a próxima ligação
-    this.lost += 1;
-    if (!quiet) this.dialogue.show(say('...Perdi a ligação.'));
-    this.#nextCall();
-  }
-
   #answer() {
     if (this.state !== 'ringing') return;
     this.#stopRinging();
     sfx.lockClick(0.5);
     this.state = 'talking';
+    this.clockLimit = this.minutes + MINUTES_PER_CALL; // a ligação dura no máximo isso
     this.body.setFrame('artur-body-phone');
     this.arms.setFrame('artur-arms-phone');
     this.phone.setFrame('phone-empty');
@@ -300,10 +279,11 @@ export class DelegaciaScene extends Phaser.Scene {
   /** Próxima ligação do dia (ou fim do turno). */
   #nextCall() {
     this.callIndex += 1;
-    this.callBacks = 0;
-    this.minutes += MINUTES_PER_CALL;
+    this.minutes = this.clockLimit; // cada ligação gasta os mesmos minutos
+    this.clockLimit = Infinity;
     if (this.callIndex >= this.calls.length) {
       this.state = 'done';
+      this.clockLimit = this.minutes + MINUTES_AFTER_SHIFT;
       // Aviso de fim do turno
       this.time.delayedCall(700, () => this.dialogue.show(say('Acabou o turno. Hora de ir pra casa.')));
       // A porta "acorda": um brilho fraco no vidro fosco
@@ -450,12 +430,12 @@ export class DelegaciaScene extends Phaser.Scene {
     this.clockText = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   }
 
-  /** Dias que já passaram riscados no calendário da parede. */
+  /** Todos os dias do mês que já passaram riscados no calendário da parede. */
   #drawCalendarMarks() {
     const g = this.calendarMarks.clear();
     const { x, y } = AT.calendar;
     g.fillStyle(0x6a1a1a, 1);
-    for (let date = dateOfDay(1); date < dateOfDay(this.day); date++) {
+    for (let date = 1; date < dateOfDay(this.day); date++) {
       const cell = date - 1;
       const col = cell % 7;
       const row = Math.floor(cell / 7);
@@ -496,7 +476,7 @@ export class DelegaciaScene extends Phaser.Scene {
           .text(cx, cy, String(date), { fontFamily: FONT, fontSize: '28px', color: date === today ? '#1a1a1e' : '#4a4a46' })
           .setOrigin(0.5),
       );
-      if (date < today && date >= dateOfDay(1)) {
+      if (date < today) {
         marks.lineStyle(3, 0x6a1a1a, 0.9);
         marks.lineBetween(cx - 14, cy - 14, cx + 14, cy + 14);
         marks.lineBetween(cx + 14, cy - 14, cx - 14, cy + 14);
@@ -563,7 +543,7 @@ export class DelegaciaScene extends Phaser.Scene {
     const dt = Math.min(delta / 1000, 0.1);
     this.dialogue.update(dt);
     this.#updateRain(dt);
-    if (!this.frozenTime) this.minutes += dt / SECONDS_PER_MINUTE;
+    if (!this.frozenTime) this.minutes = Math.min(this.minutes + dt / SECONDS_PER_MINUTE, this.clockLimit);
     this.#drawClock();
     if (this.hallucination) {
       this.#updateFlicker(dt);
@@ -574,9 +554,7 @@ export class DelegaciaScene extends Phaser.Scene {
       if (this.timer <= 0) this.#ringNow();
     } else if (this.state === 'waiting' && !this.calls.length) {
       this.state = 'done';
-    } else if (this.state === 'ringing') {
-      this.ringTime += dt;
-      if (this.ringTime >= RING_LIMIT) this.#missCall();
+      this.clockLimit = this.minutes + MINUTES_AFTER_SHIFT;
     }
     this.#updateMouth(dt);
     this.#updateDebug();
@@ -607,9 +585,12 @@ export class DelegaciaScene extends Phaser.Scene {
       'Delegacia/Ligação',
       `${Math.min(this.callIndex + 1, this.calls.length)}/${this.calls.length} · ${this.state}${
         this.state === 'waiting' ? ` (toca em ${this.timer.toFixed(1)} s)` : ''
-      }${this.state === 'ringing' ? ` (cai em ${(RING_LIMIT - this.ringTime).toFixed(0)} s)` : ''} · pararam ${this.missed} · perdidas ${this.lost}`,
+      }`,
     );
-    debug.set('Delegacia/Relógio', `${this.clockText}${this.frozenTime ? ' (travado)' : ''}`);
+    debug.set(
+      'Delegacia/Relógio',
+      `${this.clockText}${this.frozenTime ? ' (travado)' : this.minutes >= this.clockLimit ? ' (parado)' : ''}`,
+    );
   }
 
   #setupDebugKeys() {
