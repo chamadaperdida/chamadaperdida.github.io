@@ -56,6 +56,8 @@ const ITEM_RANGE = 1.0;
 const BED_RANGE = 1.4;
 const CHEST_OFFSET = 14; // px acima dos pés: de onde sai a luz da lanterna
 const NIGHT_SPEEDS = [1, 10, 60]; // debug: acelera só o relógio da noite
+// Madrugada do final: portas abertas no caminho do quarto do Artur até a sala (o resto tranca)
+const FINALE_OPEN_DOORS = ['quartoArtur', 'entradaCorredor'];
 
 const HALLUCINATIONS = {
   flicker: FlickerHallucination,
@@ -378,21 +380,11 @@ export class HouseScene extends Phaser.Scene {
     return best;
   }
 
-  /** Na madrugada do final só dá para atender o telefone e usar portas. */
+  /** Na madrugada do final a única interação é atender o telefone. */
   nearestInFinale() {
     const feet = this.player.feetMeters;
-    const dist = (p) => Phaser.Math.Distance.Between(feet.x, feet.y, p.x, p.y);
     const phone = this.finale.target;
-    if (phone && dist(phone.point) < phone.range) return phone;
-    let best = null;
-    let bestDist = DOOR_RANGE;
-    for (const door of this.doors) {
-      const d = dist(door.center);
-      if (door.kind === 'front' || d >= bestDist) continue;
-      best = { kind: 'door', door, anchor: { x: door.rect.centerX, y: door.rect.top - 2 } };
-      bestDist = d;
-    }
-    return best;
+    return phone && Phaser.Math.Distance.Between(feet.x, feet.y, phone.point.x, phone.point.y) < phone.range ? phone : null;
   }
 
   interact() {
@@ -719,6 +711,14 @@ export class HouseScene extends Phaser.Scene {
     this.hud.dialogue.clear();
     this.hud.setHint('');
     this.hud.showHold(null, 0);
+    // Portas: só o caminho da cama até o telefone fica aberto; todas as outras trancadas
+    for (const door of this.doors) {
+      if (door.kind === 'front') continue;
+      if (FINALE_OPEN_DOORS.includes(door.id)) {
+        door.unlock();
+        door.setOpen(true);
+      } else door.lock();
+    }
     this.finale = new Finale(this, {
       sfx,
       onEnd: () => {

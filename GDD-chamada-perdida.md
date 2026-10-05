@@ -200,6 +200,7 @@ Só nas alucinações (nunca nas reais):
 - Quem liga chama Artur pelo nome sem ele ter se apresentado.
 - Tela com vinheta escura e granulado leve.
 - **Voz distorcida na caixa de diálogo (sem áudio):** só nas falas de quem liga (Artur fala normal). O texto treme de leve, letras falham por um instante (viram símbolos ou somem) e a digitação sai irregular, travando e correndo. Efeitos sonoros e ações aparecem em cinza, sem nome.
+- Os efeitos entre parênteses na caixa de diálogo ficam só para o que o jogador não vê nem ouve de outro jeito e que é pista (respiração, gerador, "parabéns", a linha caindo); o chiado e a lâmpada piscando já aparecem no som e na tela.
 - Por enquanto só há um chiado baixo de fundo; os ruídos (gerador, porta rangendo, "parabéns", balão) entram na etapa 13 (áudio).
 
 ---
@@ -559,7 +560,7 @@ Mediana para zerar o medo (entre parênteses: chance de zerar em até 5 min). "N
 
 1. A gameplay do dia 7 corre normalmente até Artur dormir.
 2. Artur acorda na madrugada com o **telefone fixo da sala** tocando. As três ligações acontecem às **23:41, 23:44 e 23:47**. O relógio do corredor, no caminho entre a cama e o telefone, mostra o mesmo horário. **Fica ambíguo** se as ligações são reais.
-   - A tela clareia com Artur ao lado da cama e o telefone já tocando. Na casa não acontece mais nada: sem alucinações, monstros, medo, gerador, tarefas ou ursos; só andar, abrir portas e atender.
+   - A tela clareia com Artur ao lado da cama e o telefone já tocando. Na casa não acontece mais nada: sem alucinações, monstros, medo, gerador, tarefas ou ursos. **A única interação é o telefone:** todas as portas ficam fechadas e trancadas, menos as duas do caminho da cama até a sala (a do quarto do Artur e a do corredor para a entrada), que ficam abertas; nenhuma porta responde ao F.
    - O telefone **toca até Artur atender** (F perto dele; treme e mostra as marcas de "tocando", como na alucinação). Cada ligação começa com o horário na caixa de diálogo (*"(23:41)"*). Depois dela, alguns segundos de silêncio, o relógio do corredor pula para o próximo horário e o telefone toca de novo.
    - **Relógio do corredor:** relógio digital de parede, números vermelhos, no corredor dos quartos logo na saída do quarto do Artur. Nas outras noites fica **parado em 23:41** (como o da tela inicial).
    - **1ª:** Helena — "Artur, a luz caiu. O gerador não liga... Me liga de volta."
@@ -570,7 +571,8 @@ Mediana para zerar o medo (entre parênteses: chance de zerar em até 5 min). "N
 
 > "Um ex-policial de 41 anos foi encontrado morto em sua casa, em Vale Sereno. Segundo a perícia, a morte está relacionada ao uso excessivo de medicamentos controlados. Artur Lemos havia sido afastado das ruas há um ano, após a morte da esposa, Helena, e da filha, Clara, durante uma invasão à residência da família no dia do aniversário da filha. O criminoso nunca foi identificado."
 
-   - Implementação: a TV liga em tela cheia (a imagem abre de uma linha, com clarão e chiado), a reportagem aparece na caixa de diálogo (nome: *Jornalista*) em cinco partes, a foto da casa surge na segunda; a boca da jornalista mexe enquanto o texto é digitado. Depois, a TV desliga (fecha numa linha e num ponto). Visual na seção 13.7.
+   - **Ponto de vista de quem assiste:** a imagem começa ocupando a tela inteira e a câmera vai se afastando devagar (~24 s), até aparecer a TV inteira (gabinete de madeira, antena, móvel baixo) numa sala escura, iluminada só pela luz azulada da tela. Ao desligar, a sala some no escuro e os créditos sobem.
+   - Implementação: a TV liga (a imagem abre de uma linha, com clarão e chiado), a reportagem aparece na caixa de diálogo (nome: *Jornalista*) em cinco partes, a foto da casa surge na segunda; a boca da jornalista mexe enquanto o texto é digitado. Depois, a TV desliga (fecha numa linha e num ponto). Visual na seção 13.7.
 5. Créditos rolando com chuva ao fundo (texto em `src/scenes/EndingScene.js`, ajustável).
 6. Tela: *"Se você estiver passando por um momento difícil, ligue 188."* (CVV) — texto claro (não vermelho), fica alguns segundos.
 7. Volta para a tela inicial (Continuar desativado).
@@ -707,10 +709,10 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 ### 13.7 Cena da reportagem
 
-- Tela cheia de uma TV de tubo, imagem com linhas de varredura e chiado leve.
+- TV de tubo vista por quem está assistindo: começa em tela cheia e a câmera se afasta até mostrar a TV inteira na sala escura. Imagem com linhas de varredura e chiado leve.
 - Jornalista em pixel art, fundo de estúdio simples com a faixa "PLANTÃO — VALE SERENO".
 - Durante a fala, aparece uma foto antiga (borrada) da casa da Rua das Acácias.
-- Implementado (`scripts/sprites/ending.mjs`, 480×270 ampliada 2×): estúdio azul-escuro com o logotipo "VS" do canal, jornalista de cabelo curto e blazer atrás da bancada (pisca de vez em quando), painel de vídeo atrás dela onde a foto amarelada e borrada da casa aparece, faixa vermelha do plantão, "● AO VIVO" piscando, faixa clara descendo devagar pela imagem, cantos escuros do tubo.
+- Implementado (`scripts/sprites/ending.mjs`, 480×270 ampliada 2×): estúdio azul-escuro com o logotipo "VS" do canal, jornalista de cabelo curto e blazer atrás da bancada (pisca de vez em quando), painel de vídeo atrás dela onde a foto amarelada e borrada da casa aparece, faixa vermelha do plantão, "● AO VIVO" piscando, faixa clara descendo devagar pela imagem, cantos escuros do tubo. Gabinete de madeira escura com tela de cantos arredondados, grade do alto-falante, dois botões e antena de orelhas de coelho, sobre um móvel baixo de duas portas.
 
 ---
 
@@ -837,11 +839,10 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 - **Artur:** Anota a placa dele e não discute. Já mando alguém aí.
 
 **3. Silêncio (alucinação — 23:41)**
-- *(chiado)*
 - **Artur:** Delegacia de Vale Sereno, boa noite.
-- *(chiado... uma respiração)*
+- *(uma respiração do outro lado da linha)*
 - **Artur:** Alô? Consegue me ouvir?
-- *(a respiração para de repente)*
+- *(a respiração para)*
 - **Artur:** ...Alô?
 
 **4. Bicicleta roubada (real)**
@@ -868,12 +869,11 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 - **Artur:** Não chega perto. Vou acionar a companhia de energia agora.
 
 **3. A voz (alucinação — 23:41)**
-- *(chiado, a lâmpada pisca)*
 - **Artur:** Delegacia, boa noite.
 - **Voz de mulher:** ...Artur?
 - **Artur:** Quem tá falando? Como sabe meu nome?
 - **Voz de mulher:** ...a luz caiu de novo...
-- *(clique)*
+- *(a linha cai)*
 
 ### Dia 4
 
@@ -892,12 +892,11 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 - **Artur:** Não sai de casa. Vou mandar uma viatura passar aí.
 
 **3. Rua das Acácias (alucinação — 23:44)**
-- *(chiado; voz masculina, calma)*
-- **Voz:** Quero denunciar uma invasão.
+- **Voz de homem:** Quero denunciar uma invasão.
 - **Artur:** Qual o endereço, senhor?
-- **Voz:** Rua das Acácias, 47.
-- **Artur:** *(pausa)* ...Esse é o meu endereço. Quem tá falando?
-- **Voz:** Tem alguém na porta dos fundos.
+- **Voz de homem:** Rua das Acácias, 47.
+- **Artur:** ...Esse é o meu endereço. Quem tá falando?
+- **Voz de homem:** Tem alguém na porta dos fundos.
 - *(a linha cai)*
 
 **4. Vidro quebrando (real)**
@@ -925,12 +924,12 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 - **Mãe:** Obrigada, moço. Obrigada mesmo.
 
 **3. A promessa (alucinação — 23:44)**
-- *(chiado, a luz pisca, ao fundo um gerador tentando ligar)*
+- *(ao fundo, um gerador tentando ligar)*
 - **Artur:** Delegacia, boa noite.
 - **Voz de mulher:** ...você disse que vinha...
-- **Artur:** *(pausa)* ...Eu conheço essa voz.
+- **Artur:** ...Eu conheço essa voz.
 - **Voz de mulher:** ...você prometeu que ia estar aqui...
-- *(clique)*
+- *(a linha cai)*
 
 ### Dia 6
 
@@ -949,9 +948,9 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 - **Artur:** Não faz isso. Vou mandar alguém ver.
 
 **3. Pai? (alucinação — 23:47)**
-- *(chiado; ao fundo, um "parabéns pra você" quase inaudível)*
+- *(ao fundo, alguém cantando "parabéns pra você")*
 - **Artur:** Delegacia, boa noite.
-- *(silêncio, uma respiração pequena)*
+- *(uma respiração pequena)*
 - **Artur:** Tem alguém aí?
 - **Criança, sussurrando:** ...pai?
 - **Artur:** ...Quem é você?

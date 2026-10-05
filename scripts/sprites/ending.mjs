@@ -1,9 +1,12 @@
-// Reportagem do final (GDD 13.7): tela cheia de uma TV de tubo com o plantão de Vale Sereno.
-// Arte em 480×270 (ampliada 2× no jogo, como a tela inicial):
+// Reportagem do final (GDD 13.7): uma TV de tubo com o plantão de Vale Sereno, vista por
+// quem está assistindo. A imagem começa ocupando a tela e a câmera vai se afastando, até
+// aparecer a TV inteira, na sala escura. Arte em 480×270 (ampliada 2× no jogo):
 //   studio            fundo do estúdio (parede, painel de vídeo, bancada)
 //   reporter-0/1/2    jornalista atrás da bancada: boca fechada, boca aberta, piscando
 //   desk              frente da bancada (fica na frente da jornalista)
 //   house-photo       foto antiga e borrada da casa da Rua das Acácias (aparece no painel)
+//   tv-set            gabinete da TV com antena (a tela fica vazada, para a imagem aparecer)
+//   tv-rack           móvel baixo onde a TV fica
 // Linhas de varredura, chiado e a faixa "PLANTÃO — VALE SERENO" são desenhados pelo jogo.
 
 import { PixelCanvas, seeded } from './canvas.mjs';
@@ -14,6 +17,9 @@ export const DESK_Y = 176; // topo da bancada
 export const PANEL = { x: 262, y: 30, w: 176, h: 124 }; // painel de vídeo atrás da jornalista
 export const REPORTER = { x: 118, y: 62, w: 100, h: 120 };
 export const PHOTO = { w: 120, h: 86 };
+// Gabinete: corpo começa em y = 60 (antena acima); a tela vazada fica em (screenX, screenY)
+export const TV_SET = { w: 548, h: 430, body: 60, screenX: 34, screenY: 90 };
+export const TV_RACK = { w: 640, h: 90 };
 
 const hexToRgb = (h) => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 const rgbToHex = ([r, g, b]) =>
@@ -253,13 +259,105 @@ function paintHousePhoto(c, ox, oy) {
   }
 }
 
+// ---- TV e móvel -----------------------------------------------------------------------
+
+function line(c, x0, y0, x1, y1, color, thick = 1) {
+  const n = Math.ceil(Math.max(Math.abs(x1 - x0), Math.abs(y1 - y0)));
+  for (let i = 0; i <= n; i++) {
+    const x = Math.round(x0 + ((x1 - x0) * i) / n);
+    const y = Math.round(y0 + ((y1 - y0) * i) / n);
+    c.rect(x, y, thick, thick, color);
+  }
+}
+
+/** Dentro de um retângulo de cantos arredondados? */
+function inRounded(x, y, x0, y0, w, h, r) {
+  if (x < x0 || y < y0 || x >= x0 + w || y >= y0 + h) return false;
+  const cx = Math.min(Math.max(x, x0 + r), x0 + w - 1 - r);
+  const cy = Math.min(Math.max(y, y0 + r), y0 + h - 1 - r);
+  return (x - cx) ** 2 + (y - cy) ** 2 <= r * r;
+}
+
+/** Gabinete de TV de tubo, madeira escura, iluminado só de leve pela própria tela. */
+function paintTvSet(c, ox, oy) {
+  const { w, h, body, screenX, screenY } = TV_SET;
+  const rnd = seeded(33);
+  const bodyH = h - body;
+  const sx = screenX;
+  const sy = screenY;
+  const sw = ENDING_W;
+  const sh = ENDING_H;
+  // Antena (orelhas de coelho)
+  const ax = w / 2;
+  line(c, ox + ax - 6, oy + body - 8, ox + ax - 110, oy + 2, '#6a6a72', 2);
+  line(c, ox + ax + 6, oy + body - 8, ox + ax + 96, oy + 6, '#6a6a72', 2);
+  c.rect(ox + ax - 112, oy + 1, 4, 4, '#9a9aa2');
+  c.rect(ox + ax + 94, oy + 5, 4, 4, '#9a9aa2');
+  ellipse(c, ox + ax, oy + body - 2, 24, 10, '#1a1614');
+  ellipse(c, ox + ax, oy + body - 4, 22, 8, '#2e2824');
+  // Corpo
+  for (let y = 0; y < bodyH; y++) {
+    const grain = Math.sin(y * 0.9 + rnd() * 0.5) * 0.06;
+    for (let x = 0; x < w; x++) {
+      if (!inRounded(x, y, 0, 0, w, bodyH, 16)) continue;
+      // Na tela vazada não desenha nada
+      if (x >= sx && x < sx + sw && y + body >= sy && y + body < sy + sh && inRounded(x, y + body, sx, sy, sw, sh, 14)) continue;
+      let col = mix('#3a2a20', '#1e1612', y / bodyH);
+      col = mix(col, '#000000', Math.max(0, grain));
+      // Moldura funda em volta da tela
+      const ring = inRounded(x, y + body, sx - 10, sy - 10, sw + 20, sh + 20, 22);
+      if (ring) col = inRounded(x, y + body, sx - 3, sy - 3, sw + 6, sh + 6, 16) ? '#050505' : mix('#141010', '#0a0808', (y + body - sy) / sh);
+      // Bordas do gabinete pegam um pouco da luz da tela (azulada)
+      if (!ring && (y < 2 || x < 2 || x >= w - 2)) col = mix(col, '#4a5a78', 0.35);
+      c.px(ox + x, oy + body + y, col);
+    }
+  }
+  // Painel de baixo: grade do alto-falante, plaquinha e botões
+  const py = sy + sh + 14;
+  for (let k = 0; k < 6; k++) c.rect(ox + 44, oy + py + k * 7, 230, 3, '#120c0a');
+  c.rect(ox + 300, oy + py + 6, 40, 8, '#6a6a70');
+  c.rect(ox + 301, oy + py + 7, 38, 6, '#8a8a92');
+  for (const kx of [420, 476]) {
+    ellipse(c, ox + kx, oy + py + 20, 15, 15, '#0e0a08');
+    ellipse(c, ox + kx, oy + py + 19, 13, 13, '#3a3430');
+    ellipse(c, ox + kx - 2, oy + py + 16, 6, 6, '#4a4440');
+    c.rect(ox + kx - 1, oy + py + 8, 2, 8, '#c8c0b0');
+  }
+}
+
+/** Móvel baixo de madeira debaixo da TV. */
+function paintTvRack(c, ox, oy) {
+  const { w, h } = TV_RACK;
+  for (let y = 0; y < h - 10; y++) {
+    for (let x = 0; x < w; x++) {
+      let col = y < 8 ? mix('#4a3a2c', '#2e241c', y / 8) : mix('#24190f', '#120c08', (y - 8) / (h - 18));
+      if (y === 8) col = '#0a0604';
+      c.px(ox + x, oy + y, col);
+    }
+  }
+  // Portas do móvel
+  for (const dx of [16, w / 2 + 8]) {
+    c.rect(ox + dx, oy + 16, w / 2 - 24, 1, '#0a0604');
+    c.rect(ox + dx, oy + h - 20, w / 2 - 24, 1, '#0a0604');
+    c.rect(ox + dx, oy + 16, 1, h - 36, '#0a0604');
+    c.rect(ox + dx + w / 2 - 25, oy + 16, 1, h - 36, '#0a0604');
+  }
+  c.rect(ox + w / 2 - 14, oy + 40, 4, 8, '#6a5a40');
+  c.rect(ox + w / 2 + 10, oy + 40, 4, 8, '#6a5a40');
+  // Pés
+  c.rect(ox + 20, oy + h - 10, 10, 10, '#0e0a06');
+  c.rect(ox + w - 30, oy + h - 10, 10, 10, '#0e0a06');
+}
+
 // ---- Atlas -----------------------------------------------------------------------------
 
 export function drawEnding() {
-  const W = 512;
+  const W = 640;
   const deskH = ENDING_H - DESK_Y;
   const rowY = ENDING_H + deskH + 2;
-  const H = rowY + Math.max(REPORTER.h, PHOTO.h + 8) + 2;
+  const setY = rowY + Math.max(REPORTER.h, PHOTO.h + 8) + 2;
+  const rackY = setY + TV_SET.h + 2;
+  const H = rackY + TV_RACK.h;
   const c = new PixelCanvas(W, H);
   const frames = {};
   paintStudio(c, 0, 0);
@@ -278,5 +376,9 @@ export function drawEnding() {
   const px = 3 * (REPORTER.w + 2) + 4;
   paintHousePhoto(c, px, rowY + 4);
   frames['house-photo'] = { frame: { x: px - 4, y: rowY, w: PHOTO.w + 8, h: PHOTO.h + 8 } };
+  paintTvSet(c, 0, setY);
+  frames['tv-set'] = { frame: { x: 0, y: setY, w: TV_SET.w, h: TV_SET.h } };
+  paintTvRack(c, 0, rackY);
+  frames['tv-rack'] = { frame: { x: 0, y: rackY, w: TV_RACK.w, h: TV_RACK.h } };
   return { canvas: c, json: { frames, meta: { image: 'ending.png', size: { w: W, h: H }, scale: '1' } } };
 }

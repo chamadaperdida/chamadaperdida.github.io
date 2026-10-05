@@ -1,9 +1,12 @@
 // Final (GDD 10, passos 4 a 7), depois que a tela escurece na madrugada do dia 7:
 //
-// 1. Uma TV de tubo liga em tela cheia com o plantão de Vale Sereno (GDD 13.7): estúdio,
-//    jornalista, faixa "PLANTÃO — VALE SERENO", linhas de varredura e chiado leve. A
-//    reportagem aparece na caixa de diálogo; durante a fala, uma foto antiga e borrada da
-//    casa da Rua das Acácias surge no painel atrás dela. A TV desliga.
+// 1. Uma TV de tubo liga com o plantão de Vale Sereno (GDD 13.7), vista por quem está
+//    assistindo: a imagem começa ocupando a tela e a câmera vai se afastando devagar, até
+//    aparecer a TV inteira (gabinete, antena, móvel) numa sala escura, iluminada só por
+//    ela. Estúdio, jornalista, faixa "PLANTÃO — VALE SERENO", linhas de varredura e chiado
+//    leve. A reportagem aparece na caixa de diálogo; durante a fala, uma foto antiga e
+//    borrada da casa da Rua das Acácias surge no painel atrás dela. A TV desliga e a sala
+//    fica escura.
 // 2. Créditos rolando, com chuva ao fundo.
 // 3. "Se você estiver passando por um momento difícil, ligue 188." (CVV)
 // 4. Volta para a tela inicial (o save já está marcado como zerado: Continuar desativado).
@@ -17,11 +20,17 @@ import { DialogueBox } from '../ui/DialogueBox.js';
 const FONT = 'VT323, monospace';
 const S = 2;
 // Posições na arte (ver scripts/sprites/ending.mjs)
+const ENDING_W_ART = 480;
+const ENDING_H_ART = 270;
 const DESK_Y = 176;
 const PANEL = { x: 262, y: 30, w: 176, h: 124 };
 const REPORTER = { x: 118, y: 62 };
 const PHOTO = { w: 128, h: 94 };
 const BANNER_Y = 152; // faixa do plantão, logo acima da bancada
+const TV_SET = { w: 548, h: 430, screenX: 34, screenY: 90 };
+const TV_RACK = { w: 640 };
+// Câmera se afastando da TV: de tela cheia (1) até a TV inteira na sala (0,5 = arte 1:1)
+const PULL_BACK = { scale: 0.5, y: 228, delay: 1200, duration: 24000 };
 
 const REPORT = [
   'Um ex-policial de 41 anos foi encontrado morto em sua casa, em Vale Sereno.',
@@ -151,6 +160,33 @@ export class EndingScene extends Phaser.Scene {
     put(this.add.image(0, 0, 'tv-scanlines').setOrigin(0));
     // Clarão de ligar/desligar
     this.flash = put(this.add.rectangle(0, 0, width, height, 0xe8f0ff, 1).setOrigin(0).setAlpha(0));
+
+    // A TV na sala: luz da tela no escuro, móvel, a imagem e o gabinete (tela vazada).
+    // Tudo num container que encolhe (a câmera se afastando).
+    if (!this.textures.exists('tv-room-glow')) {
+      const size = 256;
+      const tex = this.textures.createCanvas('tv-room-glow', size, size);
+      const ctx = tex.getContext();
+      const g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      g.addColorStop(0, 'rgba(110,140,200,0.32)');
+      g.addColorStop(0.5, 'rgba(70,95,150,0.12)');
+      g.addColorStop(1, 'rgba(40,60,110,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, size, size);
+      tex.refresh();
+    }
+    const top = -(ENDING_H_ART / 2 + TV_SET.screenY) * S;
+    this.roomGlow = this.add.image(0, 0, 'tv-room-glow').setScale(10, 7).setAlpha(0).setBlendMode(Phaser.BlendModes.ADD);
+    const rack = this.add
+      .image(-(TV_RACK.w / 2) * S, top + TV_SET.h * S, 'ending', 'tv-rack')
+      .setOrigin(0)
+      .setScale(S);
+    const casing = this.add
+      .image(-(ENDING_W_ART / 2 + TV_SET.screenX) * S, top, 'ending', 'tv-set')
+      .setOrigin(0)
+      .setScale(S);
+    this.tv.setPosition(0, 0);
+    this.set = this.add.container(width / 2, height / 2, [this.roomGlow, rack, this.tv, casing]);
   }
 
   /** A TV liga: a imagem abre de uma linha no meio, com um clarão e o chiado. */
@@ -163,6 +199,16 @@ export class EndingScene extends Phaser.Scene {
     this.tweens.add({ targets: this.flash, alpha: 0, duration: 600, delay: 120 });
     // O chiado baixa quando a imagem firma
     this.time.delayedCall(900, () => this.static?.setVolume(0.07));
+    // A câmera vai se afastando: aparece a TV inteira, na sala escura
+    this.tweens.add({
+      targets: this.set,
+      scale: PULL_BACK.scale,
+      y: PULL_BACK.y,
+      delay: PULL_BACK.delay,
+      duration: PULL_BACK.duration,
+      ease: 'Sine.easeInOut',
+    });
+    this.tweens.add({ targets: this.roomGlow, alpha: 1, delay: PULL_BACK.delay, duration: PULL_BACK.duration * 0.6 });
     this.time.delayedCall(1800, () => this.dialogue.show(REPORT).then(() => this.time.delayedCall(1400, () => this.#tvOff())));
   }
 
@@ -181,7 +227,11 @@ export class EndingScene extends Phaser.Scene {
         this.tv.setVisible(false);
         this.static?.stop();
         this.static = null;
-        this.time.delayedCall(1800, () => this.#credits());
+        // Sem a luz da tela, a sala some no escuro
+        this.tweens.killTweensOf(this.set);
+        this.roomGlow.setAlpha(0);
+        this.tweens.add({ targets: this.set, alpha: 0, duration: 1400 });
+        this.time.delayedCall(2200, () => this.#credits());
       },
     });
   }
