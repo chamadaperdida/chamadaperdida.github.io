@@ -6,6 +6,7 @@ import { BALANCE } from '../config/balance.js';
 import { PPM } from '../world/tiles.js';
 import { Hallucination } from './Hallucination.js';
 import { positional } from '../audio/Sfx.js';
+import { foley } from '../audio/Foley.js';
 
 const FONT = 'VT323, monospace';
 const MAX_LIFE = 60;
@@ -30,6 +31,8 @@ export class TvHallucination extends Hallucination {
     this.wordIn = 2 + Math.random() * 2;
     this.pos = { x: (this.tv.x + this.tv.width / 2) / PPM, y: (this.tv.y + this.tv.height) / PPM };
     this.sound = ctx.sfx.staticLoop(0);
+    const { pan } = positional(ctx.feet(), this.pos, BALANCE.extra.deviceSoundRange);
+    foley.tvOn(0.5, pan);
   }
 
   get name() {
@@ -90,6 +93,7 @@ export class TvHallucination extends Hallucination {
   }
 
   end() {
+    foley.tvOff(0.4);
     this.sound.stop();
     this.screen.destroy();
   }

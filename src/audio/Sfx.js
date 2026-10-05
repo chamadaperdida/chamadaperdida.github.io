@@ -1,5 +1,7 @@
-// Efeitos sonoros gerados por código (Web Audio). Versão básica para as alucinações
-// funcionarem; a etapa 11 refina o som e adiciona ambiente, chuva, vozes etc.
+// Efeitos sonoros gerados por código (Web Audio): sons dos monstros, alucinações, telefone,
+// chuva da tela inicial etc. Os sons da casa e da delegacia (tarefas, portas, passos,
+// ambiente...) ficam em audio/Foley.js, montados com as peças públicas daqui (out, burst,
+// noiseSource, thump, loopHandle).
 //
 // O navegador só libera áudio depois de uma tecla ou clique: o contexto liga sozinho
 // no primeiro toque do jogador.
@@ -80,6 +82,41 @@ class Sfx {
     panner.pan.value = Math.max(-1, Math.min(1, pan));
     gain.connect(panner).connect(bus);
     return { gain, panner };
+  }
+
+  // ---- Peças para outros módulos (audio/Foley.js) ------------------------------
+
+  get now() {
+    return this.ctx.currentTime;
+  }
+
+  /** Saída com volume e lado; bus: 'effects' ou 'ambient'. */
+  out(volume = 1, pan = 0, bus = 'effects') {
+    return this.#out(volume, pan, bus === 'ambient' ? this.ambient : this.effects);
+  }
+
+  burst(at, out, opts) {
+    this.#burst(at, out, opts);
+  }
+
+  noiseSource() {
+    return this.#noiseSource();
+  }
+
+  thump(at, opts) {
+    this.#thump(at, opts);
+  }
+
+  footstepAt(at, volume, pan, pitch) {
+    this.#footstep(at, volume, pan, pitch);
+  }
+
+  loopHandle(gain, panner, stopNodes, onStop) {
+    return this.#loopHandle(gain, panner, stopNodes, onStop);
+  }
+
+  silentHandle() {
+    return this.#silentHandle();
   }
 
   // ---- Ambiente (tela inicial) ------------------------------------------------
@@ -798,11 +835,23 @@ class Sfx {
     osc.stop(at + dur + 0.02);
   }
 
-  /** Grito do jumpscare (~1 s): ruído rasgado + vozes desafinadas subindo. */
-  scream(volume = 0.9) {
+  /**
+   * Grito do jumpscare (~1 s): ruído rasgado + vozes desafinadas subindo.
+   * phone: abafado como se viesse pelo telefone (3ª ligação final e o trecho escondido
+   * nos jumpscares, GDD 13.6).
+   */
+  scream(volume = 0.9, phone = false) {
     if (!this.ready) return;
     const at = this.ctx.currentTime;
-    const { gain } = this.#out(volume);
+    let { gain } = this.#out(volume * (phone ? 2.2 : 1));
+    if (phone) {
+      const bp = this.ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = 1100;
+      bp.Q.value = 0.9;
+      bp.connect(gain);
+      gain = bp;
+    }
     const env = this.ctx.createGain();
     env.gain.setValueAtTime(0.0001, at);
     env.gain.exponentialRampToValueAtTime(1, at + 0.03);

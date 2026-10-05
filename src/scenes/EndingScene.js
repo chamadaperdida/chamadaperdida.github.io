@@ -17,6 +17,7 @@
 import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx.js';
 import { DialogueBox } from '../ui/DialogueBox.js';
+import { foley } from '../audio/Foley.js';
 
 const FONT = 'VT323, monospace';
 const S = 2;
@@ -201,6 +202,7 @@ export class EndingScene extends Phaser.Scene {
     this.tv.setVisible(true).setScale(1, 0.01);
     this.flash.setAlpha(1);
     this.static = sfx.staticLoop(0.35);
+    foley.tvOn(0.6);
     this.tweens.add({ targets: this.tv, scaleY: 1, duration: 260, ease: 'Cubic.easeOut' });
     this.tweens.add({ targets: this.flash, alpha: 0, duration: 600, delay: 120 });
     // O chiado baixa quando a imagem firma
@@ -223,6 +225,7 @@ export class EndingScene extends Phaser.Scene {
     this.phase = 'off';
     this.flash.setAlpha(0.6);
     this.static?.setVolume(0.3);
+    foley.tvOff(0.6);
     this.tweens.chain({
       targets: this.tv,
       tweens: [

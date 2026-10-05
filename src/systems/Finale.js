@@ -254,7 +254,7 @@ export class Finale {
       for (let i = 0; i < 6; i++) this.scene.time.delayedCall(i * 520, () => sfx.step(0.22 + i * 0.05, 0));
     } else if (kind === 'creak') sfx.doorCreak(0.4);
     else if (kind === 'screams') {
-      sfx.scream(0.5);
+      sfx.scream(0.5, true); // pelo telefone
       // A luz pisca sem parar, a tela treme e falha
       this.storm = 1.8;
       this.scene.cameras.main.shake(900, 0.006);

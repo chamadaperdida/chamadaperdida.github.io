@@ -49,6 +49,7 @@ import { MONSTER_KINDS, MonsterDirector } from '../systems/MonsterDirector.js';
 import { fearDecayPerSecond, hallucinationGap } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
 import { sfx } from '../audio/Sfx.js';
+import { foley } from '../audio/Foley.js';
 import { debug } from '../debug/debug.js';
 
 const CAMERA_ZOOM = 2; // mostra ~15 m × 8,4 m da casa por vez
@@ -104,6 +105,13 @@ export class HouseScene extends Phaser.Scene {
       (kind, ctx) => this.hallucinationAvailable(kind, ctx),
     );
     this.sleep = null; // sequência de sono em andamento
+    // Sons contínuos da casa (GDD 14): ambiente, respiração, segurar F, sussurros do sono
+    this.ambience = null;
+    this.breath = null;
+    this.holdSound = null;
+    this.whispers = null;
+    this.stepDist = 0;
+    this.wasFlicker = false;
     this.finale = null; // madrugada do dia 7 (GDD 10)
     this.dead = false; // a cena é reaproveitada a cada noite: zera o estado
     this.arrived = false; // fala de chegada já fechada
@@ -207,14 +215,19 @@ export class HouseScene extends Phaser.Scene {
     this.keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.input.keyboard.on('keydown-ESC', () => openPause(this));
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep && !this.finale) this.flashlight.toggle(!this.generator.on);
+      if (!pointer.leftButtonDown() || this.hud.talking || this.sleep || this.finale) return;
+      const was = this.flashlight.on;
+      this.flashlight.toggle(!this.generator.on);
+      if (this.flashlight.on !== was) foley.flashlightClick();
     });
 
     this.generator.listen('drop', () => {
       cam.shake(180, 0.004);
+      foley.generatorFail();
       this.onPowerDrop();
     });
     this.generator.listen('restore', () => {
+      foley.generatorStart();
       this.flashlight.forceOff();
       this.hasFuse = false; // o fusível novo foi usado
     });
@@ -236,6 +249,7 @@ export class HouseScene extends Phaser.Scene {
       this.monsters.endAll();
       this.finale?.end();
       this.chaseSound?.stop();
+      this.stopSounds();
       this.hud.resetDread?.();
       debug.clearGroup('Casa');
       debug.clearGroup('Noite');
@@ -414,6 +428,7 @@ export class HouseScene extends Phaser.Scene {
   // ---- Lista da rotina e começo da noite (GDD 4.6 e 4.11) -----------------
 
   readList() {
+    foley.paper();
     this.hud.showList('Rotina antes de dormir', this.tasks.lines).then(() => {
       if (this.tasks.listRead) return;
       this.tasks.listRead = true;
@@ -485,6 +500,8 @@ export class HouseScene extends Phaser.Scene {
     }
     if (door.isOpen && door.isObstructedBy(this.player.body.getBounds({}))) return;
     door.toggle();
+    if (door.isOpen) foley.doorOpen();
+    else foley.doorClose();
   }
 
   useItem(item) {
@@ -497,20 +514,24 @@ export class HouseScene extends Phaser.Scene {
     if (item.type === 'medicine') {
       // Remédio: medo cai rápido + glitch rápido na tela
       this.fear.reduce(-BALANCE.fearEvents.medicine);
+      foley.pills();
       glitchCamera(this, this.cameras.main, BALANCE.extra.medicineGlitchSeconds);
     } else if (item.type === 'battery') {
       this.flashlight.addBattery(BALANCE.batteryPickup / 100);
+      foley.battery();
     } else if (item.type === 'key') {
       this.hasKey = true;
+      sfx.keyJingle(0.35);
       this.hud.talk(LINES.foundKey);
     } else if (item.type === 'fuse') {
       this.hasFuse = true;
       this.fuse.glint.destroy();
       this.fuse = null;
-      sfx.lockClick(0.4);
+      foley.fusePick();
       this.hud.talk(LINES.foundFuse);
     } else if (item.type === 'phone') {
       this.tasks.hasPhone = true;
+      foley.tick();
     }
   }
 
@@ -656,11 +677,14 @@ export class HouseScene extends Phaser.Scene {
     this.generator.paused = true;
     this.flashlight.forceOff();
     this.hud.fadeToBlack(BALANCE.timings.sleepSequenceSeconds * 0.85);
+    this.whispers = foley.sleepWhispers();
   }
 
   updateSleep(dt) {
     const s = this.sleep;
     s.elapsed += dt;
+    // Vários sussurros aumentando (GDD 4.7)
+    this.whispers?.setLevel(Math.min(1, s.elapsed / (BALANCE.timings.sleepSequenceSeconds * 0.9)));
     if (!s.rolled && s.elapsed >= s.rollAt) {
       s.rolled = true;
       if (this.generator.rollSleep()) {
@@ -673,6 +697,8 @@ export class HouseScene extends Phaser.Scene {
 
   cancelSleep() {
     this.sleep = null;
+    this.whispers?.stop();
+    this.whispers = null;
     this.generator.paused = false;
     this.hud.clearFade(0.25);
   }
@@ -687,6 +713,11 @@ export class HouseScene extends Phaser.Scene {
       return;
     }
     this.sleep = null;
+    // Silêncio na hora (fim da sequência de sono)
+    this.whispers?.stop();
+    this.whispers = null;
+    this.ambience?.stop();
+    this.ambience = null;
     const day = this.clock.day;
     if (day >= 7) {
       this.startFinale();
@@ -694,6 +725,80 @@ export class HouseScene extends Phaser.Scene {
     }
     save.nightDone(day);
     this.scene.start('Transition', toDelegacia(day + 1));
+  }
+
+  // ---- Sons (GDD 14) ------------------------------------------------------
+
+  /** Chuva + ruído o tempo todo (aberta lá fora, abafada dentro) e a respiração do cansaço. */
+  updateAmbientSounds() {
+    if (!this.ambience && sfx.ready) this.ambience = foley.houseAmbience();
+    const feet = this.player.feetMeters;
+    this.ambience?.setOutdoors(!!roomAt(feet.x, feet.y)?.external);
+    const tired = this.player.exhausted;
+    if (tired && !this.breath) this.breath = foley.breathLoop();
+    else if (!tired && this.breath) {
+      this.breath.stop();
+      this.breath = null;
+    }
+  }
+
+  /** Passos do Artur, conforme o chão: taco, azulejo/concreto ou lama. */
+  updateFootsteps(dt) {
+    const p = this.player;
+    const speed = p.body.velocity.length() / PPM;
+    if (speed === 0) {
+      this.stepDist = 0.4; // o primeiro passo sai logo
+      return;
+    }
+    this.stepDist += speed * dt;
+    if (this.stepDist < (p.running ? 0.9 : 0.65)) return;
+    this.stepDist = 0;
+    const feet = p.feetMeters;
+    const floor = roomAt(feet.x, feet.y)?.floor;
+    const surface = floor === 'mud' ? 'mud' : floor === 'taco' || floor === 'corridor' ? 'wood' : 'tile';
+    foley.footstep(surface, p.running ? 0.22 : 0.13);
+  }
+
+  /**
+   * Som enquanto segura F numa tarefa: água e bucha na pia, talher no prato, roupa e
+   * prendedor no varal, água no vaso, janela correndo, vapor do ferro. null para parar.
+   */
+  updateHoldSound(task, dt = 0) {
+    if (this.holdSound?.task !== task) {
+      this.holdSound?.loop?.stop();
+      this.holdSound = null;
+      if (!task) return;
+      const loops = { louca: () => foley.waterLoop(1800), regar: () => foley.waterLoop(800), uniforme: () => foley.steamLoop() };
+      const loop = loops[task]?.() ?? null;
+      loop?.setVolume(task === 'uniforme' ? 0.3 : 0.35);
+      if (task === 'jantar') foley.chair(0.3);
+      else if (task === 'janelas') foley.windowSlide(0.4, 0, BALANCE.tasks.closeWindowSeconds);
+      else if (task === 'roupa') foley.wetCloth(0.35);
+      this.holdSound = { task, loop, tick: 0.3 };
+    }
+    const h = this.holdSound;
+    h.tick -= dt;
+    if (h.tick > 0) return;
+    h.tick = 1;
+    if (task === 'louca') {
+      foley.scrub();
+      h.tick = 0.35 + Math.random() * 0.2;
+    } else if (task === 'jantar') {
+      foley.cutlery();
+      h.tick = 0.5 + Math.random() * 0.5;
+    } else if (task === 'roupa') {
+      foley.clothespin(0.25);
+      h.tick = 0.8;
+    }
+  }
+
+  stopSounds() {
+    this.ambience?.stop();
+    this.breath?.stop();
+    this.whispers?.stop();
+    this.updateHoldSound(null);
+    this.tasks?.stopSounds();
+    this.ambience = this.breath = this.whispers = null;
   }
 
   // ---- Final (GDD 10) -----------------------------------------------------
@@ -709,6 +814,10 @@ export class HouseScene extends Phaser.Scene {
     this.generator.paused = true;
     this.flashlight.forceOff();
     this.taskHold = null;
+    this.updateHoldSound(null);
+    this.tasks.stopSounds();
+    this.breath?.stop();
+    this.breath = null;
     this.hud.resetDread();
     this.hud.dialogue.clear();
     this.hud.setHint('');
@@ -739,6 +848,8 @@ export class HouseScene extends Phaser.Scene {
     this.player.carrying = false;
     this.player.update(dt);
     const feet = this.player.feetMeters;
+    this.updateFootsteps(dt);
+    if (!this.finale.frozen) this.updateAmbientSounds();
     this.finale.update(dt, feet);
     this.lighting.update(dt, { powerOn: true, feet, chest: this.chest, flashlight: this.flashlight, zoneFactor: this.finale.lightFactor });
     this.hud.setFear(0);
@@ -777,6 +888,8 @@ export class HouseScene extends Phaser.Scene {
 
     this.player.update(dt);
     const feet = this.player.feetMeters;
+    this.updateFootsteps(dt);
+    if (!this.sleep) this.updateAmbientSounds();
 
     this.generator.update(nightDt, feet);
     const v = this.player.body.velocity;
@@ -787,8 +900,10 @@ export class HouseScene extends Phaser.Scene {
     this.director.update(dt, nightDt, this.frameCtx);
     this.fear.update(nightDt, this.generator.on);
     this.flashlight.update(dt);
+    if (this.flashlight.shining === false && this.flashlight.on && !this.wasFlicker) foley.flashlightFlicker();
+    this.wasFlicker = this.flashlight.on && !this.flashlight.shining;
     if (this.generator.on && this.flashlight.on) this.flashlight.forceOff();
-    this.tasks.update(dt, this.generator.on, time);
+    this.tasks.update(dt, this.generator.on, time, feet);
     this.lockEvent.update(dt, this.generator.on);
     this.generator.lockedDoor = !!this.lockEvent.door;
     this.hud.setHint(this.sleep || this.dead ? '' : this.tasks.hint);
@@ -818,11 +933,16 @@ export class HouseScene extends Phaser.Scene {
       if (this.taskHold?.key !== key) this.taskHold = { key, progress: 0 };
       this.taskHold.progress += dt / holdTask.hold;
       taskProgress = Math.min(1, this.taskHold.progress);
+      this.updateHoldSound(holdTask.task, dt);
       if (this.taskHold.progress >= 1) {
         this.taskHold = null;
+        this.updateHoldSound(null);
         this.useTask(holdTask);
       }
-    } else this.taskHold = null;
+    } else {
+      this.taskHold = null;
+      this.updateHoldSound(null);
+    }
 
     this.lighting.update(dt, {
       powerOn: this.generator.on,

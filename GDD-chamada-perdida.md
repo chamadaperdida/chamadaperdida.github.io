@@ -201,7 +201,7 @@ Só nas alucinações (nunca nas reais):
 - Tela com vinheta escura e granulado leve.
 - **Voz distorcida na caixa de diálogo (sem áudio):** só nas falas de quem liga (Artur fala normal). O texto treme de leve, letras falham por um instante (viram símbolos ou somem) e a digitação sai irregular, travando e correndo. Efeitos sonoros e ações aparecem em cinza, sem nome.
 - Os efeitos entre parênteses na caixa de diálogo ficam só para o que o jogador não vê nem ouve de outro jeito e que é pista (respiração, gerador, "parabéns", a linha caindo); o chiado e a lâmpada piscando já aparecem no som e na tela.
-- Por enquanto só há um chiado baixo de fundo; os ruídos (gerador, porta rangendo, "parabéns", balão) entram na etapa 13 (áudio).
+- Ruídos ao fundo de cada ligação-alucinação, baixos e abafados pelo filtro de telefone (além do chiado): dia 2 — balão sendo apertado; dia 3 — gerador tentando ligar; dia 4 — porta rangendo; dia 5 — gerador tentando ligar; dia 6 — "parabéns pra você" lento e desafinado.
 
 ---
 
@@ -723,12 +723,13 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 ### 14.1 Ambiente
 
-- Em casa: **chuva de fundo + ruído branco**, o tempo todo.
-- Delegacia: chuva na janela, zumbido da lâmpada fluorescente.
+- Em casa: **chuva de fundo + ruído branco**, o tempo todo. Dentro de casa a chuva chega abafada; no quintal, jardim e varanda, aberta e mais alta. Para de uma vez no fim da sequência de sono (o "silêncio instantâneo").
+- Delegacia: chuva na janela, zumbido da lâmpada fluorescente (o zumbido some quando a lâmpada pisca e apaga).
+- Implementado na etapa 13 (`src/audio/Foley.js`): todos os sons são gerados por código; nenhum arquivo de áudio.
 
 ### 14.2 Efeitos (lista para produzir)
 
-> **Sons das tarefas, ursos e fusível — prioridade alta (etapa 13).** Cada ação abaixo precisa do seu som, para o jogador perceber sem olhar a tela:
+> **Sons das tarefas, ursos e fusível — feitos na etapa 13** (`src/audio/Foley.js`). Cada ação abaixo tem o seu som, para o jogador perceber sem olhar a tela. Os de segurar F tocam enquanto a tecla está apertada (água e bucha na pia, talher no prato, roupa e prendedor no varal, água no vaso, janela correndo, vapor do ferro); micro-ondas e máquina tocam enquanto funcionam, mais altos perto deles:
 >
 > | Momento | Som |
 > |---|---|
@@ -748,6 +749,8 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 > | Fusível | pegar o fusível; encaixe no gerador |
 
 Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando do Invasor (posicional, a cada passo), sussurro distorcido do Artur distorcido (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
+
+**Feito na etapa 13:** passos do Artur conforme o chão (taco, azulejo/concreto, lama), respiração ofegante com a estamina esgotada, portas abrindo e fechando (rangido + trinco), gerador falhando (motor engasgando e a luz morrendo) e ligando (encaixe do fusível + arranque), pilha, remédio (frasco + falha digital), clique da lanterna e estalido quando ela falha, TV ligando/desligando (casa e reportagem), chave, celular, sussurros do sono (quatro vozes de lados diferentes, aumentando), gritos da 3ª ligação abafados pelo telefone, trecho escondido desses gritos em todo jumpscare e, na Helena, o tom de linha ocupada. O "ops" do balão é voz e depende da decisão da seção 14.3.
 
 ### 14.3 Vozes
 

@@ -33,6 +33,7 @@ npm run dev
 | Caminho | O que é |
 |---|---|
 | `src/config/balance.js` | Todos os valores de balanceamento (GDD seção 9). Ajuste aqui. |
+| `src/audio/` | Som gerado por código: `Sfx.js` (monstros, alucinações, telefone, chuva da tela inicial) e `Foley.js` (ambiente da casa e da delegacia, tarefas, portas, passos, itens, gerador, sono). |
 | `src/systems/` | Fórmulas (GDD 9.2), relógio da noite, medo, gerador, lanterna, iluminação, itens, tarefas (`Tasks.js`) e ursos (`Bears.js`), save e opções (`Save.js`), madrugada do final (`Finale.js`). |
 | `src/world/houseMap.js` | Mapa da casa em metros (cômodos, portas, móveis), feito a partir da planta. |
 | `src/entities/` | Artur (`Player.js`) e portas (`Door.js`). |
@@ -67,5 +68,5 @@ npm run dev
 - [x] 10. Delegacia
 - [x] 11. Fluxo completo
 - [x] 12. Final
-- [ ] 13. Áudio
+- [x] 13. Áudio (falta decidir quais momentos terão voz, GDD 14.3)
 - [ ] 14. Arte final e polimento

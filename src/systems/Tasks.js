@@ -15,9 +15,13 @@
 //
 // Este módulo só guarda o estado e diz o que dá para fazer agora (targets). A cena cuida
 // de mostrar o [F], segurar F e chamar use()/complete().
+// Sons (GDD 14.2): cada ação toca o seu som aqui (audio/Foley.js); os sons de segurar F
+// ficam na cena, e o micro-ondas e a máquina tocam enquanto funcionam (update).
 
 import { BALANCE } from '../config/balance.js';
 import { PPM } from '../world/tiles.js';
+import { foley } from '../audio/Foley.js';
+import { positional } from '../audio/Sfx.js';
 
 export const TASK_NAMES = {
   jantar: 'Jantar',
@@ -84,6 +88,14 @@ const HANDS = {
   up: { x: 0, y: -12, behind: true },
   left: { x: -5, y: -10, behind: false },
   right: { x: 5, y: -10, behind: false },
+};
+
+// O que Artur carrega → som ao cair no chão
+const DROP_SOUND = {
+  marmita: 'box',
+  jantar: 'ceramic',
+  pratos: 'ceramic',
+  regador: 'plastic',
 };
 
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.max(0, Math.ceil(s) % 60)).padStart(2, '0')}`;
@@ -378,6 +390,7 @@ export class Tasks {
             this.hooks.say('Estou com as mãos ocupadas.');
             return;
           } else this.carrying = d.carry;
+          foley.pickUp();
           d.sprite.destroy();
           this.dropped = this.dropped.filter((o) => o !== d);
         },
@@ -389,12 +402,14 @@ export class Tasks {
       const j = this.st.jantar;
       if (j.step === 'pegar') {
         out.push(this.#pick('jantar', this.#front('freezer'), 'marmita', () => {
+          foley.freezer();
           this.#carry('marmita');
           j.step = 'esquentar';
         }));
       } else if (j.step === 'esquentar' && this.#carryingType('marmita')) {
         out.push(this.#target('jantar', this.#front('microondas'), {
           use: () => {
+            foley.applianceDoor();
             this.carrying = null;
             j.step = 'cozinhando';
             j.timer = cfg.microwaveSeconds;
@@ -402,6 +417,7 @@ export class Tasks {
         }));
       } else if (j.step === 'pronto') {
         out.push(this.#pick('jantar', this.#front('microondas'), 'jantar', () => {
+          foley.applianceDoor();
           this.#carry('jantar');
           j.step = 'comer';
         }));
@@ -409,6 +425,7 @@ export class Tasks {
         out.push(this.#target('jantar', this.#front('mesaJantar'), {
           hold: cfg.eatSeconds,
           complete: () => {
+            foley.chair();
             this.carrying = null;
             this.#finish('jantar');
           },
@@ -424,6 +441,7 @@ export class Tasks {
         out.push(this.#pick('louca', this.#front(p.on, p.dx), 'pratos', () => {
           p.taken = true;
           p.sprite.destroy();
+          foley.plates();
           if (this.#carryingType('pratos')) this.carrying.count += 1;
           else this.#carry('pratos', { count: 1 });
         }));
@@ -434,6 +452,7 @@ export class Tasks {
           complete: () => {
             this.carrying.count -= 1;
             l.washed += 1;
+            foley.plates(0.25);
             // Prato limpo empilhado no canto da bancada da pia
             const pia = this.furniture.get('pia').sprite;
             this.scene.add
@@ -455,6 +474,7 @@ export class Tasks {
         out.push(this.#pick('lixo', this.#front(b.on), 'sacos', () => {
           b.taken = true;
           b.sprite.destroy();
+          foley.plastic(0.4, 0, true);
           if (this.#carryingType('sacos')) this.carrying.count += 1;
           else this.#carry('sacos', { count: 1 });
         }));
@@ -462,6 +482,7 @@ export class Tasks {
       if (this.#carryingType('sacos')) {
         out.push(this.#target('lixo', this.#front('latao'), {
           use: () => {
+            foley.metalLid();
             x.deposited += this.carrying.count;
             this.carrying = null;
             if (x.deposited >= x.bags.length) this.#finish('lixo');
@@ -475,6 +496,7 @@ export class Tasks {
       const r = this.st.roupa;
       if (r.step === 'cesto') {
         out.push(this.#pick('roupa', this.#front('cesto'), 'roupaSuja', () => {
+          foley.wicker();
           this.#carry('roupaSuja');
           // O cesto vai para as mãos: some do quarto (não fica um no chão e outro na mão)
           const cesto = this.furniture.get('cesto').sprite;
@@ -485,6 +507,8 @@ export class Tasks {
       } else if (r.step === 'maquina' && this.#carryingType('roupaSuja')) {
         out.push(this.#target('roupa', this.#front('maquina'), {
           use: () => {
+            foley.applianceDoor();
+            foley.wicker(0.3);
             this.carrying = null;
             r.step = 'lavando';
             r.timer = cfg.washerSeconds;
@@ -492,6 +516,8 @@ export class Tasks {
         }));
       } else if (r.step === 'pronta') {
         out.push(this.#pick('roupa', this.#front('maquina'), 'roupaMolhada', () => {
+          foley.applianceDoor();
+          foley.wetCloth();
           this.#carry('roupaMolhada');
           r.step = 'varal';
         }));
@@ -499,6 +525,7 @@ export class Tasks {
         out.push(this.#target('roupa', this.#front('varal'), {
           hold: cfg.hangClothesSeconds,
           complete: () => {
+            foley.clothespin();
             this.carrying = null;
             // A roupa fica estendida no varal
             this.furniture.get('varal').sprite.setFrame('clothesline-full');
@@ -515,6 +542,7 @@ export class Tasks {
       // Só existe um regador: se ficou no chão, o tanque não dá outro
       if (can ? can.water < cfg.canCapacity : !this.#droppedFor('regar')) {
         out.push(this.#pick('regar', this.#front('tanque'), 'regador', () => {
+          foley.fillCan();
           if (can) can.water = cfg.canCapacity;
           else this.#carry('regador', { water: cfg.canCapacity });
         }));
@@ -548,6 +576,7 @@ export class Tasks {
           complete: () => {
             w.closed = true;
             w.sprite.setFrame('window-closed');
+            foley.latch();
             if (all.every((o) => o.closed)) this.#finish('janelas');
           },
         }));
@@ -559,6 +588,7 @@ export class Tasks {
       const u = this.st.uniforme;
       if (u.step === 'pegar') {
         out.push(this.#pick('uniforme', this.#front('armarioQuarto'), 'uniforme', () => {
+          foley.wardrobe();
           this.#carry('uniforme');
           u.step = 'passar';
         }));
@@ -573,6 +603,7 @@ export class Tasks {
       } else if (u.step === 'guardar' && this.#carryingType('uniformePassado')) {
         out.push(this.#target('uniforme', this.#front('armarioQuarto'), {
           use: () => {
+            foley.wardrobe();
             this.carrying = null;
             this.#finish('uniforme');
           },
@@ -585,6 +616,7 @@ export class Tasks {
       out.push(this.#target('celular', this.#front('criadoMudo'), {
         use: () => {
           this.hasPhone = false;
+          foley.plug();
           // Fica carregando no criado-mudo
           const cm = this.furniture.get('criadoMudo').sprite;
           this.scene.add.image(cm.x + 13, cm.y + 9, 'props', 'phone-charging').setOrigin(0.5, 1).setDepth(cm.depth + 1);
@@ -606,9 +638,13 @@ export class Tasks {
 
   // ---- Quadro a quadro -----------------------------------------------------
 
-  update(dt, lightsOn, time) {
+  update(dt, lightsOn, time, feet) {
     const j = this.st.jantar;
     const r = this.st.roupa;
+    if (feet) {
+      this.#applianceSound('microwave', lightsOn && j.step === 'cozinhando', () => foley.microwaveLoop(), 0.5, feet);
+      this.#applianceSound('washer', lightsOn && r.step === 'lavando', () => foley.washerLoop(), 0.7, feet);
+    }
     if (lightsOn) {
       if (j.step === 'cozinhando' && (j.timer -= dt) <= 0) {
         j.step = 'pronto';
@@ -621,6 +657,29 @@ export class Tasks {
     }
     this.#display('microwave', j.step === 'cozinhando', j.step === 'pronto', j.timer, lightsOn, time);
     this.#display('washer', r.step === 'lavando', r.step === 'pronta', r.timer, lightsOn, time);
+  }
+
+  /** Micro-ondas / máquina funcionando: o som contínuo, mais alto perto (some sem luz). */
+  #applianceSound(key, running, create, volume, feet) {
+    this.loops ??= {};
+    const loop = this.loops[key];
+    if (!running) {
+      if (loop) {
+        loop.stop();
+        this.loops[key] = null;
+      }
+      return;
+    }
+    const s = this.displays[key].sprite;
+    const pos = { x: (s.x + s.width / 2) / PPM, y: (s.y + s.height) / PPM };
+    const { volume: v, pan } = positional(feet, pos, 12);
+    (this.loops[key] ??= create()).setVolume(volume * v, pan);
+  }
+
+  /** Para os sons contínuos (fim da noite). */
+  stopSounds() {
+    for (const loop of Object.values(this.loops ?? {})) loop?.stop();
+    this.loops = {};
   }
 
   /** Aparelho funcionando: sprite "ligado" + tempo que falta. Pronto: 0:00 piscando. Sem luz: apagado. */
@@ -649,6 +708,7 @@ export class Tasks {
   /** A luz caiu (ou o jogador soltou com Q): Artur larga o que carrega ali mesmo (GDD 4.11). */
   dropCarried(feet) {
     if (!this.carrying) return;
+    foley.drop(DROP_SOUND[this.carrying.type] ?? 'soft');
     const sprite = this.scene.add
       .image(feet.x * PPM, feet.y * PPM + 3, 'props', CARRY_ICON[this.carrying.type])
       .setOrigin(0.5, 1)

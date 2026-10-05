@@ -45,6 +45,10 @@ export class DeathScene extends Phaser.Scene {
     this.time.delayedCall(200, () => {
       scare.setVisible(true);
       sfx.scream();
+      // Trecho escondido dos gritos da 3ª ligação final, abafado pelo telefone (GDD 13.6)
+      sfx.scream(0.25, true);
+      // Helena: o grito vem misturado com o tom de linha ocupada (GDD 13.5)
+      if (monster === 'helena') sfx.busyTone(1.2, 0.35);
       cam.shake(1100, 0.02);
       glitchCamera(this, cam, 1.1, 0.8);
     });

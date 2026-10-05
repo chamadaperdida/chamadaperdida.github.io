@@ -12,6 +12,7 @@ import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
 import { CALLS, NOTES } from '../data/calls.js';
 import { sfx } from '../audio/Sfx.js';
+import { foley } from '../audio/Foley.js';
 import { debug } from '../debug/debug.js';
 import { daysLeftText } from './TransitionScene.js';
 import { openPause } from './PauseScene.js';
@@ -158,9 +159,12 @@ export class DelegaciaScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-ESC', () => openPause(this));
 
     this.#setupDebugKeys();
+    this.ambience = null; // chuva na janela + lâmpada (GDD 14.1), começa no update
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.ring?.stop();
       this.static?.stop();
+      this.ambience?.stop();
+      this.callNoise?.stop();
       debug.clearGroup('Delegacia');
     });
     for (const g of ['Casa', 'Noite', 'Gerador', 'Monstros']) debug.clearGroup(g);
@@ -265,7 +269,7 @@ export class DelegaciaScene extends Phaser.Scene {
     this.phone.setFrame('phone-empty');
     const call = this.calls[this.callIndex];
     const isHallucination = call.kind === 'hallucination';
-    if (isHallucination) this.#startHallucination(call.time);
+    if (isHallucination) this.#startHallucination(call.time, call.noise);
     // Na alucinação, a voz de quem liga sai distorcida (Artur fala normal)
     const lines = call.lines.map((l) => (isHallucination && !l.fx && l.speaker !== 'Artur' ? { ...l, glitch: true } : l));
     this.dialogue.show(lines).then(() => this.#hangUp());
@@ -326,8 +330,10 @@ export class DelegaciaScene extends Phaser.Scene {
     this.grainIn = 0;
   }
 
-  #startHallucination(time) {
+  #startHallucination(time, noise) {
     this.hallucination = true;
+    // Ruído da noite da tragédia ao fundo da ligação, abafado pelo telefone (GDD 3.5)
+    this.callNoise = noise ? foley.callNoise(noise) : null;
     this.frozenTime = time;
     this.flickerIn = 0;
     this.static = sfx.staticLoop(0.06);
@@ -342,7 +348,10 @@ export class DelegaciaScene extends Phaser.Scene {
     this.frozenTime = null;
     this.static?.stop();
     this.static = null;
+    this.callNoise?.stop();
+    this.callNoise = null;
     this.tube.setFrame('tube-on');
+    this.ambience?.setHum(1);
     this.tweens.killTweensOf(this.dark);
     this.tweens.add({ targets: [this.vignette, this.grain, this.dark], alpha: 0, duration: 500 });
   }
@@ -353,6 +362,7 @@ export class DelegaciaScene extends Phaser.Scene {
     if (this.flickerIn > 0) return;
     const off = this.tube.frame.name === 'tube-on' && Math.random() < 0.6;
     this.tube.setFrame(off ? 'tube-off' : 'tube-on');
+    this.ambience?.setHum(off ? 0 : 1); // o zumbido some com a lâmpada
     if (this.tweens.isTweening(this.dark)) return; // ainda escurecendo
     this.dark.setAlpha(off ? FLICKER_DARK : HALLUCINATION_DARK);
     this.flickerIn = off ? 0.04 + Math.random() * 0.12 : 0.15 + Math.random() * 0.9;
@@ -546,6 +556,7 @@ export class DelegaciaScene extends Phaser.Scene {
 
   update(time, delta) {
     const dt = Math.min(delta / 1000, 0.1);
+    if (!this.ambience && sfx.ready) this.ambience = foley.officeAmbience();
     this.dialogue.update(dt);
     this.#updateRain(dt);
     if (!this.frozenTime) this.minutes = Math.min(this.minutes + dt / SECONDS_PER_MINUTE, this.clockLimit);
