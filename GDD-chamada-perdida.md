@@ -133,7 +133,10 @@ Tela preta, **todo texto em vermelho**.
 - O jogador interage com objetos clicando neles.
 - O telefone toca; o jogador clica para atender. A ligação aparece na **caixa de diálogo** (seção 11.1), com o nome de quem fala.
 - Quando todas as ligações do dia terminam, a **porta** fica interativa (o vidro fosco brilha fraco). Antes disso, clicar nela: Artur diz *"Ainda não terminou o turno."*
-- O telefone toca 3 s depois de entrar e, entre uma ligação e outra, depois de 5 a 9 s. Toca até ser atendido (o aparelho treme).
+- O telefone toca 3 s depois de entrar e, entre uma ligação e outra, depois de 5 a 9 s (o aparelho treme).
+- **Demorou para atender:** depois de 20 s tocando, a ligação cai (chamada perdida) e a mesma pessoa liga de novo 4 s depois. Na primeira vez do dia, Artur diz *"...Parou de tocar."*
+- **Fim do turno:** depois da última ligação, Artur diz *"Acabou o turno. Hora de ir pra casa."* e a porta fica interativa.
+- Artur **mexe a boca** enquanto a fala dele está sendo digitada.
 - Passando o mouse num objeto, o nome dele aparece pequeno no canto inferior direito; o cursor vira mãozinha.
 - Durante uma ligação, os outros objetos não respondem. Clique também avança o diálogo.
 
@@ -143,8 +146,8 @@ Tela preta, **todo texto em vermelho**.
 |---|---|
 | Telefone | Ligações do dia |
 | Calendário | Clicando, abre grande: dias que já passaram riscados, hoje em destaque, o dia 27 (dia 7 do jogo; dia 1 = 21) circulado com "Aniversário da Clara" |
-| Planta | Decoração (só mostra o nome) |
-| Relógio de parede | Mostra a hora do turno (começa às 22:58, anda 1 min a cada 4 s e +6 min a cada ligação); **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
+| Planta | Artur: *"Uma planta muito bonita."* |
+| Relógio de parede | Clicando, Artur diz a hora (*"Já são 23:12."*). Mostra a hora do turno (começa às 22:58, anda 1 min a cada 4 s e +6 min a cada ligação); **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
 | Bilhete do Marcos | Aparece na mesa nos dias 1–6 |
 | Porta | Leva para casa ao fim das ligações |
 
@@ -587,6 +590,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
   - Espaço com o texto ainda sendo digitado → mostra o texto inteiro na hora.
   - Espaço com o texto completo → passa para a próxima fala ou fecha a caixa.
 - Um indicador piscando (▼) avisa que o texto terminou e dá para avançar.
+- **Som da digitação:** enquanto o texto aparece, um "blip" curto a cada duas letras, com a voz de quem fala: grave para homens (Artur um pouco mais agudo que os outros), mais agudo para mulheres e idosas, bem agudo para crianças. Bilhetes soam como caneta no papel; efeitos e ações, como um tique abafado. Na voz distorcida das alucinações, o tom oscila bastante.
 - Em casa, Artur fica parado enquanto a caixa está aberta.
 - Na delegacia, clicar também avança (seção 12).
 
@@ -766,6 +770,10 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Gerador sem fusível | "Queimou o fusível... tem que ter outro em algum lugar." |
 | Achou o fusível | "Achei um fusível." |
 | Porta da delegacia antes da hora | "Ainda não terminou o turno." |
+| Relógio da delegacia | "Já são HH:MM." |
+| Planta da delegacia | "Uma planta muito bonita." |
+| Telefone parou sem ninguém atender (1ª vez no dia) | "...Parou de tocar." |
+| Fim das ligações do dia | "Acabou o turno. Hora de ir pra casa." |
 | Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
 | Porta trancada (de novo) | "Trancada. Preciso achar a chave." |

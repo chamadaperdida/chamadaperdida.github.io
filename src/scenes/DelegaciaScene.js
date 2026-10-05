@@ -46,6 +46,12 @@ const MINUTES_PER_CALL = 6;
 
 const FIRST_RING = 3; // s depois de entrar
 const BETWEEN_CALLS = [5, 9]; // s
+// Ninguém atendeu: o telefone para (chamada perdida) e a mesma pessoa liga de novo
+const RING_LIMIT = 20; // s tocando
+const CALL_BACK = 4; // s até ligar de novo
+const MOUTH_EVERY = 0.09; // s entre abrir e fechar a boca falando
+
+const say = (text) => [{ speaker: 'Artur', text }];
 
 export class DelegaciaScene extends Phaser.Scene {
   constructor() {
@@ -62,6 +68,9 @@ export class DelegaciaScene extends Phaser.Scene {
     this.frozenTime = null;
     this.hallucination = false;
     this.leaving = false;
+    this.missed = 0; // ligações perdidas no dia
+    this.mouthIn = 0;
+    this.mouthOpen = false;
 
     this.scene.setVisible(false, 'Hud');
     this.cameras.main.setBackgroundColor('#000000');
@@ -153,20 +162,26 @@ export class DelegaciaScene extends Phaser.Scene {
     zone(AT.calendar.x, AT.calendar.y, AT.calendar.w, AT.calendar.h, 'Calendário', () => this.#openCalendar());
     zone(AT.door.x, AT.door.y, AT.door.w, AT.door.h, 'Porta', () => this.#door());
     if (this.note) zone(AT.note[0] - 2, AT.note[1] - 2, 14, 14, 'Bilhete do Marcos', () => this.#readNote());
-    // Relógio e planta: só olhar (GDD 3.2)
-    zone(AT.clock[0] - 12, AT.clock[1] - 12, 24, 24, 'Relógio', () => {});
-    zone(AT.plant.x, AT.plant.y, AT.plant.w, AT.plant.h, 'Planta', () => {});
+    zone(AT.clock[0] - 12, AT.clock[1] - 12, 24, 24, 'Relógio', () => this.#lookAt(`Já são ${this.clockText}.`));
+    zone(AT.plant.x, AT.plant.y, AT.plant.w, AT.plant.h, 'Planta', () => this.#lookAt('Uma planta muito bonita.'));
+  }
+
+  /** Artur comenta o que está olhando (não durante uma ligação). */
+  #lookAt(text) {
+    if (this.state === 'talking') return;
+    this.dialogue.show(say(text));
   }
 
   #readNote() {
     if (this.state === 'talking') return;
+    sfx.textBlip({ kind: 'paper' }, false, 0.2);
     this.dialogue.show([{ speaker: 'Bilhete do Marcos', text: NOTES[this.day] }]);
   }
 
   #door() {
     if (this.state === 'talking' || this.leaving) return;
     if (this.state !== 'done') {
-      this.dialogue.show([{ speaker: 'Artur', text: 'Ainda não terminou o turno.' }]);
+      this.dialogue.show(say('Ainda não terminou o turno.'));
       return;
     }
     this.leaving = true;
@@ -181,6 +196,7 @@ export class DelegaciaScene extends Phaser.Scene {
 
   #ringNow() {
     this.state = 'ringing';
+    this.ringTime = 0;
     this.ring = sfx.phoneRing(0.5);
     this.ringShake = this.tweens.add({
       targets: this.phone,
@@ -191,12 +207,29 @@ export class DelegaciaScene extends Phaser.Scene {
     });
   }
 
-  #answer() {
-    if (this.state !== 'ringing') return;
+  /** Para o toque e o tremor do aparelho. */
+  #stopRinging() {
     this.ring?.stop();
     this.ring = null;
     this.ringShake?.stop();
     this.phone.x = AT.phone[0] * S;
+  }
+
+  /**
+   * Tocou demais sem ninguém atender: a ligação cai (chamada perdida) e a mesma pessoa liga
+   * de novo pouco depois. Na primeira vez do dia, Artur percebe.
+   */
+  #missCall() {
+    this.#stopRinging();
+    this.missed += 1;
+    this.state = 'waiting';
+    this.timer = CALL_BACK;
+    if (this.missed === 1 && !this.dialogue.isOpen && !this.calendarOpen) this.dialogue.show(say('...Parou de tocar.'));
+  }
+
+  #answer() {
+    if (this.state !== 'ringing') return;
+    this.#stopRinging();
     sfx.lockClick(0.5);
     this.state = 'talking';
     this.body.setFrame('artur-body-phone');
@@ -220,6 +253,8 @@ export class DelegaciaScene extends Phaser.Scene {
     this.minutes += MINUTES_PER_CALL;
     if (this.callIndex >= this.calls.length) {
       this.state = 'done';
+      // Aviso de fim do turno
+      this.time.delayedCall(700, () => this.dialogue.show(say('Acabou o turno. Hora de ir pra casa.')));
       // A porta "acorda": um brilho fraco no vidro fosco
       this.doorGlow = this.add
         .rectangle((AT.door.x + 6) * S, (AT.door.y + 8) * S, 32 * S, 70 * S, 0xd8e0e8, 0)
@@ -501,8 +536,29 @@ export class DelegaciaScene extends Phaser.Scene {
       if (this.timer <= 0) this.#ringNow();
     } else if (this.state === 'waiting' && !this.calls.length) {
       this.state = 'done';
+    } else if (this.state === 'ringing') {
+      this.ringTime += dt;
+      if (this.ringTime >= RING_LIMIT) this.#missCall();
     }
+    this.#updateMouth(dt);
     this.#updateDebug();
+  }
+
+  /** Artur mexe a boca enquanto a fala dele é digitada. */
+  #updateMouth(dt) {
+    const talking = this.dialogue.isTyping && this.dialogue.speaker === 'Artur';
+    if (talking) {
+      this.mouthIn -= dt;
+      if (this.mouthIn <= 0) {
+        this.mouthIn = MOUTH_EVERY * (0.7 + Math.random() * 0.6);
+        this.mouthOpen = !this.mouthOpen;
+      }
+    } else {
+      this.mouthOpen = false;
+    }
+    const pose = this.state === 'talking' ? 'artur-body-phone' : 'artur-body-idle';
+    const frame = this.mouthOpen ? `${pose}-talk` : pose;
+    if (this.body.frame.name !== frame) this.body.setFrame(frame);
   }
 
   #updateDebug() {
@@ -513,7 +569,7 @@ export class DelegaciaScene extends Phaser.Scene {
       'Delegacia/Ligação',
       `${Math.min(this.callIndex + 1, this.calls.length)}/${this.calls.length} · ${this.state}${
         this.state === 'waiting' ? ` (toca em ${this.timer.toFixed(1)} s)` : ''
-      }`,
+      }${this.state === 'ringing' ? ` (cai em ${(RING_LIMIT - this.ringTime).toFixed(0)} s)` : ''} · perdidas ${this.missed}`,
     );
     debug.set('Delegacia/Relógio', `${this.clockText}${this.frozenTime ? ' (travado)' : ''}`);
   }
@@ -527,9 +583,7 @@ export class DelegaciaScene extends Phaser.Scene {
       else if (k === 'r') this.scene.restart({ day: this.day });
       else if (k === 'c') this.scene.start('House', { day: this.day });
       else if (k === 'n' && this.state !== 'talking') {
-        this.ring?.stop();
-        this.ringShake?.stop();
-        this.phone.x = AT.phone[0] * S;
+        this.#stopRinging();
         this.callIndex = this.calls.length - 1;
         this.state = 'talking';
         this.#hangUp();

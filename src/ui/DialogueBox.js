@@ -11,6 +11,12 @@
 //   { ..., glitch: true }   voz distorcida das ligações-alucinação (GDD 3.5), sem áudio:
 //                           o texto treme, letras falham por um instante (viram outros
 //                           símbolos ou somem) e a digitação sai irregular
+//
+// Som: enquanto o texto é digitado, um "blip" a cada duas letras, com a voz de quem fala
+// (grave para homens, mais agudo para mulheres e crianças); bilhetes soam como papel e
+// efeitos como um tique abafado.
+
+import { sfx } from '../audio/Sfx.js';
 
 const FONT = 'VT323, monospace';
 const CHARS_PER_SECOND = 38;
@@ -22,6 +28,27 @@ const GLITCH_CHARS = '#%&*?/|<>~=+_^';
 const GLITCH_SWAP = 0.05; // fração das letras visíveis trocadas em cada "falha"
 const GLITCH_EVERY = [0.06, 0.22]; // s entre falhas
 const GLITCH_SHAKE = 1.5; // px
+
+// Voz de cada personagem no som da digitação (Hz)
+const VOICES = [
+  [/^Artur$/, { kind: 'voice', freq: 150 }],
+  [/^Marcos$/, { kind: 'voice', freq: 128 }],
+  [/^Bilhete|^Lista/, { kind: 'paper' }],
+  [/Criança/, { kind: 'voice', freq: 380, wave: 'triangle' }],
+  [/^Jovem$/, { kind: 'voice', freq: 200 }],
+  [/Senhora/, { kind: 'voice', freq: 250, wave: 'triangle' }],
+  [/Mãe|Moradora|Mulher|Moça|Voz de mulher|Helena/, { kind: 'voice', freq: 270, wave: 'triangle' }],
+  [/Idoso|Senhor/, { kind: 'voice', freq: 112 }],
+  [/Clara/, { kind: 'voice', freq: 400, wave: 'triangle' }],
+];
+const DEFAULT_VOICE = { kind: 'voice', freq: 125 }; // homens (vizinho, motorista, voz...)
+const UNKNOWN_VOICE = { kind: 'fx' }; // ??? e efeitos
+const BLIP_EVERY = 2; // letras por blip
+
+function voiceOf(speaker, fx) {
+  if (fx || !speaker || speaker === '???') return UNKNOWN_VOICE;
+  return VOICES.find(([re]) => re.test(speaker))?.[1] ?? DEFAULT_VOICE;
+}
 
 const BOX_W = 780;
 const BOX_H = 118;
@@ -116,8 +143,21 @@ export class DialogueBox {
     resolve?.();
   }
 
+  /** Quem está falando agora (nome), ou null em efeitos. */
+  get speaker() {
+    return this.isOpen ? this.currentSpeaker : null;
+  }
+
+  /** O texto ainda está sendo digitado? */
+  get isTyping() {
+    return this.isOpen && this.typing;
+  }
+
   #startLine({ speaker, text, fx, glitch }) {
     this.#setSpeaker(fx ? null : speaker);
+    this.currentSpeaker = fx ? null : speaker;
+    this.voice = voiceOf(speaker, fx);
+    this.blipCount = 0;
     this.bodyText.setColor(fx ? '#7d8088' : '#dcdcdc');
     this.glitch = !!glitch;
     this.glitchIn = 0;
@@ -155,6 +195,8 @@ export class DialogueBox {
     while (this.wait <= 0 && this.shown < this.fullText.length) {
       const ch = this.fullText[this.shown];
       this.shown += 1;
+      // Som da digitação: um blip a cada poucas letras (não em espaços e pontuação)
+      if (/[\p{L}\p{N}]/u.test(ch) && this.blipCount++ % BLIP_EVERY === 0) sfx.textBlip(this.voice, this.glitch);
       const nextCh = this.fullText[this.shown];
       // Reticências: pausa só no último ponto
       const pause = ch === '.' && nextCh === '.' ? 0.12 : (PAUSES[ch] ?? 0);

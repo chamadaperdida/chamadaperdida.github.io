@@ -440,6 +440,43 @@ class Sfx {
     return this.#loopHandle(gain, panner, [n, lfo]);
   }
 
+  /**
+   * Som de digitação da caixa de diálogo (um a cada poucas letras).
+   * voice: { kind: 'voice' | 'paper' | 'fx', freq (Hz, só voz), wave } · glitch: voz distorcida.
+   */
+  textBlip(voice, glitch = false, volume = 0.12) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime;
+    const { gain } = this.#out(volume);
+    if (voice.kind === 'paper') {
+      // Caneta/papel: raspadinha aguda
+      this.#burst(at, gain, { filter: { type: 'bandpass', freq: 3200 + Math.random() * 800, q: 1.5 }, decay: 0.03, level: 3 });
+      return;
+    }
+    if (voice.kind === 'fx') {
+      // Efeito/ação: tique abafado
+      this.#burst(at, gain, { filter: { type: 'lowpass', freq: 900, q: 0.7 }, decay: 0.025, level: 2 });
+      return;
+    }
+    const osc = this.ctx.createOscillator();
+    osc.type = voice.wave ?? 'square';
+    // Cada letra varia um pouco; distorcida: tom oscilando bem mais
+    const spread = glitch ? 0.35 : 0.06;
+    const f = voice.freq * (1 + (Math.random() * 2 - 1) * spread);
+    osc.frequency.setValueAtTime(f, at);
+    if (glitch && Math.random() < 0.4) osc.frequency.exponentialRampToValueAtTime(f * 0.6, at + 0.05);
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 1800;
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(0.5, at + 0.005);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.05);
+    osc.connect(lp).connect(env).connect(gain);
+    osc.start(at);
+    osc.stop(at + 0.06);
+  }
+
   /** Estalos secos (Clara correndo de quatro). */
   cracks(volume = 0.5, pan = 0) {
     if (!this.ready) return;

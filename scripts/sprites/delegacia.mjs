@@ -188,7 +188,7 @@ function calendarSmall(c, x, y) {
 
 // ---- Artur sentado (frente) ---------------------------------------------------
 
-function arturHead(c, x, y) {
+function arturHead(c, x, y, talking = false) {
   // Cabeça 14×16 a partir de (x, y)
   c.rect(x + 1, y + 1, 12, 14, C.skin);
   c.rect(x + 2, y + 15, 10, 1, C.skin);
@@ -213,7 +213,13 @@ function arturHead(c, x, y) {
   // Barba por fazer e boca
   c.rect(x + 2, y + 11, 10, 4, C.stubble);
   c.rect(x + 3, y + 15, 8, 1, C.stubble);
-  c.rect(x + 5, y + 12, 4, 1, C.mouth);
+  if (talking) {
+    // Boca aberta (falando)
+    c.rect(x + 5, y + 12, 4, 2, '#2a1410');
+    c.rect(x + 5, y + 12, 4, 1, C.mouth);
+  } else {
+    c.rect(x + 5, y + 12, 4, 1, C.mouth);
+  }
 }
 
 function arturTorso(c, x, y) {
@@ -240,16 +246,16 @@ function arturTorso(c, x, y) {
   c.rect(x + 21, y + 7, 1, 2, '#2a2a2e');
 }
 
-function arturBodyIdle(c, x, y) {
+function arturBodyIdle(c, x, y, talking = false) {
   // 34×40: cabeça um pouco baixa (cansado) + tronco
   arturTorso(c, x + 2, y + 18);
-  arturHead(c, x + 10, y + 3);
+  arturHead(c, x + 10, y + 3, talking);
 }
 
-function arturBodyPhone(c, x, y) {
+function arturBodyPhone(c, x, y, talking = false) {
   // 34×40: fone no ouvido esquerdo (da tela, à direita), braço levantado
   arturTorso(c, x + 2, y + 18);
-  arturHead(c, x + 9, y + 3);
+  arturHead(c, x + 9, y + 3, talking);
   // Braço direito dele (à esquerda da tela) dobrado segurando o fone na orelha
   c.rect(x + 24, y + 20, 6, 4, C.shirt);
   c.rect(x + 26, y + 13, 4, 8, C.shirt);
@@ -379,6 +385,8 @@ const PIECES = [
   ['desk', 232, 90, (c, x, y) => desk(c, x, y + 22)],
   ['artur-body-idle', 34, 40, arturBodyIdle],
   ['artur-body-phone', 34, 40, arturBodyPhone],
+  ['artur-body-idle-talk', 34, 40, (c, x, y) => arturBodyIdle(c, x, y, true)],
+  ['artur-body-phone-talk', 34, 40, (c, x, y) => arturBodyPhone(c, x, y, true)],
   ['artur-arms-idle', 40, 10, arturArmsIdle],
   ['artur-arms-phone', 40, 10, arturArmsPhone],
   ['phone', 26, 14, (c, x, y) => phoneBase(c, x, y, true)],
