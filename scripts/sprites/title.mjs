@@ -19,7 +19,7 @@ const EMPTY = 0; // transparente (vidro da janela: o céu aparece por trás)
 const WALL = 1;
 const TABLE = 2;
 const OBJECT = 3;
-const EMISSIVE = 4; // brilha sozinho (visor, luz no fim do corredor)
+const EMISSIVE = 4; // brilha sozinho (visor, luz vermelha da secretária)
 const HALL = 5; // corredor escuro
 const BLIND = 6; // persiana (contra a luz)
 
@@ -319,10 +319,8 @@ function paintDoor(sc) {
     const base = far ? hex('#3a3a40') : hex('#24242a');
     return mul(base, 0.8 + 0.2 * smooth(y0, y1, y));
   }, HALL);
-  // Porta do fundo do corredor, com luz por baixo
+  // Porta do fundo do corredor
   sc.rect(216, 104, 18, 64, hex('#2e2c30'), HALL);
-  sc.rect(217, 167, 16, 1, hex('#8a5a26'), EMISSIVE);
-  sc.rect(219, 168, 12, 1, hex('#4a3016'), EMISSIVE);
   // Folha da porta entreaberta (à esquerda, em perspectiva)
   sc.shape(x0, y0, x0 + 9, y1, (x, y) => y > y0 + (x - x0) * 0.6, (x, y) => mix(hex('#5e4c3a'), hex('#3a2e24'), (x - x0) / 9), HALL);
   sc.rect(x0 + 2, y0 + 20, 1, 40, hex('#2a2018'), HALL);

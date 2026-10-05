@@ -7,6 +7,7 @@
 //   param. Micro-ondas, máquina e ferro precisam de luz (os timers pausam).
 // - Tarefa feita não se desfaz.
 // - Artur pode soltar o que carrega quando quiser (Q) e pegar de volta depois.
+//   Pratos e sacos largados se juntam aos que estão na mão; só existe um regador.
 // - Micro-ondas e máquina mostram que estão funcionando e quanto tempo falta.
 // - Progresso: tarefas com vários itens mostram "(x/n)" na lista da geladeira.
 // - Próximo passo: legenda pequena e direta enquanto Artur carrega algo (some ao soltar
@@ -370,11 +371,13 @@ export class Tasks {
         point: { x: d.x, y: d.y },
         anchor: { x: d.sprite.x, y: d.sprite.y - 10 },
         use: () => {
-          if (this.carrying) {
+          const c = this.carrying;
+          // Pratos e sacos empilham: os do chão se juntam aos da mão
+          if (c && c.type === d.carry.type && c.count !== undefined) c.count += d.carry.count;
+          else if (c) {
             this.hooks.say('Estou com as mãos ocupadas.');
             return;
-          }
-          this.carrying = d.carry;
+          } else this.carrying = d.carry;
           d.sprite.destroy();
           this.dropped = this.dropped.filter((o) => o !== d);
         },
@@ -509,7 +512,8 @@ export class Tasks {
     if (this.has('regar') && !this.done.has('regar')) {
       const g = this.st.regar;
       const can = this.#carryingType('regador') ? this.carrying : null;
-      if (!can || can.water < cfg.canCapacity) {
+      // Só existe um regador: se ficou no chão, o tanque não dá outro
+      if (can ? can.water < cfg.canCapacity : !this.#droppedFor('regar')) {
         out.push(this.#pick('regar', this.#front('tanque'), 'regador', () => {
           if (can) can.water = cfg.canCapacity;
           else this.#carry('regador', { water: cfg.canCapacity });

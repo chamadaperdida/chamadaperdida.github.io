@@ -73,7 +73,7 @@ A história **nunca é contada de forma direta**. O jogador recebe peças soltas
 - Fundo: título *Chamada Perdida* em pixel art com glitch ocasional, sobre um telefone numa mesa escura. É a imagem principal do jogo, com mais resolução que o resto (480×270):
   - sala escura iluminada só pela luz fria da rua entrando pela persiana (uma lâmina torta), em faixas na parede, na mesa e nos objetos, com poeira flutuando nos raios;
   - na mesa: o telefone antigo de disco (em destaque), uma secretária eletrônica com **"1" no visor e a luz de mensagem piscando em vermelho** (a chamada perdida), porta-retrato de uma menina com o vidro rachado, frasco de remédio derramado e o urso inteiro, com um laço amarelo (o conforto do Artur, sinal de esperança no luto);
-  - relógio de parede parado em **23:41**; atrás, a porta entreaberta do corredor, escuro, com luz por baixo da porta do fim;
+  - relógio de parede parado em **23:41**; atrás, a porta entreaberta do corredor, escuro, com a porta do fim fechada;
   - chuva no vidro e **relâmpagos** de tempos em tempos (com trovão); em alguns deles, **a silhueta de uma menina aparece parada no corredor** no clarão e se dissolve no escuro junto com ele.
 - Título e menu ficam à esquerda, sobre a parede escura.
 - Som: chuva; de tempos em tempos, um telefone tocando três vezes ao longe.
@@ -346,7 +346,7 @@ Nas noites 5–7, **ao ler a lista** (começo da noite), o evento da tranca (4.9
 - Dormir exige todas as tarefas da noite feitas (4.7).
 
 **Regras das tarefas**
-- **Carregar:** com as mãos ocupadas (pilha de pratos, sacos de lixo, cesto, roupa molhada, regador, uniforme, marmita), Artur **não corre**. Carrega uma coisa por vez (pratos e sacos empilham); tentar pegar outra: *"Estou com as mãos ocupadas."* Se a luz cair, ele **larga o que carrega ali mesmo** (uma mão fica com a lanterna); dá para voltar e pegar quando a luz voltar.
+- **Carregar:** com as mãos ocupadas (pilha de pratos, sacos de lixo, cesto, roupa molhada, regador, uniforme, marmita), Artur **não corre**. Carrega uma coisa por vez (pratos e sacos empilham, inclusive os que ficaram no chão: pegar a pilha largada junta com a da mão); tentar pegar outra: *"Estou com as mãos ocupadas."* Se a luz cair, ele **larga o que carrega ali mesmo** (uma mão fica com a lanterna); dá para voltar e pegar quando a luz voltar. Só existe **um regador**: enquanto ele estiver no chão, o tanque não dá outro (é preciso buscar o largado).
 - **No escuro nenhuma tarefa avança:** não dá para pegar objetos de tarefa nem fazer as interações (fechar janela, regar etc.).
 - Interações de tarefa que levam tempo (lavar, regar, comer, passar) **não são canceladas** por alucinações; só param se Artur sair de perto ou se a luz cair.
 - O lugar sorteado do celular nunca coincide com outro item (remédio, pilha, chave, fusível).
