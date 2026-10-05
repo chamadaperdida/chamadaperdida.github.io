@@ -559,16 +559,20 @@ Mediana para zerar o medo (entre parênteses: chance de zerar em até 5 min). "N
 
 1. A gameplay do dia 7 corre normalmente até Artur dormir.
 2. Artur acorda na madrugada com o **telefone fixo da sala** tocando. As três ligações acontecem às **23:41, 23:44 e 23:47**. O relógio do corredor, no caminho entre a cama e o telefone, mostra o mesmo horário. **Fica ambíguo** se as ligações são reais.
+   - A tela clareia com Artur ao lado da cama e o telefone já tocando. Na casa não acontece mais nada: sem alucinações, monstros, medo, gerador, tarefas ou ursos; só andar, abrir portas e atender.
+   - O telefone **toca até Artur atender** (F perto dele; treme e mostra as marcas de "tocando", como na alucinação). Cada ligação começa com o horário na caixa de diálogo (*"(23:41)"*). Depois dela, alguns segundos de silêncio, o relógio do corredor pula para o próximo horário e o telefone toca de novo.
+   - **Relógio do corredor:** relógio digital de parede, números vermelhos, no corredor dos quartos logo na saída do quarto do Artur. Nas outras noites fica **parado em 23:41** (como o da tela inicial).
    - **1ª:** Helena — "Artur, a luz caiu. O gerador não liga... Me liga de volta."
    - **2ª:** Helena, com medo — "Tem alguém na porta dos fundos. Por favor, atende... Você prometeu que ia estar aqui."
-   - **3ª:** Helena, sussurrando — "A gente tá escondida no quarto da Clara. A Clara tá comigo..." → passos no corredor → porta rangendo → **gritos** → a linha cai.
-3. A tela escurece. **Nada é mostrado.**
+   - **3ª:** Helena, sussurrando — "A gente tá escondida no quarto da Clara. A Clara tá comigo..." → passos no corredor → porta rangendo → **gritos** → a linha cai. (Cada efeito aparece na caixa de diálogo em cinza, com o seu som: passos abafados, porta rangendo, gritos e o tom de linha ocupada.)
+3. A tela escurece. **Nada é mostrado.** O save é marcado como zerado neste momento.
 4. Uma TV liga com a reportagem:
 
 > "Um ex-policial de 41 anos foi encontrado morto em sua casa, em Vale Sereno. Segundo a perícia, a morte está relacionada ao uso excessivo de medicamentos controlados. Artur Lemos havia sido afastado das ruas há um ano, após a morte da esposa, Helena, e da filha, Clara, durante uma invasão à residência da família no dia do aniversário da filha. O criminoso nunca foi identificado."
 
-5. Créditos rolando com chuva ao fundo.
-6. Tela: *"Se você estiver passando por um momento difícil, ligue 188."* (CVV)
+   - Implementação: a TV liga em tela cheia (a imagem abre de uma linha, com clarão e chiado), a reportagem aparece na caixa de diálogo (nome: *Jornalista*) em cinco partes, a foto da casa surge na segunda; a boca da jornalista mexe enquanto o texto é digitado. Depois, a TV desliga (fecha numa linha e num ponto). Visual na seção 13.7.
+5. Créditos rolando com chuva ao fundo (texto em `src/scenes/EndingScene.js`, ajustável).
+6. Tela: *"Se você estiver passando por um momento difícil, ligue 188."* (CVV) — texto claro (não vermelho), fica alguns segundos.
 7. Volta para a tela inicial (Continuar desativado).
 
 ---
@@ -706,6 +710,7 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 - Tela cheia de uma TV de tubo, imagem com linhas de varredura e chiado leve.
 - Jornalista em pixel art, fundo de estúdio simples com a faixa "PLANTÃO — VALE SERENO".
 - Durante a fala, aparece uma foto antiga (borrada) da casa da Rua das Acácias.
+- Implementado (`scripts/sprites/ending.mjs`, 480×270 ampliada 2×): estúdio azul-escuro com o logotipo "VS" do canal, jornalista de cabelo curto e blazer atrás da bancada (pisca de vez em quando), painel de vídeo atrás dela onde a foto amarelada e borrada da casa aparece, faixa vermelha do plantão, "● AO VIVO" piscando, faixa clara descendo devagar pela imagem, cantos escuros do tubo.
 
 ---
 

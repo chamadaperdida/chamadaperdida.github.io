@@ -19,6 +19,7 @@ export class BootScene extends Phaser.Scene {
     this.load.atlas('props', `${base}props.png${v}`, `${base}props.json${v}`);
     this.load.atlas('delegacia', `${base}delegacia.png${v}`, `${base}delegacia.json${v}`);
     this.load.atlas('title', `${base}title.png${v}`, `${base}title.json${v}`);
+    this.load.atlas('ending', `${base}ending.png${v}`, `${base}ending.json${v}`);
   }
 
   create() {

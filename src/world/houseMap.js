@@ -184,6 +184,8 @@ export const FURNITURE = [
   { id: 'passadeira', sprite: 'runner', x: 23.0, y: 2.7, room: 'corredorQuartos', layer: 'floor' },
   { id: 'quadro1', sprite: 'frame-a', x: 24.0, y: 1.8, room: 'corredorQuartos', layer: 'wall' },
   { id: 'quadro2', sprite: 'frame-b', x: 27.4, y: 1.8, room: 'corredorQuartos', layer: 'wall' },
+  // Relógio do corredor, no caminho entre a cama e o telefone: parado em 23:41 (GDD 10)
+  { id: 'relogioCorredor', sprite: 'wall-clock-2341', x: 25.5, y: 1.78, room: 'corredorQuartos', layer: 'wall' },
   { id: 'quadro3', sprite: 'frame-a', x: 31.4, y: 1.8, room: 'corredorQuartos', layer: 'wall' },
   { id: 'quadro4', sprite: 'frame-b', x: 38.4, y: 9.8, room: 'corredorQuartos', layer: 'wall' },
   // Quarto do Artur

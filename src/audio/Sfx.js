@@ -833,6 +833,55 @@ class Sfx {
     }
     this.#burst(at, env, { filter: { type: 'bandpass', freq: 2200, q: 0.5 }, attack: 0.01, decay: 1.1, level: 0.6 });
   }
+
+  // ---- Final (GDD 10) ---------------------------------------------------------
+
+  /** Porta rangendo devagar, abafada como se viesse pelo telefone. */
+  doorCreak(volume = 0.5, seconds = 1.6) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime + 0.02;
+    const { gain } = this.#out(0);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(volume, at + 0.25);
+    gain.gain.setValueAtTime(volume, at + seconds - 0.4);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
+    // Dobradiça: tom áspero que sobe e desce sem ritmo, filtrado como linha de telefone
+    const o = this.ctx.createOscillator();
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(190, at);
+    for (let t = 0.15; t < seconds; t += 0.12 + Math.random() * 0.1) {
+      o.frequency.linearRampToValueAtTime(150 + Math.random() * 160, at + t);
+    }
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 1100;
+    bp.Q.value = 1.2;
+    // Atrito: o som "gagueja" (liga e desliga muito rápido)
+    const chop = this.ctx.createGain();
+    chop.gain.value = 0;
+    for (let t = 0; t < seconds; t += 0.018) chop.gain.setValueAtTime(Math.random() < 0.7 ? 0.5 : 0.05, at + t);
+    o.connect(chop).connect(bp).connect(gain);
+    o.start(at);
+    o.stop(at + seconds + 0.05);
+  }
+
+  /** Tom de linha ocupada (bip curto repetido, 425 Hz), por `seconds`. */
+  busyTone(seconds = 4, volume = 0.3) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime + 0.02;
+    const { gain } = this.#out(volume);
+    const o = this.ctx.createOscillator();
+    o.frequency.value = 425;
+    const env = this.ctx.createGain();
+    env.gain.value = 0;
+    for (let t = 0; t < seconds; t += 0.5) {
+      env.gain.setValueAtTime(0.35, at + t);
+      env.gain.setValueAtTime(0, at + t + 0.25);
+    }
+    o.connect(env).connect(gain);
+    o.start(at);
+    o.stop(at + seconds);
+  }
 }
 
 export const sfx = new Sfx();

@@ -282,3 +282,28 @@ export const CALLS = {
     },
   ],
 };
+
+// Madrugada do dia 7 (GDD 10): as três ligações da Helena no telefone fixo da sala.
+// `after` marca o que acontece depois da última fala de cada parte da 3ª ligação
+// (a cena toca o som e mostra o efeito em seguida).
+export const FINAL_CALLS = [
+  {
+    time: '23:41',
+    lines: [s('Helena', 'Artur, a luz caiu. O gerador não liga... Me liga de volta.')],
+  },
+  {
+    time: '23:44',
+    lines: [s('Helena', 'Tem alguém na porta dos fundos. Por favor, atende... Você prometeu que ia estar aqui.')],
+  },
+  {
+    time: '23:47',
+    lines: [s('Helena', '(sussurrando) A gente tá escondida no quarto da Clara. A Clara tá comigo...')],
+    // Depois da fala: cada efeito com o seu som
+    after: [
+      { sound: 'steps', line: fx('(passos no corredor)') },
+      { sound: 'creak', line: fx('(uma porta rangendo)') },
+      { sound: 'screams', line: fx('(gritos)') },
+      { sound: 'busy', line: fx('(a linha cai)') },
+    ],
+  },
+];

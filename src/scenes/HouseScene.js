@@ -1,5 +1,6 @@
 // Casa (GDD 4): mapa, Artur, portas, colisões, câmera, luz, medo, alucinações, monstros,
-// lista da rotina e tarefas, ursos, fusível e sono.
+// lista da rotina e tarefas, ursos, fusível e sono. Depois do sono do dia 7, a madrugada
+// do final (GDD 10, systems/Finale.js).
 
 import Phaser from 'phaser';
 import { BALANCE, TOTAL_DAYS } from '../config/balance.js';
@@ -28,6 +29,7 @@ import { Tasks } from '../systems/Tasks.js';
 import { Bears } from '../systems/Bears.js';
 import { Heart } from '../systems/Heart.js';
 import { LockEvent } from '../systems/LockEvent.js';
+import { Finale } from '../systems/Finale.js';
 import { HALLUCINATION_KINDS, HallucinationDirector } from '../systems/HallucinationDirector.js';
 import { BEDROOM_DOOR_ID, BEDROOM_LOCKED_FROM_DAY, BEDROOM_ROOMS, LOCKED_DOOR_LINE } from '../systems/BedroomEvent.js';
 import { FlickerHallucination } from '../hallucinations/Flicker.js';
@@ -99,6 +101,7 @@ export class HouseScene extends Phaser.Scene {
       (kind, ctx) => this.hallucinationAvailable(kind, ctx),
     );
     this.sleep = null; // sequência de sono em andamento
+    this.finale = null; // madrugada do dia 7 (GDD 10)
     this.dead = false; // a cena é reaproveitada a cada noite: zera o estado
     this.arrived = false; // fala de chegada já fechada
     this.hasKey = false;
@@ -190,7 +193,7 @@ export class HouseScene extends Phaser.Scene {
     this.input.keyboard.on('keydown-F', () => this.interact());
     // Q: soltar o que está carregando (GDD 4.11)
     this.input.keyboard.on('keydown-Q', () => {
-      if (this.hud.talking || this.sleep || !this.tasks.carrying) return;
+      if (this.hud.talking || this.sleep || this.finale || !this.tasks.carrying) return;
       this.tasks.dropCarried(this.player.feetMeters);
     });
     // O item nas mãos acompanha o Artur depois da física (sem tremer)
@@ -200,7 +203,7 @@ export class HouseScene extends Phaser.Scene {
     this.keyF = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.F);
     this.input.keyboard.on('keydown-ESC', () => openPause(this));
     this.input.on('pointerdown', (pointer) => {
-      if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep) this.flashlight.toggle(!this.generator.on);
+      if (pointer.leftButtonDown() && !this.hud.talking && !this.sleep && !this.finale) this.flashlight.toggle(!this.generator.on);
     });
 
     this.generator.listen('drop', () => {
@@ -227,6 +230,7 @@ export class HouseScene extends Phaser.Scene {
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       this.director.active?.end();
       this.monsters.endAll();
+      this.finale?.end();
       this.chaseSound?.stop();
       this.hud.resetDread?.();
       debug.clearGroup('Casa');
@@ -324,6 +328,7 @@ export class HouseScene extends Phaser.Scene {
 
   /** O que dá para usar com F agora: alucinação, item, gerador, cama ou porta mais perto. */
   nearestInteractable() {
+    if (this.finale) return this.nearestInFinale();
     const feet = this.player.feetMeters;
     const dist = (x, y) => Phaser.Math.Distance.Between(feet.x, feet.y, x, y);
     let best = null;
@@ -373,12 +378,29 @@ export class HouseScene extends Phaser.Scene {
     return best;
   }
 
+  /** Na madrugada do final só dá para atender o telefone e usar portas. */
+  nearestInFinale() {
+    const feet = this.player.feetMeters;
+    const dist = (p) => Phaser.Math.Distance.Between(feet.x, feet.y, p.x, p.y);
+    const phone = this.finale.target;
+    if (phone && dist(phone.point) < phone.range) return phone;
+    let best = null;
+    let bestDist = DOOR_RANGE;
+    for (const door of this.doors) {
+      const d = dist(door.center);
+      if (door.kind === 'front' || d >= bestDist) continue;
+      best = { kind: 'door', door, anchor: { x: door.rect.centerX, y: door.rect.top - 2 } };
+      bestDist = d;
+    }
+    return best;
+  }
+
   interact() {
     // A mesma tecla F que fechou a lista não interage de novo
     if (this.hud.talking || this.sleep || this.hud.listClosedFrame === this.game.loop.frame) return;
     const target = this.nearestInteractable();
     if (!target) return;
-    if (target.kind === 'hallucination') target.use();
+    if (target.kind === 'hallucination' || target.kind === 'finale') target.use();
     else if (target.kind === 'item') this.useItem(target.item);
     else if (target.kind === 'door') this.useDoor(target.door);
     else if (target.kind === 'bed') this.tryToSleep();
@@ -661,18 +683,68 @@ export class HouseScene extends Phaser.Scene {
     this.hud.clearFade(0.25);
   }
 
-  /** Noite terminou: salva e vai para a delegacia do dia seguinte (GDD 2.3 e 2.6). */
+  /**
+   * Noite terminou: salva e vai para a delegacia do dia seguinte (GDD 2.3 e 2.6).
+   * No dia 7, começa a madrugada do final (GDD 10).
+   */
   endNight() {
+    if (this.finale) {
+      this.finale.skip(); // (debug N durante a madrugada)
+      return;
+    }
     this.sleep = null;
     const day = this.clock.day;
     if (day >= 7) {
-      // O final (GDD 10) entra na etapa 12
-      save.completed();
-      this.scene.start('Transition', { screens: ['O final entra na etapa 12'], next: { scene: 'Title' } });
+      this.startFinale();
       return;
     }
     save.nightDone(day);
     this.scene.start('Transition', toDelegacia(day + 1));
+  }
+
+  // ---- Final (GDD 10) -----------------------------------------------------
+
+  /** Madrugada do dia 7: a casa para (sem alucinações, monstros, medo nem gerador). */
+  startFinale() {
+    this.director.enabled = false;
+    this.director.active?.end();
+    this.director.active = null;
+    this.monsters.endAll();
+    this.chaseSound?.stop();
+    this.chaseSound = null;
+    this.generator.paused = true;
+    this.flashlight.forceOff();
+    this.taskHold = null;
+    this.hud.resetDread();
+    this.hud.dialogue.clear();
+    this.hud.setHint('');
+    this.hud.showHold(null, 0);
+    this.finale = new Finale(this, {
+      sfx,
+      onEnd: () => {
+        // Zerou: Continuar fica desativado (GDD 2.6)
+        save.completed();
+        this.scene.start('Ending');
+      },
+    });
+    this.finale.start();
+  }
+
+  /** Quadro a quadro da madrugada: só Artur andando, portas, luz e o telefone. */
+  updateFinale(dt) {
+    const cam = this.cameras.main;
+    this.player.frozen = this.hud.talking || this.finale.frozen;
+    this.player.carrying = false;
+    this.player.update(dt);
+    const feet = this.player.feetMeters;
+    this.finale.update(dt, feet);
+    this.lighting.update(dt, { powerOn: true, feet, chest: this.chest, flashlight: this.flashlight, zoneFactor: 1 });
+    this.hud.setFear(0);
+    this.hud.setStamina(this.player.stamina, this.player.exhausted);
+    this.hud.setBattery(this.flashlight.battery, this.flashlight.low);
+    const target = this.nearestInteractable();
+    const anchor = target && { x: (target.anchor.x - cam.worldView.x) * cam.zoom, y: (target.anchor.y - cam.worldView.y) * cam.zoom - 4 };
+    this.hud.showPrompt(target && !this.finale.frozen ? anchor : null);
   }
 
   // ---- Quadro a quadro ----------------------------------------------------
@@ -680,6 +752,10 @@ export class HouseScene extends Phaser.Scene {
   update(time, deltaMs) {
     if (!this.hud.ready) return; // o HUD ainda está subindo
     const dt = deltaMs / 1000;
+    if (this.finale) {
+      this.updateFinale(dt);
+      return;
+    }
     const nightDt = this.clock.update(dt);
     const cam = this.cameras.main;
     const toScreen = (p) => ({ x: (p.x - cam.worldView.x) * cam.zoom, y: (p.y - cam.worldView.y) * cam.zoom });

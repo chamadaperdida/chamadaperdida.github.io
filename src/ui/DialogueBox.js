@@ -37,7 +37,7 @@ const VOICES = [
   [/Criança/, { kind: 'voice', freq: 380, wave: 'triangle' }],
   [/^Jovem$/, { kind: 'voice', freq: 200 }],
   [/Senhora/, { kind: 'voice', freq: 250, wave: 'triangle' }],
-  [/Mãe|Moradora|Mulher|Moça|Voz de mulher|Helena/, { kind: 'voice', freq: 270, wave: 'triangle' }],
+  [/Mãe|Moradora|Mulher|Moça|Voz de mulher|Helena|Jornalista/, { kind: 'voice', freq: 270, wave: 'triangle' }],
   [/Idoso|Senhor/, { kind: 'voice', freq: 112 }],
   [/Clara/, { kind: 'voice', freq: 400, wave: 'triangle' }],
 ];

@@ -8,6 +8,7 @@ import { DeathScene } from './scenes/DeathScene.js';
 import { DelegaciaScene } from './scenes/DelegaciaScene.js';
 import { TitleScene } from './scenes/TitleScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
+import { EndingScene } from './scenes/EndingScene.js';
 import { options } from './systems/Save.js';
 import { debug } from './debug/debug.js';
 import './style.css';
@@ -32,7 +33,7 @@ document.fonts.load('20px VT323').finally(() => {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 0 }, debug: false },
     },
-    scene: [BootScene, TitleScene, HouseScene, HudScene, TransitionScene, DeathScene, DelegaciaScene, PauseScene],
+    scene: [BootScene, TitleScene, HouseScene, HudScene, TransitionScene, DeathScene, DelegaciaScene, PauseScene, EndingScene],
   });
   // Tela cheia fica salva nas opções. O navegador só deixa entrar em tela cheia num clique
   // ou tecla, então, se estava ligada, ela volta no primeiro toque do jogador.
