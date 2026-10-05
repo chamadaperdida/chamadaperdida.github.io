@@ -72,9 +72,9 @@ A história **nunca é contada de forma direta**. O jogador recebe peças soltas
 
 - Fundo: título *Chamada Perdida* em pixel art com glitch ocasional, sobre um telefone numa mesa escura. É a imagem principal do jogo, com mais resolução que o resto (480×270):
   - sala escura iluminada só pela luz fria da rua entrando pela persiana (uma lâmina torta), em faixas na parede, na mesa e nos objetos, com poeira flutuando nos raios;
-  - na mesa: o telefone antigo de disco (em destaque), uma secretária eletrônica com **"1" no visor e a luz de mensagem piscando em vermelho** (a chamada perdida), porta-retrato de uma menina com o vidro rachado, frasco de remédio derramado e um urso com um olho faltando e uma costura vermelha;
+  - na mesa: o telefone antigo de disco (em destaque), uma secretária eletrônica com **"1" no visor e a luz de mensagem piscando em vermelho** (a chamada perdida), porta-retrato de uma menina com o vidro rachado, frasco de remédio derramado e o urso inteiro, com um laço amarelo (o conforto do Artur, sinal de esperança no luto);
   - relógio de parede parado em **23:41**; atrás, a porta entreaberta do corredor, escuro, com luz por baixo da porta do fim;
-  - chuva no vidro e **relâmpagos** de tempos em tempos (com trovão); em alguns deles, **a silhueta de uma menina aparece parada no corredor** só durante o clarão.
+  - chuva no vidro e **relâmpagos** de tempos em tempos (com trovão); em alguns deles, **a silhueta de uma menina aparece parada no corredor** no clarão e se dissolve no escuro junto com ele.
 - Título e menu ficam à esquerda, sobre a parede escura.
 - Som: chuva; de tempos em tempos, um telefone tocando três vezes ao longe.
 - **Apenas 3 botões:**

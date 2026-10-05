@@ -215,22 +215,29 @@ export class TitleScene extends Phaser.Scene {
     this.ledIn = on ? 0.55 : 0.75;
   }
 
-  /** Relâmpago: duas piscadas, trovão depois. Às vezes revela a silhueta no corredor. */
+  /**
+   * Relâmpago: duas piscadas, trovão depois. Às vezes revela a silhueta no corredor: ela
+   * aparece no clarão e some junto com ele (some no escuro, sem corte).
+   */
   #lightning() {
     const showFigure = Math.random() < 0.6;
     const pulse = (at, peak, ms, withFigure) =>
       this.time.delayedCall(at, () => {
+        this.tweens.killTweensOf([this.flash, this.hallFlash, this.skyFlash, this.figure]);
         this.flash.setAlpha(peak);
         this.hallFlash.setAlpha(Math.min(1, peak * 2.4));
         this.skyFlash.setAlpha(Math.min(1, peak * 3));
-        this.figure.setVisible(withFigure);
         this.tweens.add({ targets: [this.flash, this.hallFlash, this.skyFlash], alpha: 0, duration: ms, ease: 'Quad.easeOut' });
-        this.time.delayedCall(ms * 0.6, () => this.figure.setVisible(false));
+        if (!withFigure) return;
+        this.figure.setVisible(true).setAlpha(1);
+        // Fica até o corredor voltar ao escuro e então se dissolve nele
+        this.tweens.add({ targets: this.figure, alpha: 0, delay: ms * 0.5, duration: ms * 1.6, ease: 'Sine.easeIn' });
       });
     pulse(0, 0.1, 120, false);
-    pulse(190, 0.2, 420, showFigure);
+    pulse(190, 0.2, 520, showFigure);
     this.time.delayedCall(Phaser.Math.Between(700, 1500), () => sfx.thunder(0.5));
   }
+
 
   #buildTitle() {
     const style = { fontFamily: FONT, fontSize: '86px', color: '#ddd5c0' };

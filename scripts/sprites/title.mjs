@@ -638,52 +638,64 @@ function paintBear(sc) {
   part(448, 226, 10, 7); // perna direita
   sc.ellipse(402, 226, 4, 5, hex('#b8a080'), OBJECT); // sola
   sc.ellipse(454, 227, 4, 5, hex('#b8a080'), OBJECT);
-  part(415, 163, 6, 6); // orelha esquerda
+  // Orelhas inteiras, com o miolo mais claro
+  part(415, 164, 6, 6);
+  part(441, 164, 6, 6);
+  sc.ellipse(415, 165, 3, 3, hex('#b09070'), OBJECT);
+  sc.ellipse(441, 165, 3, 3, hex('#b09070'), OBJECT);
   part(428, 178, 16, 15); // cabeça
-  // orelha direita rasgada (só metade)
-  sc.shape(436, 157, 448, 168, (x, y) => ((x - 442) / 6) ** 2 + ((y - 163) / 6) ** 2 <= 1 && x < 444 - (y - 157) * 0.3, furAt(442, 163, 6, 6), OBJECT);
-  sc.line(441, 158, 446, 166, hex('#d8d0b8'), OBJECT); // enchimento aparecendo
-  sc.ellipse(415, 164, 3, 3, hex('#5a3a2a'), OBJECT);
-  // Focinho e nariz
-  sc.ellipse(428, 185, 7, 5, hex('#b09070'), OBJECT);
+  // Focinho, nariz e um sorriso leve
+  sc.ellipse(428, 185, 7, 5, hex('#b89676'), OBJECT);
   sc.rect(426, 182, 4, 2, hex('#1a1210'), OBJECT);
-  sc.line(428, 184, 428, 187, hex('#1a1210'), OBJECT);
-  sc.line(425, 188, 431, 188, hex('#2a1a14'), OBJECT);
-  // Olho de botão (esquerdo) e linha solta no lugar do direito
-  sc.ellipse(421, 175, 2, 2, hex('#0e0a08'), OBJECT);
-  sc.set(422, 174, hex('#d8dce8'), OBJECT, 0.4);
-  sc.line(433, 173, 437, 177, hex('#c8c0a8'), OBJECT);
-  sc.line(437, 173, 433, 177, hex('#c8c0a8'), OBJECT);
-  sc.line(435, 177, 436, 182, hex('#c8c0a8'), OBJECT);
-  // Costura vermelha descendo pela barriga
-  sc.ellipse(428, 212, 11, 12, hex('#9a7a5a'), OBJECT);
-  for (let y = 199; y < 224; y += 3) {
-    sc.line(425, y, 431, y + 1, hex('#b3161d'), OBJECT);
+  sc.set(427, 182, hex('#6a5a50'), OBJECT, 0.2);
+  sc.line(428, 184, 428, 186, hex('#1a1210'), OBJECT);
+  sc.line(425, 186, 427, 188, hex('#2a1a14'), OBJECT);
+  sc.line(429, 188, 431, 186, hex('#2a1a14'), OBJECT);
+  // Dois olhos de botão, com brilho
+  for (const ex of [421, 435]) {
+    sc.ellipse(ex, 175, 2, 2, hex('#0e0a08'), OBJECT);
+    sc.set(ex + 1, 174, hex('#e8ecf4'), OBJECT, 0.45);
   }
-  sc.line(428, 198, 428, 225, hex('#4a2a1e'), OBJECT);
+  // Barriga clara e um laço amarelo no pescoço (o urso é o conforto do Artur)
+  sc.ellipse(428, 212, 11, 12, hex('#a88660'), OBJECT);
+  const bow = hex('#c8a040');
+  const bowDark = hex('#8a6a24');
+  sc.shape(416, 190, 427, 199, (x, y) => Math.abs(y - 194.5) <= (427 - x) * 0.45 + 1, (x, y) => (y > 195 ? bowDark : bow), OBJECT);
+  sc.shape(429, 190, 440, 199, (x, y) => Math.abs(y - 194.5) <= (x - 429) * 0.45 + 1, (x, y) => (y > 195 ? bowDark : bow), OBJECT, (x, y) => (y < 193 && x > 436 ? 0.25 : 0));
+  sc.ellipse(428, 194.5, 2.5, 2.5, bow, OBJECT, 0.1);
+  sc.line(425, 198, 421, 205, bowDark, OBJECT);
+  sc.line(431, 198, 435, 205, bowDark, OBJECT);
 }
 
 /** Sombra de menina no corredor (só aparece nos relâmpagos). */
 function paintFigure(c, ox, oy) {
-  // 26×72: silhueta quase preta, cabelo comprido, vestido, braços soltos
+  // 26×72: silhueta quase preta de uma menina, cabelo comprido caindo nos ombros, vestido
+  // rodado, braços soltos, a cabeça levemente inclinada
   const fill = '#060608';
   const inEllipse = (x, y, cx, cy, rx, ry) => ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1;
   for (let y = 0; y < 72; y++) {
     for (let x = 0; x < 26; x++) {
-      const head = inEllipse(x, y, 13, 10, 6, 7);
-      const hair = y > 8 && y < 26 && x >= 6 && x <= 20 && Math.abs(x - 13) < 6 + (y - 8) * 0.08;
-      const neck = y >= 16 && y < 20 && x >= 11 && x <= 15;
-      const t = (y - 20) / 34;
-      const dress = y >= 20 && y < 54 && Math.abs(x - 13) <= 6 + t * 5;
-      const armL = y >= 21 && y < 46 && x >= 4 && x <= 6 - (y > 40 ? 1 : 0) && x >= 4 + Math.floor((y - 21) / 14);
-      const armR = y >= 21 && y < 46 && x <= 22 && x >= 20 - Math.floor((y - 21) / 14);
-      const legs = y >= 54 && ((x >= 9 && x <= 11) || (x >= 15 && x <= 17));
-      if (head || hair || neck || dress || armL || armR || legs) c.px(ox + x, oy + y, fill);
+      const px = x + 0.5;
+      const py = y + 0.5;
+      const head = inEllipse(px, py, 13.6, 8.5, 5.6, 6.6);
+      // cabelo: escorre dos dois lados da cabeça até abaixo dos ombros
+      const hair = py > 6 && py < 27 && Math.abs(px - 13.4) < 6.4 - Math.max(0, py - 22) * 0.5;
+      const neck = py >= 14 && py < 19 && Math.abs(px - 13) < 2;
+      const shoulders = py >= 18 && py < 23 && Math.abs(px - 13) < 4.5 + (py - 18) * 0.7;
+      const t = (py - 22) / 30;
+      const dress = py >= 22 && py < 52 && Math.abs(px - 13) < 5.6 + t * t * 6;
+      const hem = py >= 51 && py < 53 && Math.abs(px - 13) < 11 && (Math.floor(px) % 3 !== 0 || py < 52);
+      const armL = py >= 21 && py < 45 && Math.abs(px - (6.2 - (py - 21) * 0.05)) < 1.3;
+      const armR = py >= 21 && py < 45 && Math.abs(px - (19.8 + (py - 21) * 0.05)) < 1.3;
+      const hands = inEllipse(px, py, 5, 45.5, 1.6, 2) || inEllipse(px, py, 21, 45.5, 1.6, 2);
+      const legs = py >= 52 && py < 70 && (Math.abs(px - 10.5) < 1.4 || Math.abs(px - 15.5) < 1.4);
+      const feet = py >= 69 && (Math.abs(px - 10) < 2.4 || Math.abs(px - 16) < 2.4);
+      if (head || hair || neck || shoulders || dress || hem || armL || armR || hands || legs || feet) c.px(ox + x, oy + y, fill);
     }
   }
   // Olhos: dois pontinhos claros, quase invisíveis
-  c.px(ox + 11, oy + 10, '#8a8a90');
-  c.px(ox + 15, oy + 10, '#8a8a90');
+  c.px(ox + 11, oy + 9, '#6a6a72');
+  c.px(ox + 15, oy + 9, '#6a6a72');
 }
 
 /** Céu de noite visto pela janela, com prédios e a luz da rua. */
