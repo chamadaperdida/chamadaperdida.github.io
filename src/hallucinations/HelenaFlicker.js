@@ -29,6 +29,8 @@ export class HelenaFlickerHallucination extends Hallucination {
       .setDepth(spot.y)
       .setAlpha(0.9)
       .setVisible(false);
+    // Som sinistro: grito invertido crescendo até ela aparecer
+    ctx.sfx.helenaSting();
   }
 
   get name() {

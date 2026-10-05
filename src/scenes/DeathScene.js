@@ -13,6 +13,8 @@ import { glitchCamera } from '../fx/GlitchPipeline.js';
 const FONT = 'VT323, monospace';
 const RED = '#b3161d';
 const ROWS = { invasor: 0, distorcido: 1, helena: 2, clara: 3 };
+// Grito de cada monstro (gravações, ver audio/Sfx.js → scream)
+const SCREAMS = { invasor: 'roar1', distorcido: 'roar2', helena: 'woman', clara: 'girl' };
 
 export const DEATH_PHRASES = {
   clara: 'Ela só queria brincar de estátua.',
@@ -44,11 +46,11 @@ export class DeathScene extends Phaser.Scene {
     // 2. Jumpscare
     this.time.delayedCall(200, () => {
       scare.setVisible(true);
-      sfx.scream();
+      sfx.scream(0.95, false, SCREAMS[monster]);
       // Trecho escondido dos gritos da 3ª ligação final, abafado pelo telefone (GDD 13.6)
-      sfx.scream(0.25, true);
+      sfx.scream(0.08, true, 'woman');
       // Helena: o grito vem misturado com o tom de linha ocupada (GDD 13.5)
-      if (monster === 'helena') sfx.busyTone(1.2, 0.35);
+      if (monster === 'helena') sfx.busyTone(1.2, 0.2);
       cam.shake(1100, 0.02);
       glitchCamera(this, cam, 1.1, 0.8);
     });

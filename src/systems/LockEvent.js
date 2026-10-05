@@ -15,6 +15,7 @@
 import { BALANCE } from '../config/balance.js';
 import { PPM } from '../world/tiles.js';
 import { positional } from '../audio/Sfx.js';
+import { foley } from '../audio/Foley.js';
 
 const JINGLE_EVERY = 0.5; // s, um chacoalhar por passo
 const SOUND_RANGE = 18; // m
@@ -81,7 +82,7 @@ export class LockEvent {
     this.door = door;
     this.lockedRooms = cutRooms;
     const { volume, pan } = positional(this.ctx.feet(), door.center, SOUND_RANGE);
-    this.ctx.sfx.lockClick(Math.max(0.15, volume), pan);
+    foley.lock(Math.max(0.15, volume), pan);
     this.walker = {
       pos: { ...start },
       path,

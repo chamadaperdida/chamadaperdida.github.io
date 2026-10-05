@@ -23,7 +23,7 @@
 | Publicação | **GitHub Pages** (gratuito, link público para jogar no navegador) |
 | Sem Lovable | O projeto é só Phaser + Vite, sem React |
 | Arte | Pixel art feita pelo Claude Code (sprites gerados por código/scripts, exportados como spritesheets PNG) |
-| Sons e efeitos | Gerados por código (Web Audio: ruído branco, chiado, batimento, estática) + bancos gratuitos com licença livre (ex.: Freesound, filtrando por CC0) |
+| Sons e efeitos | Gravações reais de domínio público (CC0): BigSoundBank (Joseph Sardin) e Wikimedia Commons, cortadas e comprimidas por `npm run audio` (ffmpeg) e tratadas no jogo com Web Audio (eco, reverberação, filtros, velocidade, som invertido). Sintetizados só o chiado/estática, o bipe da máquina, a digitação da caixa de diálogo, o clique dos menus e o "parabéns pra você" da delegacia |
 | Falas | **Caixa de diálogo** com nome de quem fala e texto sendo digitado (seção 11.1). Não há voz por IA; áudio de voz só em momentos específicos (a definir) |
 | Save | `localStorage` do navegador |
 
@@ -725,11 +725,11 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 - Em casa: **chuva de fundo + ruído branco**, o tempo todo. Dentro de casa a chuva chega abafada; no quintal, jardim e varanda, aberta e mais alta. Para de uma vez no fim da sequência de sono (o "silêncio instantâneo").
 - Delegacia: chuva na janela, zumbido da lâmpada fluorescente (o zumbido some quando a lâmpada pisca e apaga).
-- Implementado na etapa 13 (`src/audio/Foley.js`): todos os sons são gerados por código; nenhum arquivo de áudio.
+- Gravações reais (ver 14.5): chuva no concreto (abafada dentro de casa), chuva no para-brisa (o vidro da delegacia), zumbido de reator de lâmpada, estalo de lâmpada piscando, motor do gerador ligado (ouvido de perto, no quintal).
 
 ### 14.2 Efeitos (lista para produzir)
 
-> **Sons das tarefas, ursos e fusível — feitos na etapa 13** (`src/audio/Foley.js`). Cada ação abaixo tem o seu som, para o jogador perceber sem olhar a tela. Os de segurar F tocam enquanto a tecla está apertada (água e bucha na pia, talher no prato, roupa e prendedor no varal, água no vaso, janela correndo, vapor do ferro); micro-ondas e máquina tocam enquanto funcionam, mais altos perto deles:
+> **Sons das tarefas, ursos e fusível — feitos na etapa 13, com gravações reais** (`src/audio/Foley.js`). Cada ação abaixo tem o seu som, para o jogador perceber sem olhar a tela. Os de segurar F tocam enquanto a tecla está apertada (água e bucha na pia, talher no prato, roupa e prendedor no varal, água no vaso, janela correndo, vapor do ferro); micro-ondas e máquina tocam enquanto funcionam, mais altos perto deles:
 >
 > | Momento | Som |
 > |---|---|
@@ -750,11 +750,21 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofegante, coração batendo, gerador falhando, gerador ligando, porta abrindo/fechando, tranca, destrancar, chaveiro tilintando do Invasor (posicional, a cada passo), sussurro distorcido do Artur distorcido (posicional), goteira, gota caindo, estouro de balão + "ops", TV ligando com chiado, telefone fixo tocando, telefone da delegacia tocando, encaixe de pilha, glitch do remédio, clique da lanterna, lanterna falhando, risadas da Clara, estalos da Clara, choro da Helena, sussurros (sequência de sono), gritos (jumpscares e 3ª ligação), tom de linha ocupada, estática/chiado da morte, trovão, fusível (encaixe), nota de caixinha de música (urso coletado), micro-ondas, máquina de lavar, louça, saco de lixo, regador, ferro, janela fechando.
 
-**Feito na etapa 13:** passos do Artur conforme o chão (taco, azulejo/concreto, lama), respiração ofegante com a estamina esgotada, portas abrindo e fechando (rangido + trinco), gerador falhando (motor engasgando e a luz morrendo) e ligando (encaixe do fusível + arranque), pilha, remédio (frasco + falha digital), clique da lanterna e estalido quando ela falha, TV ligando/desligando (casa e reportagem), chave, celular, sussurros do sono (quatro vozes de lados diferentes, aumentando), gritos da 3ª ligação abafados pelo telefone, trecho escondido desses gritos em todo jumpscare e, na Helena, o tom de linha ocupada. O "ops" do balão é voz e depende da decisão da seção 14.3.
+**Feito na etapa 13 (refeito com gravações reais):** passos do Artur conforme o chão (taco, concreto/azulejo, lama), respiração ofegante, portas abrindo e fechando, tranca, chave na fechadura e maçaneta travada, gerador tentando ligar e morrendo / fusível encaixando e motor pegando, pilha (dois cliques), remédio (comprimido saindo da cartela), interruptor da lanterna e estalo quando ela falha, TV de tubo ligando/desligando, celular e fusível pegos do móvel, telefone fixo de campainha (casa e delegacia), fone saindo e voltando ao gancho, linha ocupada, papel (lista da geladeira, bilhetes) e página do calendário, sacola plástica (lixo, marmita), caixinha de música (urso), gotas na poça, balão estourando, trovão.
+
+**Monstros e vozes (macabros):**
+- **Invasor:** chaveiro de verdade tilintando a cada passo; jumpscare com um rugido rouco mais grave.
+- **Artur distorcido:** passos pesados no taco, bem mais graves e arrastados, com eco; sussurro de homem mais lento, grave e rasgado, com outro sussurro invertido por baixo; jumpscare com outro rugido, ainda mais grave.
+- **Clara:** risada de menina mais lenta e grave que o normal, com eco e reverberação, às vezes invertida, misturada de vez em quando com risada de crianças desacelerada; estalos de ossos de verdade quando ela corre de quatro; jumpscare com grito de menina.
+- **Helena:** choro de mulher baixinho, mais lento e grave, com eco, e o mesmo choro invertido e bem grave por baixo; jumpscare com grito demoníaco de mulher + tom de linha ocupada.
+- **Luz piscando com Helena:** grito de mulher invertido e lento crescendo até ela aparecer, sopro de sussurro grave com eco longo e estalos de lâmpada.
+- **Sono:** quatro sussurros (dois de homem, um suave, um invertido), lentos, com eco longo, de lados diferentes, aumentando; no fim, silêncio na hora (o eco também corta).
+- **3ª ligação final:** passos pesados, porta rangendo, grito da Helena e da Clara, tudo abafado pelo filtro de telefone; um trecho baixinho desse grito fica escondido em todo jumpscare.
+- **"Ops" do balão:** não feito — não existe gravação CC0 de criança dizendo "ops" (decidido deixar sem, por enquanto).
 
 ### 14.3 Vozes
 
-> **Decisão atualizada:** não há mais voz por IA. As falas e ligações aparecem na **caixa de diálogo** (seção 11.1). Áudio de voz fica só para **momentos específicos**, ainda a definir (candidatos: as três ligações finais da Helena, gritos, risadas da Clara, choro da Helena, "ops" do balão). A lista abaixo fica como referência dos personagens que falam (nomes na etiqueta da caixa de diálogo).
+> **Decisão atualizada:** não há mais voz por IA. As falas e ligações aparecem na **caixa de diálogo** (seção 11.1). Áudio de voz só nos momentos sem fala: gritos, risada da Clara, choro da Helena e sussurros, com gravações reais tratadas para soar macabras (14.2). O "ops" do balão ficou de fora (sem gravação CC0). A lista abaixo fica como referência dos personagens que falam (nomes na etiqueta da caixa de diálogo).
 
 - Personagens que falam:
 
@@ -778,6 +788,14 @@ Aplicados nos poucos trechos que tiverem voz:
 5. Respirações curtas e pausas.
 
 Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos invertidos quase imperceptíveis.
+
+---
+
+### 14.5 De onde vêm os sons
+
+- Gravações de domínio público (CC0, crédito não obrigatório): **BigSoundBank** (Joseph Sardin, bigsoundbank.com) e **Wikimedia Commons** (choro: *Cry of woman*, AlucardsBride; grito: *Demonic Woman Scream*, Nick121087; risada: *Short clip of girl laughing*, lmbubec; sacola: *Plastic bag*, soerena; sussurro: *Whispering example*, Mx. Granger). Lista completa com os links em `scripts/audio-manifest.mjs`; os créditos do final citam as duas fontes.
+- `npm run audio` baixa as gravações para `.audio-cache/` (fora do repositório), corta o trecho de cada som (achando o começo do golpe), emenda os loops, normaliza e grava MP3 mono em `public/assets/audio/` (~3 MB no total, 120 sons).
+- No jogo, `src/audio/Sfx.js` carrega tudo no começo e toca com tratamento na hora: velocidade/tom, eco, reverberação de cômodo, filtro de telefone, abafado, distorção, invertido. Variações (passos, chaves, pratos...) são sorteadas entre vários cortes para não repetir.
 
 ---
 

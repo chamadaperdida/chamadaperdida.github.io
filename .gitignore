@@ -4,3 +4,6 @@ dist/
 *.log
 .vscode/
 .idea/
+
+# Gravações originais dos sons (npm run audio baixa de novo)
+.audio-cache/

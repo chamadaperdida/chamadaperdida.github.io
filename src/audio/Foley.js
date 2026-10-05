@@ -1,680 +1,319 @@
-// Sons da casa e da delegacia (GDD 14.1 e 14.2), gerados por código com as peças do Sfx:
-// ambiente (chuva + ruído; chuva na janela + lâmpada fluorescente), tarefas, portas, passos,
-// respiração, itens, gerador, lanterna, TV e os sussurros do sono.
+// Sons da casa e da delegacia (GDD 14.1 e 14.2), com as gravações reais (audio/Sfx.js →
+// play): ambiente (chuva + ruído; chuva no vidro + lâmpada fluorescente), passos,
+// respiração, portas, itens, gerador, lanterna, TV, tarefas e os sussurros do sono.
 //
-// Todos os sons de um disparo recebem (volume, pan). Os contínuos devolvem um "handle"
+// Sons de um disparo recebem (volume, pan). Os contínuos devolvem um handle
 // { setVolume(v, pan), stop() } (alguns com controles extras).
 
 import { sfx } from './Sfx.js';
 
 const rnd = (a, b) => a + Math.random() * (b - a);
 
-// ---- Peças pequenas ----------------------------------------------------------------------
-
-/** Tom curto com decaimento (louça, metal, cliques). */
-function ping(at, out, freq, decay, level = 0.3, type = 'sine') {
-  const ctx = sfx.ctx;
-  const o = ctx.createOscillator();
-  o.type = type;
-  o.frequency.value = freq;
-  const env = ctx.createGain();
-  env.gain.setValueAtTime(0.0001, at);
-  env.gain.exponentialRampToValueAtTime(level, at + 0.002);
-  env.gain.exponentialRampToValueAtTime(0.0001, at + decay);
-  o.connect(env).connect(out);
-  o.start(at);
-  o.stop(at + decay + 0.02);
-}
-
-/** Ruído contínuo passando por filtros (cada um com seu nível). Devolve os nós para parar. */
-function noiseInto(out, layers) {
-  const ctx = sfx.ctx;
-  return layers.map(({ type, freq, q = 0.7, level = 1 }) => {
-    const n = sfx.noiseSource();
-    const f = ctx.createBiquadFilter();
-    f.type = type;
-    f.frequency.value = freq;
-    f.Q.value = q;
-    const g = ctx.createGain();
-    g.gain.value = level;
-    n.connect(f).connect(g).connect(out);
-    n.start();
-    return n;
-  });
-}
-
-/** Oscilador lento que mexe num parâmetro (ondulação). */
-function lfo(param, rate, depth) {
-  const ctx = sfx.ctx;
-  const o = ctx.createOscillator();
-  o.frequency.value = rate;
-  const g = ctx.createGain();
-  g.gain.value = depth;
-  o.connect(g).connect(param);
-  o.start();
-  return o;
-}
-
-/** Sequência de estalinhos de ruído (papel, plástico, vime): n estalos em `seconds`. */
-function crackle(at, out, n, seconds, { lo, hi, q = 1.5, decay = [0.01, 0.04], level = 0.6 }) {
-  for (let i = 0; i < n; i++) {
-    sfx.burst(at + Math.random() * seconds, out, {
-      filter: { type: 'bandpass', freq: rnd(lo, hi), q },
-      attack: 0.001,
-      decay: rnd(decay[0], decay[1]),
-      level: level * rnd(0.5, 1),
-    });
-  }
-}
-
 class Foley {
   get ok() {
     return sfx.ready;
   }
 
-  #out(volume, pan = 0, bus = 'effects') {
-    return sfx.out(volume, pan, bus).gain;
-  }
-
   // ---- Ambiente ----------------------------------------------------------------------
 
   /**
-   * Casa (GDD 14.1): chuva + ruído branco, o tempo todo. Dentro de casa a chuva chega
-   * abafada; nas áreas externas, aberta e mais alta. Handle: setOutdoors(true/false), stop().
+   * Casa (GDD 14.1): chuva + ruído branco baixinho, o tempo todo. Dentro de casa a chuva
+   * chega abafada pelas paredes; nas áreas externas, aberta e mais alta.
+   * Handle: setOutdoors(true/false), stop().
    */
   houseAmbience() {
     if (!this.ok) return { setOutdoors() {}, stop() {} };
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0, 0, 'ambient');
-    const muffle = ctx.createBiquadFilter();
-    muffle.type = 'lowpass';
-    muffle.frequency.value = 900;
-    muffle.connect(gain);
-    const rain = ctx.createGain();
-    rain.gain.value = 1;
-    rain.connect(muffle);
-    const nodes = noiseInto(rain, [
-      { type: 'lowpass', freq: 900, q: 0.4, level: 0.9 },
-      { type: 'bandpass', freq: 2400, q: 0.6, level: 0.35 },
-      { type: 'highpass', freq: 6000, q: 0.5, level: 0.15 },
-    ]);
-    nodes.push(lfo(rain.gain, 0.07, 0.25)); // rajadas
-    // Ruído branco baixinho por baixo de tudo (não passa pelo abafador)
-    nodes.push(...noiseInto(gain, [{ type: 'highpass', freq: 200, q: 0.5, level: 0.04 }]));
-    gain.gain.setTargetAtTime(0.4, ctx.currentTime, 0.8);
-    const handle = sfx.loopHandle(gain, panner, nodes);
+    const rain = sfx.play('rain', { loop: true, volume: 0, bus: 'ambient', filter: { type: 'lowpass', freq: 900 } });
+    const { gain, panner } = sfx.out(0.025, 0, 'ambient');
+    const noise = sfx.noiseSource();
+    noise.connect(gain);
+    noise.start();
+    const bed = sfx.loopHandle(gain, panner, [noise]);
     let outdoors = null;
-    handle.setOutdoors = (on) => {
-      if (on === outdoors) return;
-      outdoors = on;
-      const t = ctx.currentTime;
-      muffle.frequency.setTargetAtTime(on ? 7000 : 900, t, 0.25);
-      gain.gain.setTargetAtTime(on ? 0.6 : 0.4, t, 0.25);
+    return {
+      setOutdoors: (on) => {
+        if (on === outdoors) return;
+        outdoors = on;
+        rain.setVolume(on ? 2.2 : 3.5); // (a gravação é baixa; dentro, o filtro tira muito)
+        rain.filter?.frequency.setTargetAtTime(on ? 12000 : 900, sfx.now, 0.25);
+      },
+      stop: () => {
+        rain.stop(0.02);
+        bed.stop();
+      },
     };
-    return handle;
   }
 
-  /**
-   * Delegacia (GDD 14.1): chuva na janela e o zumbido da lâmpada fluorescente.
-   * Handle: setHum(0–1) (a lâmpada apaga nas piscadas), stop().
-   */
+  /** Delegacia (GDD 14.1): chuva no vidro e o zumbido da lâmpada. Handle: setHum(0–1). */
   officeAmbience() {
     if (!this.ok) return { setHum() {}, stop() {} };
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0.35, 0, 'ambient');
-    // Chuva batendo no vidro: abafada, com gotas mais agudas por cima
-    const rain = ctx.createGain();
-    rain.gain.value = 0.8;
-    rain.connect(gain);
-    const nodes = noiseInto(rain, [
-      { type: 'lowpass', freq: 700, q: 0.5, level: 0.8 },
-      { type: 'bandpass', freq: 3200, q: 1.2, level: 0.12 },
-    ]);
-    nodes.push(lfo(rain.gain, 0.05, 0.2));
-    // Zumbido: 120 Hz e harmônicos, ásperos
-    const hum = ctx.createGain();
-    hum.gain.value = 0.05;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 1400;
-    hum.connect(lp).connect(gain);
-    for (const [f, level] of [
-      [120, 1],
-      [240, 0.5],
-      [360, 0.25],
-    ]) {
-      const o = ctx.createOscillator();
-      o.type = 'sawtooth';
-      o.frequency.value = f;
-      const g = ctx.createGain();
-      g.gain.value = level;
-      o.connect(g).connect(hum);
-      o.start();
-      nodes.push(o);
-    }
-    const handle = sfx.loopHandle(gain, panner, nodes);
-    handle.setHum = (k) => hum.gain.setTargetAtTime(0.05 * k, ctx.currentTime, 0.01);
-    return handle;
+    const rain = sfx.play('rain-window', { loop: true, volume: 0.18, bus: 'ambient', filter: { type: 'lowpass', freq: 3500 } });
+    const hum = sfx.play('hum', { loop: true, volume: 0.055, bus: 'ambient' });
+    return {
+      setHum: (k) => hum.setVolume(0.055 * k),
+      stop: () => {
+        rain.stop();
+        hum.stop();
+      },
+    };
+  }
+
+  /** Lâmpada da delegacia piscando: estalo do reator. */
+  lampFlicker(volume = 0.25) {
+    sfx.play('bulb', { volume, vary: 0.1 });
+  }
+
+  /** Gerador ligado, ouvido de perto (quintal). */
+  generatorLoop() {
+    return sfx.play('gen-run', { loop: true, volume: 0, bus: 'ambient' });
   }
 
   // ---- Passos e respiração -------------------------------------------------------------
 
-  /** Passo do Artur: 'wood' (taco), 'tile' (azulejo/cozinha/concreto) ou 'mud' (lama). */
+  /** Passo do Artur: 'wood' (taco), 'tile' (azulejo, cozinha, concreto) ou 'mud' (lama). */
   footstep(surface, volume = 0.2, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    if (surface === 'mud') {
-      const out = this.#out(volume * 5, pan);
-      sfx.burst(at, out, { filter: { type: 'lowpass', freq: 380, q: 1.2 }, attack: 0.02, decay: 0.12, level: 1 });
-      sfx.burst(at + 0.03, out, { filter: { type: 'bandpass', freq: 1200, q: 2 }, attack: 0.01, decay: 0.08, level: 0.3 });
-      return;
-    }
-    if (surface === 'tile') {
-      sfx.footstepAt(at, volume * 0.8, pan, 1.5);
-      sfx.burst(at, this.#out(volume * 3, pan), { filter: { type: 'highpass', freq: 3000 }, decay: 0.02, level: 0.25 });
-      return;
-    }
-    sfx.footstepAt(at, volume, pan, 1);
+    const name = { wood: 'step-wood-*', tile: 'step-hard-*', mud: 'step-mud-*' }[surface] ?? 'step-wood-*';
+    const level = { wood: 3.2, tile: 5, mud: 5 }[surface] ?? 3.2; // iguala as gravações
+    sfx.play(name, { volume: volume * level, pan, vary: 0.06 });
   }
 
-  /** Respiração ofegante (estamina esgotada). Handle com setVolume/stop. */
+  /** Respiração ofegante (estamina esgotada). */
   breathLoop() {
-    if (!this.ok) return sfx.silentHandle();
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0);
-    const breath = ctx.createGain();
-    breath.gain.value = 0;
-    breath.connect(gain);
-    const nodes = noiseInto(breath, [
-      { type: 'bandpass', freq: 1100, q: 1.2, level: 1.4 },
-      { type: 'bandpass', freq: 2600, q: 2, level: 0.4 },
-    ]);
-    // Puxa e solta o ar ~1,4 vez por segundo
-    const o = ctx.createOscillator();
-    o.type = 'triangle';
-    o.frequency.value = 1.4;
-    const shape = ctx.createWaveShaper();
-    shape.curve = new Float32Array([0, 0, 0.1, 1]);
-    o.connect(shape).connect(breath.gain);
-    o.start();
-    nodes.push(o);
-    gain.gain.setTargetAtTime(0.35, ctx.currentTime, 0.4);
-    return sfx.loopHandle(gain, panner, nodes);
+    return sfx.play('breath', { loop: true, volume: 0.36, fadeIn: 0.4 });
   }
 
   // ---- Portas ------------------------------------------------------------------------
 
-  doorOpen(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume, pan);
-    sfx.thump(at, { freq: 1300, dur: 0.03, volume: volume * 0.4, pan, noise: 0.9 }); // trinco
-    this.#creak(at + 0.05, out, 0.5);
+  doorOpen(volume = 0.55, pan = 0) {
+    sfx.play('door-open', { volume, pan, vary: 0.04 });
   }
 
-  doorClose(volume = 0.45, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    this.#creak(at, this.#out(volume * 0.6, pan), 0.3);
-    sfx.thump(at + 0.28, { freq: 95, dur: 0.16, volume, pan, noise: 0.6 });
-    sfx.thump(at + 0.3, { freq: 1100, dur: 0.03, volume: volume * 0.35, pan, noise: 0.9 });
+  doorClose(volume = 0.9, pan = 0) {
+    sfx.play('door-close', { volume, pan, vary: 0.04 });
   }
 
-  /** Rangido de dobradiça curto. */
-  #creak(at, out, seconds) {
-    const ctx = sfx.ctx;
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(rnd(220, 300), at);
-    o.frequency.linearRampToValueAtTime(rnd(160, 260), at + seconds);
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 1400;
-    bp.Q.value = 2;
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(0.25, at + 0.05);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
-    const chop = ctx.createGain();
-    for (let t = 0; t < seconds; t += 0.02) chop.gain.setValueAtTime(Math.random() < 0.65 ? 1 : 0.1, at + t);
-    o.connect(chop).connect(bp).connect(env).connect(out);
-    o.start(at);
-    o.stop(at + seconds + 0.05);
+  /** Porta sendo trancada (evento da tranca). */
+  lock(volume = 0.6, pan = 0) {
+    sfx.play('lock', { volume, pan, reverb: 0.15 });
+  }
+
+  /** Destrancando com a chave. */
+  unlockWithKey(volume = 2, pan = 0) {
+    sfx.play('key-in-lock', { volume, pan, duration: 1.6 });
+  }
+
+  /** Tentando abrir uma porta trancada (maçaneta travada). */
+  lockedHandle(volume = 0.5, pan = 0) {
+    sfx.play('unlock', { volume, pan, rate: 0.9 });
   }
 
   // ---- Itens -------------------------------------------------------------------------
 
-  /** Remédio: frasco chacoalhando + falha digital (o glitch na tela). */
-  pills(volume = 0.5) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume);
-    for (let i = 0; i < 9; i++) ping(at + Math.random() * 0.25, out, rnd(3200, 5200), 0.03, 0.12, 'triangle');
-    // Falha digital: tons quadrados pulando
-    const ctx = sfx.ctx;
-    const o = ctx.createOscillator();
-    o.type = 'square';
-    const g = ctx.createGain();
-    g.gain.value = 0;
-    for (let t = 0; t < 0.5; t += 0.03) {
-      o.frequency.setValueAtTime(rnd(120, 1800), at + 0.3 + t);
-      g.gain.setValueAtTime(Math.random() < 0.6 ? 0.06 : 0, at + 0.3 + t);
-    }
-    g.gain.setValueAtTime(0, at + 0.82);
-    o.connect(g).connect(out);
-    o.start(at + 0.3);
-    o.stop(at + 0.85);
+  /** Remédio: comprimido saindo da cartela. */
+  pills(volume = 1) {
+    sfx.play('pills-*', { volume });
   }
 
-  /** Pilha encaixando na lanterna (clique-claque). */
-  battery(volume = 0.5) {
+  /** Pilha entrando na lanterna (dois cliques). */
+  battery(volume = 1) {
     if (!this.ok) return;
-    const at = sfx.now;
-    sfx.thump(at, { freq: 1500, dur: 0.03, volume: volume * 0.6, noise: 0.9 });
-    sfx.thump(at + 0.14, { freq: 900, dur: 0.05, volume, noise: 0.9 });
+    sfx.play('click-1', { volume });
+    sfx.play('click-2', { volume, when: sfx.now + 0.18 });
   }
 
-  /** Coisa pequena de plástico/metal pega de um móvel (celular, chave). */
-  tick(volume = 0.35, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume, pan);
-    ping(at, out, 2600, 0.04, 0.3, 'triangle');
-    sfx.burst(at, out, { filter: { type: 'highpass', freq: 4000 }, decay: 0.02, level: 0.3 });
+  /** Coisa pequena pega de um móvel (celular). */
+  tick(volume = 0.5, pan = 0) {
+    sfx.play('small-object', { volume, pan, rate: 1.15 });
   }
 
-  /** Fusível: pegar (metal fininho). */
-  fusePick(volume = 0.4) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume);
-    ping(at, out, 3400, 0.08, 0.25);
-    ping(at + 0.05, out, 4700, 0.06, 0.15);
+  /** Fusível: pegar. */
+  fusePick(volume = 0.5) {
+    sfx.play('small-object', { volume, rate: 1.3 });
   }
 
-  /** Lanterna: clique do botão. */
-  flashlightClick(volume = 0.35) {
-    if (!this.ok) return;
-    sfx.thump(sfx.now, { freq: 2000, dur: 0.02, volume, noise: 1 });
+  /** Lanterna: botão (ligar / desligar). */
+  flashlightClick(on = true, volume = 0.8) {
+    sfx.play(on ? 'switch-1' : 'switch-2', { volume });
   }
 
-  /** Lanterna falhando (bateria fraca): estalido elétrico. */
-  flashlightFlicker(volume = 0.25) {
-    if (!this.ok) return;
-    crackle(sfx.now, this.#out(volume), 4, 0.12, { lo: 2500, hi: 6000, q: 3, decay: [0.005, 0.015], level: 1 });
+  /** Lanterna falhando (bateria fraca): o contato estalando. */
+  flashlightFlicker(volume = 0.3) {
+    sfx.play('bulb', { volume, rate: 1.3, vary: 0.1 });
   }
 
   // ---- Gerador ------------------------------------------------------------------------
 
-  /** Fusível encaixando + o gerador pegando: arranque engasgado e o motor firmando. */
+  /** Fusível encaixando + o gerador pegando. */
   generatorStart(volume = 0.7, pan = 0) {
     if (!this.ok) return;
-    const at = sfx.now;
-    sfx.thump(at, { freq: 700, dur: 0.05, volume: volume * 0.6, pan, noise: 0.9 }); // encaixe
-    sfx.thump(at + 0.12, { freq: 220, dur: 0.08, volume: volume * 0.5, pan, noise: 0.8 });
-    for (let i = 0; i < 6; i++) sfx.thump(at + 0.5 + i * 0.13, { freq: 55, dur: 0.1, volume: volume * (0.5 + i * 0.08), pan, noise: 0.7 });
-    // Motor firmando e sumindo ao fundo
-    const ctx = sfx.ctx;
-    const out = this.#out(volume * 0.5, pan);
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(30, at + 1.2);
-    o.frequency.linearRampToValueAtTime(48, at + 1.8);
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 300;
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at + 1.2);
-    env.gain.exponentialRampToValueAtTime(0.5, at + 1.5);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 3.2);
-    o.connect(lp).connect(env).connect(out);
-    o.start(at + 1.2);
-    o.stop(at + 3.3);
+    sfx.play('fuse-in', { volume, pan });
+    sfx.play('gen-start', { volume, pan, when: sfx.now + 0.45 });
   }
 
-  /** Gerador falhando: o motor engasga, tosse e morre (com a luz caindo). */
+  /** Gerador falhando: o motor engasga e morre (com a luz caindo). */
   generatorFail(volume = 0.6) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    let t = 0;
-    for (let i = 0; i < 7; i++) {
-      t += 0.08 + i * 0.05 + Math.random() * 0.04;
-      sfx.thump(at + t, { freq: 60 - i * 4, dur: 0.12, volume: volume * (1 - i * 0.11), noise: 0.8 });
-    }
-    // Zumbido elétrico caindo (a luz morrendo)
-    const ctx = sfx.ctx;
-    const out = this.#out(volume * 0.35);
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(120, at);
-    o.frequency.exponentialRampToValueAtTime(25, at + 1.1);
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 600;
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.3, at);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 1.1);
-    o.connect(lp).connect(env).connect(out);
-    o.start(at);
-    o.stop(at + 1.15);
+    sfx.play('gen-die', { volume, bus: 'ambient', filter: { type: 'lowpass', freq: 2500 } });
   }
 
   // ---- TV ------------------------------------------------------------------------------
 
-  /** TV de tubo ligando: estalo, tranco do tubo e o apito agudo fino. */
   tvOn(volume = 0.5, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    sfx.thump(at, { freq: 1600, dur: 0.03, volume: volume * 0.5, pan, noise: 1 });
-    sfx.thump(at + 0.05, { freq: 80, dur: 0.2, volume: volume * 0.7, pan, noise: 0.5 });
-    const out = this.#out(volume * 0.06, pan);
-    const ctx = sfx.ctx;
-    const o = ctx.createOscillator();
-    o.frequency.value = 15600;
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at + 0.05);
-    env.gain.exponentialRampToValueAtTime(1, at + 0.3);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 2.5);
-    o.connect(env).connect(out);
-    o.start(at + 0.05);
-    o.stop(at + 2.6);
+    sfx.play('tv-on', { volume, pan });
   }
 
-  /** TV desligando: estalo seco. */
-  tvOff(volume = 0.5, pan = 0) {
-    if (!this.ok) return;
-    sfx.thump(sfx.now, { freq: 1200, dur: 0.04, volume, pan, noise: 1 });
+  tvOff(volume = 0.3, pan = 0) {
+    sfx.play('tv-off', { volume, pan });
+  }
+
+  // ---- Papel ---------------------------------------------------------------------------
+
+  /** Folha de papel sendo pega/solta (lista da geladeira, bilhete do Marcos). */
+  paper(volume = 1.2, pan = 0) {
+    sfx.play('paper-*', { volume, pan, vary: 0.05 });
+  }
+
+  /** Folha do calendário sendo levantada. */
+  pageTurn(volume = 0.6) {
+    sfx.play('page-turn', { volume });
   }
 
   // ---- Tarefas (GDD 14.2) --------------------------------------------------------------
 
-  /** Papel sendo pego / solto (lista da geladeira). */
-  paper(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    crackle(sfx.now, this.#out(volume * 2, pan), 7, 0.3, { lo: 2500, hi: 5500, q: 1, decay: [0.02, 0.06], level: 0.7 });
+  /** Mexendo em sacola/saco plástico (lixo, marmita). */
+  plastic(volume = 0.6, pan = 0) {
+    sfx.play('bag-*', { volume, pan, vary: 0.05 });
   }
 
-  /** Plástico amassando (marmita, saco de lixo). low = saco grande (mais grave). */
-  plastic(volume = 0.4, pan = 0, low = false) {
+  /** Freezer: porta abrindo, marmita no plástico, porta fechando. */
+  freezer(volume = 0.6, pan = 0) {
     if (!this.ok) return;
-    crackle(sfx.now, this.#out(volume * 2, pan), 12, 0.45, {
-      lo: low ? 1200 : 2800,
-      hi: low ? 3500 : 7000,
-      q: 2,
-      decay: [0.01, 0.035],
-      level: 0.8,
-    });
+    sfx.play('fridge-open', { volume, pan });
+    sfx.play('bag-3', { volume: volume * 0.5, pan, when: sfx.now + 0.6, duration: 0.8 });
+    sfx.play('freezer-close', { volume, pan, when: sfx.now + 1.4 });
   }
 
-  /** Freezer: tampa abrindo (borracha descolando), plástico da marmita, tampa fechando. */
-  freezer(volume = 0.5, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume * 3, pan);
-    sfx.burst(at, out, { filter: { type: 'lowpass', freq: 350 }, attack: 0.03, decay: 0.15, level: 0.8 });
-    crackle(at + 0.3, out, 10, 0.4, { lo: 2800, hi: 7000, q: 2, decay: [0.01, 0.03], level: 0.4 });
-    sfx.thump(at + 0.9, { freq: 90, dur: 0.15, volume, pan, noise: 0.6 });
+  microwaveOpen(volume = 0.55, pan = 0) {
+    sfx.play('mw-open', { volume, pan });
   }
 
-  /** Porta de aparelho (micro-ondas, máquina): trinco. */
-  applianceDoor(volume = 0.45, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    sfx.thump(at, { freq: 1400, dur: 0.03, volume: volume * 0.5, pan, noise: 0.9 });
-    sfx.thump(at + 0.06, { freq: 300, dur: 0.06, volume, pan, noise: 0.7 });
+  microwaveClose(volume = 0.55, pan = 0) {
+    sfx.play('mw-close', { volume, pan });
   }
 
-  /** Micro-ondas funcionando: zumbido grave contínuo. */
+  /** Micro-ondas pronto: a campainha. */
+  microwaveBell(volume = 0.5, pan = 0) {
+    sfx.play('mw-bell', { volume, pan });
+  }
+
+  washerDoor(volume = 0.55, pan = 0) {
+    sfx.play('washer-door', { volume, pan });
+  }
+
   microwaveLoop() {
-    if (!this.ok) return sfx.silentHandle();
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0);
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.value = 120;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 450;
-    const g = ctx.createGain();
-    g.gain.value = 0.12;
-    o.connect(lp).connect(g).connect(gain);
-    o.start();
-    const nodes = [o, ...noiseInto(gain, [{ type: 'bandpass', freq: 300, q: 1, level: 0.25 }])];
-    return sfx.loopHandle(gain, panner, nodes);
+    return sfx.play('mw-run', { loop: true, volume: 0 });
   }
 
-  /** Máquina de lavar girando: motor grave e água batendo em ondas. */
   washerLoop() {
-    if (!this.ok) return sfx.silentHandle();
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0);
-    const slosh = ctx.createGain();
-    slosh.gain.value = 0.5;
-    slosh.connect(gain);
-    const nodes = noiseInto(slosh, [{ type: 'lowpass', freq: 380, q: 1, level: 1.4 }]);
-    nodes.push(lfo(slosh.gain, 0.6, 0.45));
-    const o = ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.value = 52;
-    const lp = ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 200;
-    const g = ctx.createGain();
-    g.gain.value = 0.15;
-    o.connect(lp).connect(g).connect(gain);
-    o.start();
-    nodes.push(o);
-    return sfx.loopHandle(gain, panner, nodes);
+    return sfx.play('washer', { loop: true, volume: 0 });
   }
 
-  /** Pratos batendo (pegar, empilhar). */
-  plates(volume = 0.35, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume, pan);
-    for (const [f, d] of [
-      [2700, 0.22],
-      [4100, 0.15],
-      [5600, 0.1],
-    ]) {
-      ping(at, out, f * rnd(0.97, 1.03), d, 0.18);
-      ping(at + 0.07, out, f * rnd(1.02, 1.06), d * 0.7, 0.1);
-    }
+  /** Pratos batendo (pegar). */
+  plates(volume = 0.55, pan = 0) {
+    sfx.play('plates-*', { volume, pan, vary: 0.04 });
   }
 
-  /** Talher no prato (comendo). */
-  cutlery(volume = 0.3, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume, pan);
-    ping(at, out, rnd(4000, 4600), 0.07, 0.2);
-    ping(at, out, rnd(6000, 6800), 0.05, 0.1);
+  /** Prato limpo empilhado no canto da pia. */
+  plateStack(volume = 0.45, pan = 0) {
+    sfx.play('plate-stack-*', { volume, pan, vary: 0.04 });
   }
 
-  /** Cadeira arrastando. */
-  chair(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    const ctx = sfx.ctx;
-    const at = sfx.now;
-    const out = this.#out(volume * 4, pan);
-    const n = sfx.noiseSource();
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.Q.value = 5;
-    bp.frequency.setValueAtTime(700, at);
-    bp.frequency.linearRampToValueAtTime(380, at + 0.35);
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(0.6, at + 0.05);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.4);
-    n.connect(bp).connect(env).connect(out);
-    n.start(at);
-    n.stop(at + 0.45);
+  cutlery(volume = 0.45, pan = 0) {
+    sfx.play('cutlery-*', { volume, pan, vary: 0.05 });
   }
 
-  /** Água corrente (torneira, tanque, regador derramando). Handle com setVolume/stop. */
+  chair(volume = 0.5, pan = 0) {
+    sfx.play('chair-*', { volume, pan, vary: 0.04 });
+  }
+
+  /** Água corrente: tone > 1000 = torneira da pia; senão, regador nos vasos. */
   waterLoop(tone = 1800) {
-    if (!this.ok) return sfx.silentHandle();
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0);
-    const water = ctx.createGain();
-    water.gain.value = 0.8;
-    water.connect(gain);
-    const nodes = noiseInto(water, [
-      { type: 'bandpass', freq: tone, q: 0.8, level: 1.2 },
-      { type: 'highpass', freq: 5000, q: 0.5, level: 0.15 },
-    ]);
-    nodes.push(lfo(water.gain, 7, 0.2)); // borbulhando
-    return sfx.loopHandle(gain, panner, nodes);
+    return sfx.play(tone > 1000 ? 'faucet' : 'watering', { loop: true, volume: 0, fadeIn: 0.15 });
   }
 
   /** Esfregando (bucha no prato). */
-  scrub(volume = 0.3, pan = 0) {
-    if (!this.ok) return;
-    sfx.burst(sfx.now, this.#out(volume * 3, pan), { filter: { type: 'bandpass', freq: rnd(2200, 3000), q: 1.5 }, attack: 0.04, decay: 0.1, level: 0.7 });
+  scrub(volume = 0.65, pan = 0) {
+    sfx.play('scrub-*', { volume, pan, vary: 0.06, duration: 0.6 });
   }
 
-  /** Tampa do latão de lixo (metal grande). */
-  metalLid(volume = 0.45, pan = 0) {
+  /** Saco caindo dentro do latão + a tampa de metal. */
+  metalLid(volume = 0.55, pan = 0) {
     if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume, pan);
-    for (const [f, d, l] of [
-      [310, 0.7, 0.2],
-      [507, 0.5, 0.15],
-      [833, 0.4, 0.1],
-      [1270, 0.3, 0.07],
-    ]) ping(at, out, f, d, l, 'triangle');
-    sfx.burst(at, out, { filter: { type: 'bandpass', freq: 2500, q: 0.8 }, decay: 0.1, level: 0.5 });
+    sfx.play('can-lid', { volume, pan, duration: 1.2 });
+    sfx.play('trash-in', { volume, pan, when: sfx.now + 0.5, offset: 1.0 });
   }
 
-  /** Cesto de vime (estalidos secos). */
-  wicker(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    crackle(sfx.now, this.#out(volume * 2, pan), 8, 0.35, { lo: 900, hi: 1800, q: 6, decay: [0.01, 0.03], level: 0.9 });
+  wicker(volume = 0.36, pan = 0) {
+    sfx.play('wicker', { volume, pan });
   }
 
-  /** Roupa molhada (encharcada, pesada). */
-  wetCloth(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume * 4, pan);
-    sfx.burst(at, out, { filter: { type: 'lowpass', freq: 500, q: 2 }, attack: 0.03, decay: 0.2, level: 0.8 });
-    sfx.burst(at + 0.08, out, { filter: { type: 'bandpass', freq: 1100, q: 2 }, attack: 0.02, decay: 0.12, level: 0.35 });
+  wetCloth(volume = 0.55, pan = 0) {
+    sfx.play('wet-cloth', { volume, pan });
   }
 
-  /** Prendedor no varal. */
-  clothespin(volume = 0.35, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    const out = this.#out(volume, pan);
-    ping(at, out, 2300, 0.03, 0.25, 'triangle');
-    sfx.burst(at, out, { filter: { type: 'highpass', freq: 3500 }, decay: 0.015, level: 0.3 });
+  clothespin(volume = 1, pan = 0) {
+    sfx.play('pin-*', { volume, pan, vary: 0.08 });
   }
 
-  /** Água enchendo o regador no tanque (o tom sobe conforme enche). */
-  fillCan(volume = 0.4, pan = 0, seconds = 1.3) {
-    if (!this.ok) return;
-    const ctx = sfx.ctx;
-    const at = sfx.now;
-    const out = this.#out(volume * 2.5, pan);
-    const n = sfx.noiseSource();
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.Q.value = 3;
-    bp.frequency.setValueAtTime(450, at);
-    bp.frequency.exponentialRampToValueAtTime(1500, at + seconds);
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(0.8, at + 0.1);
-    env.gain.setValueAtTime(0.8, at + seconds - 0.15);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
-    n.connect(bp).connect(env).connect(out);
-    n.start(at);
-    n.stop(at + seconds + 0.05);
+  /** Água enchendo o regador no tanque. */
+  fillCan(volume = 0.55, pan = 0) {
+    sfx.play('fill', { volume, pan, duration: 1.6 });
   }
 
-  /** Janela correndo no trilho. */
-  windowSlide(volume = 0.4, pan = 0, seconds = 0.7) {
-    if (!this.ok) return;
-    const ctx = sfx.ctx;
-    const at = sfx.now;
-    const out = this.#out(volume * 3, pan);
-    const n = sfx.noiseSource();
-    const bp = ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.Q.value = 3;
-    bp.frequency.setValueAtTime(600, at);
-    bp.frequency.linearRampToValueAtTime(900, at + seconds);
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(0.6, at + 0.06);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
-    const chop = ctx.createGain();
-    for (let t = 0; t < seconds; t += 0.03) chop.gain.setValueAtTime(rnd(0.4, 1), at + t);
-    n.connect(bp).connect(chop).connect(env).connect(out);
-    n.start(at);
-    n.stop(at + seconds + 0.05);
+  windowSlide(volume = 0.36, pan = 0) {
+    sfx.play('window-slide', { volume, pan });
   }
 
-  /** Trinco da janela. */
-  latch(volume = 0.45, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    sfx.thump(at, { freq: 140, dur: 0.08, volume, pan, noise: 0.6 });
-    sfx.thump(at + 0.05, { freq: 1700, dur: 0.03, volume: volume * 0.5, pan, noise: 0.9 });
+  latch(volume = 0.6, pan = 0) {
+    sfx.play('latch', { volume, pan });
   }
 
-  /** Armário abrindo (madeira rangendo + batida). */
-  wardrobe(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    this.#creak(at, this.#out(volume * 0.8, pan), 0.4);
-    sfx.thump(at + 0.4, { freq: 130, dur: 0.1, volume: volume * 0.7, pan, noise: 0.6 });
+  /** Armário abrindo/fechando. */
+  wardrobe(volume = 0.55, pan = 0) {
+    sfx.play('closet-*', { volume, pan });
   }
 
-  /** Ferro de passar soltando vapor (chiado em sopros). */
+  /** Vapor do ferro (enquanto passa o uniforme). */
   steamLoop() {
-    if (!this.ok) return sfx.silentHandle();
-    const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0);
-    const puff = ctx.createGain();
-    puff.gain.value = 0.4;
-    puff.connect(gain);
-    const nodes = noiseInto(puff, [{ type: 'highpass', freq: 3500, q: 0.5, level: 0.8 }]);
-    nodes.push(lfo(puff.gain, 0.9, 0.35));
-    return sfx.loopHandle(gain, panner, nodes);
+    return sfx.play('steam', { volume: 0, filter: { type: 'highpass', freq: 1500 }, rate: 1.3 });
   }
 
-  /** Plugue do carregador. */
-  plug(volume = 0.4, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    sfx.thump(at, { freq: 1800, dur: 0.02, volume: volume * 0.5, pan, noise: 1 });
-    sfx.thump(at + 0.07, { freq: 1100, dur: 0.03, volume, pan, noise: 1 });
+  plug(volume = 0.9, pan = 0) {
+    sfx.play('plug', { volume, pan });
   }
 
   /** Objeto largado no chão, conforme o que é: 'soft', 'ceramic', 'plastic', 'box'. */
-  drop(kind, volume = 0.45, pan = 0) {
-    if (!this.ok) return;
-    const at = sfx.now;
-    if (kind === 'ceramic') {
-      sfx.thump(at, { freq: 120, dur: 0.08, volume: volume * 0.6, pan, noise: 0.5 });
-      this.plates(volume * 0.9, pan);
-    } else if (kind === 'plastic') {
-      sfx.thump(at, { freq: 160, dur: 0.07, volume, pan, noise: 0.6 });
-      sfx.thump(at + 0.12, { freq: 220, dur: 0.05, volume: volume * 0.4, pan, noise: 0.6 });
-    } else if (kind === 'box') {
-      sfx.thump(at, { freq: 140, dur: 0.06, volume, pan, noise: 0.7 });
-    } else {
-      sfx.burst(at, this.#out(volume * 4, pan), { filter: { type: 'lowpass', freq: 300 }, attack: 0.01, decay: 0.12, level: 0.9 });
-    }
+  drop(kind, volume = 0.55, pan = 0) {
+    if (kind === 'ceramic') sfx.play('drop-ceramic', { volume, pan });
+    else if (kind === 'plastic') sfx.play('drop-plastic', { volume, pan });
+    else if (kind === 'box') sfx.play('drop-plastic', { volume, pan, rate: 0.8 });
+    else sfx.play('drop-soft-*', { volume, pan, vary: 0.05 });
   }
 
   /** Pegando de volta algo do chão. */
-  pickUp(volume = 0.35, pan = 0) {
-    if (!this.ok) return;
-    crackle(sfx.now, this.#out(volume * 2, pan), 4, 0.15, { lo: 800, hi: 2500, q: 1, decay: [0.02, 0.05], level: 0.6 });
+  pickUp(volume = 0.5, pan = 0) {
+    sfx.play('cloth-*', { volume, pan, vary: 0.05 });
+  }
+
+  // ---- Telefone ----------------------------------------------------------------------
+
+  /** Fone do telefone sendo tirado do gancho. */
+  handsetUp(volume = 0.9) {
+    sfx.play('handset-up', { volume });
+  }
+
+  /** Fone sendo posto de volta no gancho. */
+  handsetDown(volume = 0.6) {
+    sfx.play('handset-down', { volume });
   }
 
   // ---- Ligações-alucinação (GDD 3.5) -----------------------------------------------
@@ -687,7 +326,7 @@ class Foley {
   callNoise(kind) {
     if (!this.ok || kind !== 'birthday') return sfx.silentHandle();
     const ctx = sfx.ctx;
-    const { gain, panner } = sfx.out(0.5);
+    const { gain } = sfx.out(0.5);
     const line = ctx.createBiquadFilter(); // filtro de telefone
     line.type = 'bandpass';
     line.frequency.value = 1000;
@@ -746,21 +385,21 @@ class Foley {
   // ---- Sono --------------------------------------------------------------------------
 
   /**
-   * Sussurros do sono (GDD 4.7): várias vozes sussurrando juntas, de lados diferentes,
-   * aumentando. setLevel(0–1) e stop() (silêncio na hora).
+   * Sussurros do sono (GDD 4.7): vozes sussurrando de lados diferentes, lentas e graves,
+   * com eco longo, aumentando. setLevel(0–1) e stop() (silêncio na hora).
    */
   sleepWhispers() {
-    const voices = [-0.8, -0.3, 0.3, 0.8].map((pan) => ({ pan, h: sfx.whisperLoop() }));
-    let level = 0;
+    const echo = { time: 0.55, feedback: 0.5, mix: 0.55 };
+    const voices = [
+      { pan: -0.7, h: sfx.play('whisper-man', { loop: true, volume: 0, rate: 0.78, reverb: 0.6, echo }) },
+      { pan: 0.7, h: sfx.play('whisper-man-2', { loop: true, volume: 0, rate: 0.74, reverb: 0.6, echo, offset: 5 }) },
+      { pan: 0.1, h: sfx.play('whisper-soft', { every: 3.5, volume: 0, rate: 0.7, reverb: 0.7, echo }) },
+      { pan: -0.2, h: sfx.play('whisper-man', { loop: true, volume: 0, rate: 0.66, reverse: true, reverb: 0.7, echo, offset: 9 }) },
+    ];
     return {
-      setLevel: (k) => {
-        level = k;
-        voices.forEach(({ pan, h }, i) => h.setVolume(Math.max(0, (k * 4 - i * 0.6) / 4) * 0.9, pan));
-      },
-      stop: () => {
-        voices.forEach(({ h }) => h.stop());
-        return level;
-      },
+      // (gravações de sussurro são baixas: ×4)
+      setLevel: (k) => voices.forEach(({ pan, h }, i) => h.setVolume(Math.max(0, Math.min(1, k * 1.6 - i * 0.25)) * 4, pan)),
+      stop: () => voices.forEach(({ h }) => h.stop(0.01, true)),
     };
   }
 }

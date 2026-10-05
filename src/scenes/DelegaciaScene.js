@@ -215,7 +215,7 @@ export class DelegaciaScene extends Phaser.Scene {
 
   #readNote() {
     if (this.state === 'talking') return;
-    sfx.textBlip({ kind: 'paper' }, false, 0.2);
+    foley.paper();
     this.dialogue.show([{ speaker: 'Bilhete do Marcos', text: NOTES[this.day] }]);
   }
 
@@ -227,7 +227,7 @@ export class DelegaciaScene extends Phaser.Scene {
     }
     this.leaving = true;
     save.delegaciaDone(this.day); // se morrer nessa noite, o Continuar volta direto para a casa
-    sfx.lockClick(0.4);
+    foley.doorOpen();
     this.cameras.main.fadeOut(600, 0, 0, 0);
     this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () =>
       this.scene.start('Transition', { screens: ['Casa'], next: { scene: 'House', data: { day: this.day } } }),
@@ -240,7 +240,7 @@ export class DelegaciaScene extends Phaser.Scene {
   #ringNow() {
     this.state = 'ringing';
     this.clockLimit = this.minutes;
-    this.ring = sfx.phoneRing(0.5);
+    this.ring = sfx.phoneRing(0.5, 'office');
     this.ringShake = this.tweens.add({
       targets: this.phone,
       x: { from: this.phone.x - 2, to: this.phone.x + 2 },
@@ -261,7 +261,7 @@ export class DelegaciaScene extends Phaser.Scene {
   #answer() {
     if (this.state !== 'ringing') return;
     this.#stopRinging();
-    sfx.lockClick(0.5);
+    foley.handsetUp();
     this.state = 'talking';
     this.clockLimit = this.minutes + MINUTES_PER_CALL; // a ligação dura no máximo isso
     this.body.setFrame('artur-body-phone');
@@ -276,7 +276,7 @@ export class DelegaciaScene extends Phaser.Scene {
   }
 
   #hangUp() {
-    sfx.lockClick(0.35);
+    foley.handsetDown();
     this.#stopHallucination();
     this.body.setFrame('artur-body-idle');
     this.arms.setFrame('artur-arms-idle');
@@ -363,6 +363,7 @@ export class DelegaciaScene extends Phaser.Scene {
     const off = this.tube.frame.name === 'tube-on' && Math.random() < 0.6;
     this.tube.setFrame(off ? 'tube-off' : 'tube-on');
     this.ambience?.setHum(off ? 0 : 1); // o zumbido some com a lâmpada
+    if (off) foley.lampFlicker();
     if (this.tweens.isTweening(this.dark)) return; // ainda escurecendo
     this.dark.setAlpha(off ? FLICKER_DARK : HALLUCINATION_DARK);
     this.flickerIn = off ? 0.04 + Math.random() * 0.12 : 0.15 + Math.random() * 0.9;
@@ -514,6 +515,7 @@ export class DelegaciaScene extends Phaser.Scene {
 
   #openCalendar() {
     if (this.state === 'talking') return;
+    foley.pageTurn();
     this.calendarPopup.setVisible(true);
     this.calendarOpen = true;
   }

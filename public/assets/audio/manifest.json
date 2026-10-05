@@ -1,0 +1,482 @@
+{
+ "rain": {
+  "duration": 20,
+  "loop": true
+ },
+ "rain-window": {
+  "duration": 20,
+  "loop": true
+ },
+ "thunder": {
+  "duration": 5.03,
+  "loop": false
+ },
+ "hum": {
+  "duration": 8,
+  "loop": true
+ },
+ "bulb": {
+  "duration": 0.466,
+  "loop": false
+ },
+ "step-wood-1": {
+  "duration": 0.4,
+  "loop": false
+ },
+ "step-wood-2": {
+  "duration": 0.4,
+  "loop": false
+ },
+ "step-wood-3": {
+  "duration": 0.4,
+  "loop": false
+ },
+ "step-wood-4": {
+  "duration": 0.4,
+  "loop": false
+ },
+ "step-hard-1": {
+  "duration": 0.35,
+  "loop": false
+ },
+ "step-hard-2": {
+  "duration": 0.35,
+  "loop": false
+ },
+ "step-hard-3": {
+  "duration": 0.35,
+  "loop": false
+ },
+ "step-hard-4": {
+  "duration": 0.35,
+  "loop": false
+ },
+ "step-mud-1": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "step-mud-2": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "step-mud-3": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "step-mud-4": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "breath": {
+  "duration": 10,
+  "loop": true
+ },
+ "step-heavy-1": {
+  "duration": 0.5,
+  "loop": false
+ },
+ "step-heavy-2": {
+  "duration": 0.5,
+  "loop": false
+ },
+ "step-heavy-3": {
+  "duration": 0.5,
+  "loop": false
+ },
+ "keys-1": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "keys-2": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "keys-3": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "keys-4": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "laugh-girl": {
+  "duration": 1.28,
+  "loop": false
+ },
+ "laugh-kids": {
+  "duration": 4.83,
+  "loop": false
+ },
+ "crack-1": {
+  "duration": 0.85,
+  "loop": false
+ },
+ "crack-2": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "crack-3": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "crack-4": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "crack-5": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "cry": {
+  "duration": 25.5,
+  "loop": true
+ },
+ "whisper-man": {
+  "duration": 20,
+  "loop": true
+ },
+ "whisper-man-2": {
+  "duration": 18,
+  "loop": true
+ },
+ "whisper-soft": {
+  "duration": 2,
+  "loop": false
+ },
+ "scream-woman": {
+  "duration": 3.916,
+  "loop": false
+ },
+ "scream-girl": {
+  "duration": 2.677,
+  "loop": false
+ },
+ "roar-1": {
+  "duration": 3.2,
+  "loop": false
+ },
+ "roar-2": {
+  "duration": 2.8,
+  "loop": false
+ },
+ "heart": {
+  "duration": 0.888,
+  "loop": false
+ },
+ "door-open": {
+  "duration": 1.53,
+  "loop": false
+ },
+ "door-close": {
+  "duration": 1.838,
+  "loop": false
+ },
+ "creak": {
+  "duration": 3.16,
+  "loop": false
+ },
+ "lock": {
+  "duration": 1.4,
+  "loop": false
+ },
+ "unlock": {
+  "duration": 1.169,
+  "loop": false
+ },
+ "key-in-lock": {
+  "duration": 3.745,
+  "loop": false
+ },
+ "switch-1": {
+  "duration": 0.3,
+  "loop": false
+ },
+ "switch-2": {
+  "duration": 0.3,
+  "loop": false
+ },
+ "click-1": {
+  "duration": 0.25,
+  "loop": false
+ },
+ "click-2": {
+  "duration": 0.25,
+  "loop": false
+ },
+ "pills-1": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "pills-2": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "small-object": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "fuse-in": {
+  "duration": 1.4,
+  "loop": false
+ },
+ "phone-key": {
+  "duration": 0.35,
+  "loop": false
+ },
+ "balloon-pop": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "handset-up": {
+  "duration": 0.779,
+  "loop": false
+ },
+ "handset-down": {
+  "duration": 0.946,
+  "loop": false
+ },
+ "ring-house": {
+  "duration": 2.4,
+  "loop": false
+ },
+ "ring-office": {
+  "duration": 2.456,
+  "loop": false
+ },
+ "busy": {
+  "duration": 4,
+  "loop": false
+ },
+ "paper-1": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "paper-2": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "paper-3": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "page-turn": {
+  "duration": 1.6,
+  "loop": false
+ },
+ "bag-1": {
+  "duration": 1.6,
+  "loop": false
+ },
+ "bag-2": {
+  "duration": 1.6,
+  "loop": false
+ },
+ "bag-3": {
+  "duration": 1.5,
+  "loop": false
+ },
+ "trash-in": {
+  "duration": 3.39,
+  "loop": false
+ },
+ "can-lid": {
+  "duration": 3,
+  "loop": false
+ },
+ "gen-attempt": {
+  "duration": 3,
+  "loop": false
+ },
+ "gen-die": {
+  "duration": 4.28,
+  "loop": false
+ },
+ "gen-start": {
+  "duration": 7,
+  "loop": false
+ },
+ "gen-run": {
+  "duration": 8,
+  "loop": true
+ },
+ "mw-open": {
+  "duration": 1.005,
+  "loop": false
+ },
+ "mw-close": {
+  "duration": 0.97,
+  "loop": false
+ },
+ "mw-run": {
+  "duration": 10,
+  "loop": true
+ },
+ "mw-bell": {
+  "duration": 2.24,
+  "loop": false
+ },
+ "washer": {
+  "duration": 16,
+  "loop": true
+ },
+ "washer-door": {
+  "duration": 1.3,
+  "loop": false
+ },
+ "plates-1": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "plates-2": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "plates-3": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "plate-stack-1": {
+  "duration": 0.9,
+  "loop": false
+ },
+ "plate-stack-2": {
+  "duration": 0.9,
+  "loop": false
+ },
+ "cutlery-1": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "cutlery-2": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "cutlery-3": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "cutlery-4": {
+  "duration": 0.45,
+  "loop": false
+ },
+ "chair-1": {
+  "duration": 1.2,
+  "loop": false
+ },
+ "chair-2": {
+  "duration": 1.2,
+  "loop": false
+ },
+ "faucet": {
+  "duration": 8,
+  "loop": true
+ },
+ "scrub-1": {
+  "duration": 1.2,
+  "loop": false
+ },
+ "scrub-2": {
+  "duration": 1.2,
+  "loop": false
+ },
+ "wet-cloth": {
+  "duration": 1.4,
+  "loop": false
+ },
+ "fridge-open": {
+  "duration": 1.4,
+  "loop": false
+ },
+ "freezer-close": {
+  "duration": 0.8,
+  "loop": false
+ },
+ "wicker": {
+  "duration": 1.6,
+  "loop": false
+ },
+ "pin-1": {
+  "duration": 0.3,
+  "loop": false
+ },
+ "pin-2": {
+  "duration": 0.3,
+  "loop": false
+ },
+ "watering": {
+  "duration": 8,
+  "loop": true
+ },
+ "fill": {
+  "duration": 3.4,
+  "loop": false
+ },
+ "window-slide": {
+  "duration": 1.5,
+  "loop": false
+ },
+ "latch": {
+  "duration": 0.9,
+  "loop": false
+ },
+ "closet-1": {
+  "duration": 1.8,
+  "loop": false
+ },
+ "closet-2": {
+  "duration": 1.8,
+  "loop": false
+ },
+ "steam": {
+  "duration": 4.3,
+  "loop": false
+ },
+ "plug": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "drop-soft-1": {
+  "duration": 0.6,
+  "loop": false
+ },
+ "drop-soft-2": {
+  "duration": 0.6,
+  "loop": false
+ },
+ "drop-ceramic": {
+  "duration": 0.9,
+  "loop": false
+ },
+ "drop-plastic": {
+  "duration": 0.9,
+  "loop": false
+ },
+ "cloth-1": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "cloth-2": {
+  "duration": 0.7,
+  "loop": false
+ },
+ "tv-on": {
+  "duration": 0.4,
+  "loop": false
+ },
+ "tv-off": {
+  "duration": 0.12,
+  "loop": false
+ },
+ "music-box": {
+  "duration": 3.1,
+  "loop": false
+ },
+ "drip-1": {
+  "duration": 0.9,
+  "loop": false
+ },
+ "drip-2": {
+  "duration": 0.9,
+  "loop": false
+ }
+}

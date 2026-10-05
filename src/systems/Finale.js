@@ -23,6 +23,7 @@ import { PPM } from '../world/tiles.js';
 import { BED_POINT } from '../world/houseMap.js';
 import { positional } from '../audio/Sfx.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
+import { foley } from '../audio/Foley.js';
 
 const WAKE_SECONDS = 1.2; // tela preta com o telefone já tocando
 const FADE_IN_SECONDS = 2.5;
@@ -226,6 +227,7 @@ export class Finale {
 
   async #answer() {
     this.#stopRinging();
+    foley.handsetUp();
     this.state = 'talking';
     const call = FINAL_CALLS[this.call];
     const hud = this.scene.hud;
@@ -251,16 +253,20 @@ export class Finale {
     const sfx = this.sfx;
     if (kind === 'steps') {
       // Passos no corredor da casa da Helena, abafados pelo telefone
-      for (let i = 0; i < 6; i++) this.scene.time.delayedCall(i * 520, () => sfx.step(0.22 + i * 0.05, 0));
+      for (let i = 0; i < 6; i++) {
+        this.scene.time.delayedCall(i * 620, () => sfx.play('step-heavy-*', { volume: 0.3 + i * 0.08, phone: true, rate: 0.85, vary: 0.05 }));
+      }
     } else if (kind === 'creak') sfx.doorCreak(0.4);
     else if (kind === 'screams') {
-      sfx.scream(0.5, true); // pelo telefone
+      // Pelo telefone: a Helena e a Clara
+      sfx.scream(0.3, true, 'woman');
+      this.scene.time.delayedCall(350, () => sfx.scream(0.25, true, 'girl'));
       // A luz pisca sem parar, a tela treme e falha
       this.storm = 1.8;
       this.scene.cameras.main.shake(900, 0.006);
       glitchCamera(this.scene, this.scene.cameras.main, 1.2, 0.8);
     }
-    else if (kind === 'busy') sfx.busyTone(5, 0.25);
+    else if (kind === 'busy') sfx.busyTone(5, 0.12);
   }
 
   /** Debug: pula direto para a reportagem. */

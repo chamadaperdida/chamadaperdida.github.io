@@ -1,24 +1,36 @@
-// Efeitos sonoros gerados por código (Web Audio): sons dos monstros, alucinações, telefone,
-// chuva da tela inicial etc. Os sons da casa e da delegacia (tarefas, portas, passos,
-// ambiente...) ficam em audio/Foley.js, montados com as peças públicas daqui (out, burst,
-// noiseSource, thump, loopHandle).
+// Som do jogo (Web Audio). As gravações reais (public/assets/audio, geradas por
+// `npm run audio` a partir de bancos CC0 — ver scripts/audio-manifest.mjs) são tocadas
+// com tratamento na hora: velocidade/tom, eco, reverberação, filtros (telefone, abafado),
+// som invertido. Sintetizado só o que é sintético de verdade: chiado/estática, bipe de
+// aparelho, digitação da caixa de diálogo e o clique dos menus.
 //
-// O navegador só libera áudio depois de uma tecla ou clique: o contexto liga sozinho
-// no primeiro toque do jogador.
+// Monstros, alucinações, telefone e ambiente da tela inicial ficam aqui; os sons da casa e
+// da delegacia (tarefas, portas, passos...) em audio/Foley.js.
 //
-// Volumes (opções, GDD 2.1): geral → { ambiente, efeitos }. Os sons de ambiente (chuva,
-// telefone ao longe da tela inicial) vão para o canal do ambiente; o resto, para os efeitos.
+// O navegador só libera áudio depois de uma tecla ou clique: o contexto liga sozinho no
+// primeiro toque do jogador; as gravações são baixadas no carregamento e decodificadas
+// assim que o contexto existe.
+//
+// Volumes (opções, GDD 2.1): geral → { ambiente, efeitos }.
 // Pausa (GDD 2.4): o contexto de áudio inteiro congela e volta de onde parou.
 
 import { options } from '../systems/Save.js';
 
-const MASTER_LEVEL = 0.7;
+const MASTER_LEVEL = 0.8;
+const AUDIO_DIR = 'assets/audio/';
+
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const rnd = (a, b) => a + Math.random() * (b - a);
 
 class Sfx {
   constructor() {
     this.ctx = null;
     this.paused = false;
     this.volumes = options.load();
+    this.raw = new Map(); // nome → ArrayBuffer (antes de decodificar)
+    this.buffers = new Map(); // nome → AudioBuffer
+    this.manifest = {};
+    this.cache = new Map(); // buffers derivados (invertidos, com silêncio no fim)
     const unlock = () => this.#ensure();
     window.addEventListener('keydown', unlock);
     window.addEventListener('pointerdown', unlock);
@@ -36,11 +48,13 @@ class Sfx {
       this.ambient = this.ctx.createGain();
       this.ambient.connect(this.master);
       this.#applyVolumes();
-      // 2 s de ruído branco, reaproveitado por todos os sons
+      // 2 s de ruído branco (chiado, estática, ruído de fundo)
       const len = this.ctx.sampleRate * 2;
       this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
       const data = this.noise.getChannelData(0);
       for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
+      this.#buildReverb();
+      this.#decodeAll();
     }
     if (this.ctx.state === 'suspended' && !this.paused) this.ctx.resume();
     return this.ctx;
@@ -50,7 +64,10 @@ class Sfx {
     return !!this.#ensure() && this.ctx.state === 'running';
   }
 
-  /** Volumes das opções: { master, ambient, effects } de 0 a 1. */
+  get now() {
+    return this.ctx.currentTime;
+  }
+
   setVolumes(v) {
     this.volumes = { ...this.volumes, ...v };
     if (this.ctx) this.#applyVolumes();
@@ -63,7 +80,6 @@ class Sfx {
     this.ambient.gain.setTargetAtTime(this.volumes.ambient, t, 0.02);
   }
 
-  /** Congela todo o som do jogo (pausa). */
   pause() {
     this.paused = true;
     if (this.ctx?.state === 'running') this.ctx.suspend();
@@ -74,134 +90,270 @@ class Sfx {
     if (this.ctx?.state === 'suspended') this.ctx.resume();
   }
 
-  /** Saída com volume e lado (pan −1 esquerda … 1 direita). */
-  #out(volume = 1, pan = 0, bus = this.effects) {
+  // ---- Gravações ---------------------------------------------------------------------
+
+  /** Baixa todas as gravações (chamado no carregamento do jogo). */
+  async loadSamples(version = '') {
+    try {
+      const res = await fetch(`${AUDIO_DIR}manifest.json${version}`);
+      this.manifest = await res.json();
+      await Promise.all(
+        Object.keys(this.manifest).map(async (name) => {
+          const r = await fetch(`${AUDIO_DIR}${name}.mp3${version}`);
+          this.raw.set(name, await r.arrayBuffer());
+        }),
+      );
+      if (this.ctx) this.#decodeAll();
+    } catch (e) {
+      console.warn('Sons não carregaram:', e);
+    }
+  }
+
+  #decodeAll() {
+    for (const [name, data] of this.raw) {
+      this.raw.delete(name);
+      this.ctx.decodeAudioData(data).then(
+        (buf) => this.buffers.set(name, buf),
+        () => console.warn('Som inválido:', name),
+      );
+    }
+  }
+
+  /** 'step-wood-*' → um dos step-wood-1, -2… carregados (sorteado). */
+  #buffer(name) {
+    if (!name.endsWith('*')) return this.buffers.get(name) ?? null;
+    const prefix = name.slice(0, -1);
+    const options = [...this.buffers.keys()].filter((k) => k.startsWith(prefix));
+    return options.length ? this.buffers.get(pick(options)) : null;
+  }
+
+  #reversed(buf) {
+    if (!this.cache.has(buf)) {
+      const out = this.ctx.createBuffer(buf.numberOfChannels, buf.length, buf.sampleRate);
+      for (let c = 0; c < buf.numberOfChannels; c++) out.getChannelData(c).set(Float32Array.from(buf.getChannelData(c)).reverse());
+      this.cache.set(buf, out);
+    }
+    return this.cache.get(buf);
+  }
+
+  /** O mesmo som seguido de silêncio até `total` s (para repetir em loop com intervalo). */
+  #padded(buf, total) {
+    const key = `${this.#nameOf(buf)}:${total}`;
+    if (!this.cache.has(key)) {
+      const len = Math.max(buf.length, Math.round(total * buf.sampleRate));
+      const out = this.ctx.createBuffer(1, len, buf.sampleRate);
+      out.getChannelData(0).set(buf.getChannelData(0));
+      this.cache.set(key, out);
+    }
+    return this.cache.get(key);
+  }
+
+  #nameOf(buf) {
+    for (const [k, v] of this.buffers) if (v === buf) return k;
+    return 'x';
+  }
+
+  /** Reverberação de cômodo/corredor: resposta ao impulso gerada (ruído decaindo). */
+  #buildReverb() {
+    const sr = this.ctx.sampleRate;
+    const len = Math.round(sr * 2.6);
+    const ir = this.ctx.createBuffer(2, len, sr);
+    for (let c = 0; c < 2; c++) {
+      const d = ir.getChannelData(c);
+      let lp = 0;
+      for (let i = 0; i < len; i++) {
+        lp += (Math.random() * 2 - 1 - lp) * 0.35; // abafa os agudos da cauda
+        d[i] = lp * Math.pow(1 - i / len, 3.2);
+      }
+    }
+    this.reverb = {};
+    for (const [key, bus] of [
+      ['effects', this.effects],
+      ['ambient', this.ambient],
+    ]) {
+      const conv = this.ctx.createConvolver();
+      conv.buffer = ir;
+      conv.connect(bus);
+      this.reverb[key] = conv;
+    }
+  }
+
+  /**
+   * Toca uma gravação. Devolve { setVolume(v, pan), setRate(r), stop(fade, dry), duration }
+   * (stop com dry = true corta também a cauda do eco e da reverberação).
+   * opts:
+   *   volume, pan, bus ('effects' | 'ambient'), when (tempo do áudio; padrão agora)
+   *   rate (velocidade e tom juntos), vary (±fração de rate sorteada), detune (cents)
+   *   loop, offset, duration, fadeIn
+   *   reverse, reverb (0–1, quanto vai para a reverberação), echo { time, feedback, mix }
+   *   filter { type, freq, q }, phone (filtro de linha telefônica), distort (0–1)
+   *   every (s): repete em loop com esse intervalo (toque de telefone, coração)
+   */
+  play(name, opts = {}) {
+    if (!this.ready) return this.silentHandle();
+    let buf = this.#buffer(name);
+    if (!buf) return this.silentHandle();
+    const ctx = this.ctx;
+    const {
+      volume = 1,
+      pan = 0,
+      bus = 'effects',
+      when = ctx.currentTime,
+      vary = 0,
+      detune = 0,
+      loop = false,
+      offset = 0,
+      duration,
+      fadeIn = 0,
+      reverse = false,
+      reverb = 0,
+      echo = null,
+      filter = null,
+      phone = false,
+      distort = 0,
+      every = 0,
+    } = opts;
+    if (reverse) buf = this.#reversed(buf);
+    if (every) buf = this.#padded(buf, every);
+    const rate = (opts.rate ?? 1) * (1 + rnd(-vary, vary));
+
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.playbackRate.value = rate;
+    src.detune.value = detune;
+    if (loop || every) {
+      src.loop = true;
+      // Pula o silêncio que o MP3 põe nas pontas (emenda sem estalo)
+      if (!every && buf.duration > 0.2) {
+        src.loopStart = 0.03;
+        src.loopEnd = buf.duration - 0.03;
+      }
+    }
+
+    // Cadeia: fonte → (distorção) → (filtros) → ganho → pan → saída (+ eco e reverberação)
+    let node = src;
+    const chain = (n) => {
+      node.connect(n);
+      node = n;
+    };
+    if (distort > 0) {
+      const ws = ctx.createWaveShaper();
+      const k = distort * 40;
+      const curve = new Float32Array(512);
+      for (let i = 0; i < 512; i++) {
+        const x = i / 256 - 1;
+        curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+      }
+      ws.curve = curve;
+      chain(ws);
+    }
+    if (phone) {
+      const hp = ctx.createBiquadFilter();
+      hp.type = 'highpass';
+      hp.frequency.value = 320;
+      const lp = ctx.createBiquadFilter();
+      lp.type = 'lowpass';
+      lp.frequency.value = 3200;
+      chain(hp);
+      chain(lp);
+    }
+    let filterNode = null;
+    if (filter) {
+      filterNode = ctx.createBiquadFilter();
+      filterNode.type = filter.type;
+      filterNode.frequency.value = filter.freq;
+      filterNode.Q.value = filter.q ?? 0.7;
+      chain(filterNode);
+    }
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(fadeIn ? 0.0001 : volume, when);
+    if (fadeIn) gain.gain.exponentialRampToValueAtTime(Math.max(volume, 0.0002), when + fadeIn);
+    chain(gain);
+    const panner = ctx.createStereoPanner();
+    panner.pan.value = Math.max(-1, Math.min(1, pan));
+    chain(panner);
+    const dest = bus === 'ambient' ? this.ambient : this.effects;
+    panner.connect(dest);
+    const tails = []; // eco e reverberação (cortados num stop "seco")
+    if (reverb > 0) {
+      const send = ctx.createGain();
+      tails.push(send);
+      send.gain.value = reverb;
+      panner.connect(send).connect(this.reverb[bus === 'ambient' ? 'ambient' : 'effects']);
+    }
+    if (echo) {
+      const delay = ctx.createDelay(2);
+      delay.delayTime.value = echo.time ?? 0.35;
+      const fb = ctx.createGain();
+      fb.gain.value = echo.feedback ?? 0.4;
+      const wet = ctx.createGain();
+      wet.gain.value = echo.mix ?? 0.5;
+      tails.push(wet);
+      panner.connect(delay);
+      delay.connect(fb).connect(delay);
+      delay.connect(wet).connect(dest);
+    }
+
+    if (duration !== undefined) src.start(when, offset, duration);
+    else src.start(when, offset);
+    let stopped = false;
+    return {
+      duration: (duration ?? buf.duration - offset) / rate,
+      filter: filterNode,
+      setVolume: (v, p = undefined) => {
+        if (stopped) return;
+        gain.gain.setTargetAtTime(v, ctx.currentTime, 0.05);
+        if (p !== undefined) panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, p)), ctx.currentTime, 0.05);
+      },
+      setRate: (r) => src.playbackRate.setTargetAtTime(r, ctx.currentTime, 0.1),
+      stop: (fade = 0.04, dry = false) => {
+        if (stopped) return;
+        stopped = true;
+        const t = ctx.currentTime;
+        if (dry) tails.forEach((n) => n.gain.setTargetAtTime(0, t, 0.005));
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setTargetAtTime(0, t, Math.max(0.005, fade / 3));
+        try {
+          src.stop(t + fade + 0.05);
+        } catch {
+          // já tinha parado
+        }
+      },
+    };
+  }
+
+  /** Vários handles como um só (camadas de um mesmo som). */
+  group(handles) {
+    return {
+      duration: Math.max(0, ...handles.map((h) => h.duration ?? 0)),
+      setVolume: (v, p) => handles.forEach((h) => h.setVolume(v, p)),
+      setRate: (r) => handles.forEach((h) => h.setRate?.(r)),
+      stop: (fade, dry) => handles.forEach((h) => h.stop(fade, dry)),
+    };
+  }
+
+  /** O mesmo handle, com o volume multiplicado por k (gravações mais baixas). */
+  scaled(handle, k) {
+    return { ...handle, setVolume: (v, p) => handle.setVolume(v * k, p) };
+  }
+
+  silentHandle() {
+    return { duration: 0, setVolume() {}, setRate() {}, stop() {} };
+  }
+
+  // ---- Peças sintéticas (usadas aqui e em Foley.js) ----------------------------------
+
+  /** Saída com volume e lado; bus: 'effects' ou 'ambient'. */
+  out(volume = 1, pan = 0, bus = 'effects') {
     const gain = this.ctx.createGain();
     gain.gain.value = volume;
     const panner = this.ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    gain.connect(panner).connect(bus);
+    gain.connect(panner).connect(bus === 'ambient' ? this.ambient : this.effects);
     return { gain, panner };
   }
 
-  // ---- Peças para outros módulos (audio/Foley.js) ------------------------------
-
-  get now() {
-    return this.ctx.currentTime;
-  }
-
-  /** Saída com volume e lado; bus: 'effects' ou 'ambient'. */
-  out(volume = 1, pan = 0, bus = 'effects') {
-    return this.#out(volume, pan, bus === 'ambient' ? this.ambient : this.effects);
-  }
-
-  burst(at, out, opts) {
-    this.#burst(at, out, opts);
-  }
-
   noiseSource() {
-    return this.#noiseSource();
-  }
-
-  thump(at, opts) {
-    this.#thump(at, opts);
-  }
-
-  footstepAt(at, volume, pan, pitch) {
-    this.#footstep(at, volume, pan, pitch);
-  }
-
-  loopHandle(gain, panner, stopNodes, onStop) {
-    return this.#loopHandle(gain, panner, stopNodes, onStop);
-  }
-
-  silentHandle() {
-    return this.#silentHandle();
-  }
-
-  // ---- Ambiente (tela inicial) ------------------------------------------------
-
-  /** Chuva contínua (ruído filtrado, com intensidade oscilando devagar). */
-  rainLoop(volume = 0.5) {
-    if (!this.ready) return this.#silentHandle();
-    const { gain, panner } = this.#out(volume, 0, this.ambient);
-    const layers = [
-      { type: 'lowpass', freq: 900, q: 0.4, level: 0.9 },
-      { type: 'bandpass', freq: 2400, q: 0.6, level: 0.35 },
-      { type: 'highpass', freq: 6000, q: 0.5, level: 0.12 },
-    ];
-    const nodes = [];
-    for (const l of layers) {
-      const n = this.#noiseSource();
-      const f = this.ctx.createBiquadFilter();
-      f.type = l.type;
-      f.frequency.value = l.freq;
-      f.Q.value = l.q;
-      const g = this.ctx.createGain();
-      g.gain.value = l.level;
-      n.connect(f).connect(g).connect(gain);
-      n.start();
-      nodes.push(n);
-    }
-    // Rajadas: a chuva engrossa e afina devagar
-    const lfo = this.ctx.createOscillator();
-    lfo.frequency.value = 0.07;
-    const depth = this.ctx.createGain();
-    depth.gain.value = volume * 0.3;
-    lfo.connect(depth).connect(gain.gain);
-    lfo.start();
-    nodes.push(lfo);
-    return this.#loopHandle(gain, panner, nodes);
-  }
-
-  /** Trovão: estalo seco e depois um ronco grave que vai sumindo. */
-  thunder(volume = 0.5) {
-    if (!this.ready) return;
-    const { gain } = this.#out(volume * 4, (Math.random() - 0.5) * 0.8, this.ambient);
-    const at = this.ctx.currentTime + 0.02;
-    this.#burst(at, gain, { filter: { type: 'lowpass', freq: 1400, q: 0.5 }, attack: 0.005, decay: 0.35, level: 0.35 });
-    this.#burst(at + 0.05, gain, { filter: { type: 'lowpass', freq: 160, q: 0.8 }, attack: 0.25, decay: 3.4, level: 1 });
-    this.#burst(at + 0.6, gain, { filter: { type: 'lowpass', freq: 90, q: 1 }, attack: 0.4, decay: 2.6, level: 0.8 });
-  }
-
-  /** Um telefone antigo tocando três vezes, ao longe (abafado, com eco). */
-  distantRing(volume = 0.25, pan = 0) {
-    if (!this.ready) return;
-    const { gain } = this.#out(volume, pan, this.ambient);
-    const lp = this.ctx.createBiquadFilter();
-    lp.type = 'lowpass';
-    lp.frequency.value = 1100;
-    const ring = this.ctx.createGain();
-    ring.gain.value = 0;
-    ring.connect(lp).connect(gain);
-    // Eco de corredor
-    const delay = this.ctx.createDelay();
-    delay.delayTime.value = 0.23;
-    const fb = this.ctx.createGain();
-    fb.gain.value = 0.35;
-    lp.connect(delay).connect(fb).connect(delay);
-    fb.connect(gain);
-    const t0 = this.ctx.currentTime + 0.05;
-    const end = t0 + 3 * 3;
-    for (const f of [880, 1040]) {
-      const o = this.ctx.createOscillator();
-      o.type = 'square';
-      o.frequency.value = f;
-      const g = this.ctx.createGain();
-      g.gain.value = 0.08;
-      o.connect(g).connect(ring);
-      o.start(t0);
-      o.stop(end);
-    }
-    for (let cycle = 0; cycle < 3; cycle++) {
-      const start = t0 + cycle * 3;
-      for (let k = 0; k < 20; k++) ring.gain.setValueAtTime(k % 2 ? 0 : 1, start + k * 0.05);
-      ring.gain.setValueAtTime(0, start + 1);
-    }
-    return { stop: () => gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.05) };
-  }
-
-  #noiseSource() {
     const src = this.ctx.createBufferSource();
     src.buffer = this.noise;
     src.loop = true;
@@ -209,39 +361,9 @@ class Sfx {
     return src;
   }
 
-  /** Batida grave (passo pesado, coração). */
-  #thump(at, { freq = 70, dur = 0.12, volume = 1, pan = 0, noise = 0.4 }) {
-    const { gain } = this.#out(volume, pan);
-    const env = this.ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(1, at + 0.008);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-    env.connect(gain);
-    const osc = this.ctx.createOscillator();
-    osc.frequency.setValueAtTime(freq * 1.8, at);
-    osc.frequency.exponentialRampToValueAtTime(freq, at + dur * 0.6);
-    osc.connect(env);
-    osc.start(at);
-    osc.stop(at + dur + 0.02);
-    if (noise > 0) {
-      const n = this.#noiseSource();
-      const lp = this.ctx.createBiquadFilter();
-      lp.type = 'lowpass';
-      lp.frequency.value = 500;
-      const ng = this.ctx.createGain();
-      ng.gain.value = noise;
-      n.connect(lp).connect(ng).connect(env);
-      n.start(at);
-      n.stop(at + dur + 0.02);
-    }
-  }
-
-  /**
-   * Ruído filtrado com envelope curto: a base dos sons de impacto (passo, estouro, respingo).
-   * filter: { type, freq, q } · attack/decay em segundos.
-   */
-  #burst(at, out, { filter, attack = 0.002, decay = 0.08, level = 1 }) {
-    const n = this.#noiseSource();
+  /** Ruído filtrado com envelope curto. */
+  burst(at, out, { filter, attack = 0.002, decay = 0.08, level = 1 }) {
+    const n = this.noiseSource();
     const f = this.ctx.createBiquadFilter();
     f.type = filter.type;
     f.frequency.value = filter.freq;
@@ -255,134 +377,40 @@ class Sfx {
     n.stop(at + attack + decay + 0.02);
   }
 
-  /** Um passo pesado no piso de madeira: calcanhar + ponta do pé, madeira estalando. */
-  #footstep(at, volume, pan, pitch = 1) {
-    // Ruído filtrado perde muita energia: ganho extra para ficar no volume dos outros sons
-    const { gain } = this.#out(volume * 6, pan);
-    const jitter = (0.85 + Math.random() * 0.3) * pitch;
-    // Calcanhar: batida abafada no taco (grave, sem "tom" de tambor)
-    this.#burst(at, gain, { filter: { type: 'lowpass', freq: 260 * jitter, q: 0.9 }, decay: 0.07, level: 1 });
-    // Madeira cedendo: corpo médio curtinho
-    this.#burst(at + 0.004, gain, { filter: { type: 'bandpass', freq: 520 * jitter, q: 2.5 }, decay: 0.045, level: 0.35 });
-    // Ponta do pé, logo depois e mais fraca
-    const toe = at + 0.06 + Math.random() * 0.02;
-    this.#burst(toe, gain, { filter: { type: 'lowpass', freq: 340 * jitter, q: 0.8 }, decay: 0.05, level: 0.45 });
-    // Arrasto da sola (bem baixinho)
-    this.#burst(toe, gain, { filter: { type: 'highpass', freq: 2500, q: 0.5 }, attack: 0.01, decay: 0.05, level: 0.06 });
+  loopHandle(gain, panner, stopNodes) {
+    return {
+      setVolume: (v, pan = 0) => {
+        gain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05);
+        panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), this.ctx.currentTime, 0.05);
+      },
+      setRate() {},
+      stop: () => {
+        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.03);
+        const at = this.ctx.currentTime + 0.2;
+        stopNodes.forEach((n) => n.stop(at));
+      },
+    };
   }
 
-  /** Passos pesados correndo (passos falsos / Artur distorcido), passando de um lado ao outro. */
-  heavySteps(seconds = 2.6, panFrom = -0.8, panTo = 0.8, volume = 0.9) {
-    if (!this.ready) return;
-    const t0 = this.ctx.currentTime + 0.05;
-    let t = 0;
-    while (t < seconds) {
-      const k = t / seconds;
-      // Mais alto no meio (passa perto), mais baixo nas pontas
-      const v = volume * (0.35 + 0.65 * Math.sin(Math.PI * k));
-      this.#footstep(t0 + t, v, panFrom + (panTo - panFrom) * k);
-      t += 0.3 + Math.random() * 0.05; // ritmo irregular de alguém correndo pesado
-    }
+  /** Chiado contínuo (TV, estática da morte, ligações-alucinação). */
+  staticLoop(volume = 0.4) {
+    if (!this.ready) return this.silentHandle();
+    const { gain, panner } = this.out(volume);
+    const n = this.noiseSource();
+    const bp = this.ctx.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.frequency.value = 3000;
+    bp.Q.value = 0.4;
+    n.connect(bp).connect(gain);
+    n.start();
+    return this.loopHandle(gain, panner, [n]);
   }
 
-  /** Uma batida do coração (tum-tum). period = tempo até a próxima batida (s). */
-  heartBeat(volume = 0.6, period = 0.8) {
-    if (!this.ready) return;
-    const t = this.ctx.currentTime + 0.01;
-    const gap = Math.min(0.2, period * 0.32);
-    this.#thump(t, { freq: 48, dur: 0.14, volume, noise: 0.2 });
-    this.#thump(t + gap, { freq: 42, dur: 0.16, volume: volume * 0.72, noise: 0.2 });
-  }
-
-  /** Coração batendo forte (toda vez que o medo sobe muito). */
-  heartbeat(beats = 2, volume = 0.9) {
-    if (!this.ready) return;
-    const t0 = this.ctx.currentTime + 0.02;
-    for (let b = 0; b < beats; b++) {
-      const t = t0 + b * 0.75;
-      this.#thump(t, { freq: 48, dur: 0.14, volume, noise: 0.2 });
-      this.#thump(t + 0.2, { freq: 42, dur: 0.18, volume: volume * 0.75, noise: 0.2 });
-    }
-  }
-
-  /** Estouro de balão: estalo seco e curtíssimo, com um "tapa" de borracha. */
-  pop(volume = 0.8, pan = 0) {
-    if (!this.ready) return;
-    const at = this.ctx.currentTime;
-    const { gain } = this.#out(volume * 1.8, pan);
-    // Estalo: ruído de banda larga, ataque instantâneo, some em ~25 ms
-    this.#burst(at, gain, { filter: { type: 'bandpass', freq: 1800, q: 0.5 }, attack: 0.0005, decay: 0.025, level: 1 });
-    // Corpo do estouro (ar saindo de uma vez)
-    this.#burst(at, gain, { filter: { type: 'lowpass', freq: 700, q: 0.7 }, attack: 0.001, decay: 0.06, level: 0.5 });
-    // Borracha batendo (bem curto, agudo)
-    this.#burst(at + 0.02, gain, { filter: { type: 'highpass', freq: 3500, q: 0.7 }, attack: 0.001, decay: 0.03, level: 0.15 });
-  }
-
-  /** Gota caindo numa poça: "plim" de bolha (tom subindo) + respingo + eco do cômodo. */
-  drip(volume = 0.5, pan = 0) {
-    if (!this.ready || volume <= 0.01) return;
-    const at = this.ctx.currentTime;
-    const { gain } = this.#out(volume, pan);
-    // Eco curto, como num cômodo vazio
-    const delay = this.ctx.createDelay();
-    delay.delayTime.value = 0.07;
-    const fb = this.ctx.createGain();
-    fb.gain.value = 0.25;
-    const wet = this.ctx.createGain();
-    wet.gain.value = 0.35;
-    delay.connect(fb).connect(delay);
-    delay.connect(wet).connect(gain);
-    // Bolha: a frequência SOBE rápido (é isso que dá o som de gota)
-    const osc = this.ctx.createOscillator();
-    osc.type = 'sine';
-    const f0 = 700 + Math.random() * 250;
-    osc.frequency.setValueAtTime(f0, at);
-    osc.frequency.exponentialRampToValueAtTime(f0 * 2.2, at + 0.035);
-    const env = this.ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(0.5, at + 0.003);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.06);
-    osc.connect(env);
-    env.connect(gain);
-    env.connect(delay);
-    osc.start(at);
-    osc.stop(at + 0.08);
-    // Respingo baixinho
-    this.#burst(at, gain, { filter: { type: 'highpass', freq: 4000, q: 0.6 }, attack: 0.001, decay: 0.02, level: 0.12 });
-  }
-
-  /** Nota curta de caixinha de música (urso coletado): duas notas suaves, sem melodia conhecida. */
-  musicBox(volume = 0.35) {
-    if (!this.ready) return;
-    const at = this.ctx.currentTime + 0.01;
-    const { gain } = this.#out(volume);
-    for (const [freq, delay] of [
-      [1318.5, 0],
-      [1046.5, 0.22],
-    ]) {
-      for (const [mult, level] of [
-        [1, 1],
-        [3, 0.18],
-      ]) {
-        const osc = this.ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = freq * mult;
-        const env = this.ctx.createGain();
-        env.gain.setValueAtTime(0.0001, at + delay);
-        env.gain.exponentialRampToValueAtTime(level, at + delay + 0.005);
-        env.gain.exponentialRampToValueAtTime(0.0001, at + delay + 1.1);
-        osc.connect(env).connect(gain);
-        osc.start(at + delay);
-        osc.stop(at + delay + 1.2);
-      }
-    }
-  }
-
-  /** Bipe de aparelho (micro-ondas, máquina de lavar terminou). */
+  /** Bipe eletrônico de aparelho (máquina de lavar terminou). */
   beep(times = 3, volume = 0.25, pan = 0) {
     if (!this.ready) return;
     const at = this.ctx.currentTime + 0.01;
-    const { gain } = this.#out(volume, pan);
+    const { gain } = this.out(volume, pan);
     for (let i = 0; i < times; i++) {
       const osc = this.ctx.createOscillator();
       osc.type = 'square';
@@ -390,8 +418,8 @@ class Sfx {
       const env = this.ctx.createGain();
       const t = at + i * 0.32;
       env.gain.setValueAtTime(0.0001, t);
-      env.gain.exponentialRampToValueAtTime(0.4, t + 0.005);
-      env.gain.setValueAtTime(0.4, t + 0.16);
+      env.gain.exponentialRampToValueAtTime(0.25, t + 0.005);
+      env.gain.setValueAtTime(0.25, t + 0.16);
       env.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
       osc.connect(env).connect(gain);
       osc.start(t);
@@ -399,225 +427,40 @@ class Sfx {
     }
   }
 
-  /** Clique de tranca/destrancar. */
-  lockClick(volume = 0.8, pan = 0) {
+  /** Clique dos menus. */
+  uiClick(volume = 0.25) {
     if (!this.ready) return;
-    const at = this.ctx.currentTime;
-    this.#thump(at, { freq: 900, dur: 0.04, volume: volume * 0.5, pan, noise: 0.8 });
-    this.#thump(at + 0.09, { freq: 600, dur: 0.06, volume, pan, noise: 0.9 });
+    const { gain } = this.out(volume * 2);
+    this.burst(this.ctx.currentTime, gain, { filter: { type: 'bandpass', freq: 1800, q: 1 }, decay: 0.03, level: 1 });
   }
 
-  /** Chiado contínuo (TV). Devolve { setVolume(v, pan), stop() }. */
-  staticLoop(volume = 0.4) {
-    if (!this.ready) return { setVolume() {}, stop() {} };
-    const { gain, panner } = this.#out(volume);
-    const n = this.#noiseSource();
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 3000;
-    bp.Q.value = 0.4;
-    n.connect(bp).connect(gain);
-    n.start();
-    return {
-      setVolume: (v, pan = 0) => {
-        gain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05);
-        panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), this.ctx.currentTime, 0.05);
-      },
-      stop: () => {
-        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.02);
-        n.stop(this.ctx.currentTime + 0.1);
-      },
-    };
-  }
-
-  /** Telefone antigo tocando (campainha), em ciclos. Devolve { setVolume(v, pan), stop() }. */
-  phoneRing(volume = 0.5) {
-    if (!this.ready) return { setVolume() {}, stop() {} };
-    const { gain, panner } = this.#out(volume);
-    const ring = this.ctx.createGain();
-    ring.gain.value = 0;
-    ring.connect(gain);
-    // Campainha: dois tons batendo, liga e desliga rápido (sino), 1 s tocando / 2 s parado
-    const oscs = [880, 1040].map((f) => {
-      const o = this.ctx.createOscillator();
-      o.type = 'square';
-      o.frequency.value = f;
-      const g = this.ctx.createGain();
-      g.gain.value = 0.08;
-      o.connect(g).connect(ring);
-      o.start();
-      return o;
-    });
-    const t0 = this.ctx.currentTime + 0.05;
-    for (let cycle = 0; cycle < 20; cycle++) {
-      const start = t0 + cycle * 3;
-      for (let k = 0; k < 20; k++) {
-        const t = start + k * 0.05;
-        ring.gain.setValueAtTime(k % 2 ? 0 : 1, t);
-      }
-      ring.gain.setValueAtTime(0, start + 1);
-    }
-    return {
-      setVolume: (v, pan = 0) => {
-        gain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05);
-        panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), this.ctx.currentTime, 0.05);
-      },
-      stop: () => {
-        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.01);
-        oscs.forEach((o) => o.stop(this.ctx.currentTime + 0.1));
-      },
-    };
-  }
-
-  // ---- Monstros (etapa 6) — provisórios até a etapa 11 -----------------------
-
-  /** Um passo avulso (ex.: Artur distorcido se aproximando). heavy = mais grave e forte. */
-  step(volume = 0.6, pan = 0, heavy = false) {
-    if (!this.ready || volume <= 0.01) return;
-    this.#footstep(this.ctx.currentTime, volume * (heavy ? 1.4 : 1), pan, heavy ? 0.7 : 1);
+  /** Corta todo o som por um instante (início do jumpscare, GDD 13.6). */
+  cutFor(seconds) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime;
+    this.master.gain.cancelScheduledValues(t);
+    this.master.gain.setValueAtTime(0, t);
+    this.master.gain.setValueAtTime(MASTER_LEVEL * this.volumes.master, t + seconds);
   }
 
   /**
-   * Chaveiro tilintando (Invasor, GDD 6): várias chaves batendo umas nas outras, metálico e
-   * agudo. Toca um "chacoalhar" curto; o Invasor chama a cada passo.
-   */
-  keyJingle(volume = 0.5, pan = 0) {
-    if (!this.ready || volume <= 0.01) return;
-    const { gain } = this.#out(volume * 0.5, pan);
-    const at = this.ctx.currentTime;
-    const clinks = 3 + Math.floor(Math.random() * 3);
-    for (let i = 0; i < clinks; i++) {
-      const t = at + i * (0.025 + Math.random() * 0.035);
-      // Metal: parciais inarmônicas agudas, decaimento curto e diferente em cada uma
-      const base = 2600 + Math.random() * 2200;
-      for (const [ratio, level, decay] of [
-        [1, 0.5, 0.12],
-        [1.47, 0.3, 0.08],
-        [2.09, 0.2, 0.05],
-      ]) {
-        const osc = this.ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.value = base * ratio;
-        const env = this.ctx.createGain();
-        env.gain.setValueAtTime(0.0001, t);
-        env.gain.exponentialRampToValueAtTime(level, t + 0.002);
-        env.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-        osc.connect(env).connect(gain);
-        osc.start(t);
-        osc.stop(t + decay + 0.02);
-      }
-      // Batida das chaves (ruído bem agudo, curtinho)
-      this.#burst(t, gain, { filter: { type: 'highpass', freq: 5000, q: 0.7 }, attack: 0.0005, decay: 0.012, level: 0.6 });
-    }
-  }
-
-  /**
-   * Sussurro do Artur, distorcido (Artur distorcido, GDD 6). Contínuo: frases sussurradas
-   * (sílabas de ruído com formantes de vogal) com pausas, tom de voz masculina sem voz
-   * (só ar) e uma modulação que deixa tudo "errado". Devolve { setVolume(v, pan), stop() }.
-   */
-  whisperLoop() {
-    if (!this.ready) return this.#silentHandle();
-    const { gain, panner } = this.#out(0);
-    const n = this.#noiseSource();
-    // Formantes de vogais (voz masculina): a cada sílaba, uma vogal diferente
-    const VOWELS = [
-      [730, 1090],
-      [530, 1840],
-      [270, 2290],
-      [570, 840],
-      [300, 870],
-    ];
-    const f1 = this.ctx.createBiquadFilter();
-    f1.type = 'bandpass';
-    f1.Q.value = 6;
-    const f2 = this.ctx.createBiquadFilter();
-    f2.type = 'bandpass';
-    f2.Q.value = 8;
-    // Chiado do "s" e do "f" do sussurro
-    const hiss = this.ctx.createBiquadFilter();
-    hiss.type = 'highpass';
-    hiss.frequency.value = 4500;
-    const syll = this.ctx.createGain();
-    syll.gain.value = 0;
-    const hissGain = this.ctx.createGain();
-    hissGain.gain.value = 0;
-    // Modulação em anel lenta e grave: a voz parece vir "de dentro", deformada
-    const ring = this.ctx.createGain();
-    ring.gain.value = 0.6;
-    const lfo = this.ctx.createOscillator();
-    lfo.frequency.value = 38;
-    const lfoGain = this.ctx.createGain();
-    lfoGain.gain.value = 0.4;
-    lfo.connect(lfoGain).connect(ring.gain);
-    n.connect(f1).connect(syll);
-    n.connect(f2).connect(syll);
-    n.connect(hiss).connect(hissGain);
-    syll.connect(ring);
-    hissGain.connect(ring);
-    // Ganho alto: ruído em filtro estreito perde muita energia
-    const makeup = this.ctx.createGain();
-    makeup.gain.value = 9;
-    ring.connect(makeup).connect(gain);
-    // Eco curto, como num corredor
-    const delay = this.ctx.createDelay();
-    delay.delayTime.value = 0.17;
-    const fb = this.ctx.createGain();
-    fb.gain.value = 0.25;
-    makeup.connect(delay).connect(fb).connect(delay);
-    fb.connect(gain);
-
-    // Frases: 3 a 7 sílabas, pausas de 0,6 a 1,6 s (agendado para ~60 s)
-    const t0 = this.ctx.currentTime + 0.1;
-    let t = 0;
-    while (t < 60) {
-      const count = 3 + Math.floor(Math.random() * 5);
-      for (let k = 0; k < count; k++) {
-        const at = t0 + t;
-        const [a, b] = VOWELS[Math.floor(Math.random() * VOWELS.length)];
-        const shift = 0.9 + Math.random() * 0.2;
-        f1.frequency.setValueAtTime(a * shift, at);
-        f2.frequency.setValueAtTime(b * shift, at);
-        const len = 0.12 + Math.random() * 0.12;
-        syll.gain.setValueAtTime(0, at);
-        syll.gain.linearRampToValueAtTime(1, at + 0.03);
-        syll.gain.linearRampToValueAtTime(0, at + len);
-        // Às vezes uma consoante sibilante antes da vogal
-        if (Math.random() < 0.4) {
-          hissGain.gain.setValueAtTime(0, at - 0.06);
-          hissGain.gain.linearRampToValueAtTime(0.05, at - 0.03);
-          hissGain.gain.linearRampToValueAtTime(0, at);
-        }
-        t += len + 0.03 + Math.random() * 0.05;
-      }
-      t += 0.6 + Math.random() * 1.0;
-    }
-    n.start();
-    lfo.start();
-    return this.#loopHandle(gain, panner, [n, lfo]);
-  }
-
-  /**
-   * Som de digitação da caixa de diálogo (um a cada poucas letras).
-   * voice: { kind: 'voice' | 'paper' | 'fx', freq (Hz, só voz), wave } · glitch: voz distorcida.
+   * Som da digitação da caixa de diálogo: um "blip" com a voz de quem fala (grave para
+   * homens, mais agudo para mulheres e crianças); efeitos soam como um tique abafado.
    */
   textBlip(voice, glitch = false, volume = 0.12) {
     if (!this.ready) return;
     const at = this.ctx.currentTime;
-    const { gain } = this.#out(volume);
+    const { gain } = this.out(volume);
     if (voice.kind === 'paper') {
-      // Caneta/papel: raspadinha aguda
-      this.#burst(at, gain, { filter: { type: 'bandpass', freq: 3200 + Math.random() * 800, q: 1.5 }, decay: 0.03, level: 3 });
+      this.burst(at, gain, { filter: { type: 'bandpass', freq: 3200 + Math.random() * 800, q: 1.5 }, decay: 0.03, level: 3 });
       return;
     }
     if (voice.kind === 'fx') {
-      // Efeito/ação: tique abafado
-      this.#burst(at, gain, { filter: { type: 'lowpass', freq: 900, q: 0.7 }, decay: 0.025, level: 2 });
+      this.burst(at, gain, { filter: { type: 'lowpass', freq: 900, q: 0.7 }, decay: 0.025, level: 2 });
       return;
     }
     const osc = this.ctx.createOscillator();
     osc.type = voice.wave ?? 'square';
-    // Cada letra varia um pouco; distorcida: tom oscilando bem mais
     const spread = glitch ? 0.35 : 0.06;
     const f = voice.freq * (1 + (Math.random() * 2 - 1) * spread);
     osc.frequency.setValueAtTime(f, at);
@@ -634,302 +477,200 @@ class Sfx {
     osc.stop(at + 0.06);
   }
 
-  /** Estalos secos (Clara correndo de quatro). */
-  cracks(volume = 0.5, pan = 0) {
+  // ---- Ambiente (tela inicial) -------------------------------------------------------
+
+  /** Chuva contínua. */
+  rainLoop(volume = 0.5) {
+    return this.play('rain', { loop: true, volume, bus: 'ambient', fadeIn: 1.5 });
+  }
+
+  /** Trovão (de um lado ou do outro, com o cômodo ecoando). */
+  thunder(volume = 0.5) {
+    this.play('thunder', { volume: volume * 3.5, bus: 'ambient', pan: rnd(-0.5, 0.5), vary: 0.08, reverb: 0.25 });
+  }
+
+  /** Um telefone antigo tocando três vezes, ao longe (abafado, com eco). */
+  distantRing(volume = 0.25, pan = 0) {
+    if (!this.ready) return this.silentHandle();
+    const t = this.ctx.currentTime + 0.05;
+    return this.group(
+      [0, 4, 8].map((dt) =>
+        this.play('ring-house', { when: t + dt, volume, pan, bus: 'ambient', filter: { type: 'lowpass', freq: 1400 }, reverb: 0.7 }),
+      ),
+    );
+  }
+
+  // ---- Telefone ----------------------------------------------------------------------
+
+  /** Telefone tocando em ciclos até stop(): 'house' (fixo da sala) ou 'office' (delegacia). */
+  phoneRing(volume = 0.5, kind = 'house') {
+    return this.play(kind === 'office' ? 'ring-office' : 'ring-house', { volume, every: 4 });
+  }
+
+  /** Tom de linha ocupada por `seconds`. */
+  busyTone(seconds = 4, volume = 0.3) {
+    const h = this.play('busy', { loop: true, volume, phone: true });
+    setTimeout(() => h.stop(0.05), seconds * 1000);
+    return h;
+  }
+
+  /** Porta rangendo devagar; phone: abafada como se viesse pela linha. */
+  doorCreak(volume = 0.5, phone = true) {
+    this.play('creak', { volume, phone, rate: 0.85, reverb: phone ? 0.15 : 0.35 });
+  }
+
+  // ---- Corpo -------------------------------------------------------------------------
+
+  /** Uma batida do coração (tum-tum). period = tempo até a próxima batida (s). */
+  heartBeat(volume = 0.6, period = 0.8) {
+    this.play('heart', { volume: volume * 0.5, rate: Math.min(1.5, Math.max(0.9, 0.75 / period)), filter: { type: 'lowpass', freq: 400 } });
+  }
+
+  /** Coração batendo forte algumas vezes. */
+  heartbeat(beats = 2, volume = 0.9) {
     if (!this.ready) return;
-    const { gain } = this.#out(volume * 4, pan);
-    const at = this.ctx.currentTime;
-    for (let i = 0; i < 2; i++) {
-      this.#burst(at + i * 0.04 + Math.random() * 0.02, gain, {
-        filter: { type: 'bandpass', freq: 2500 + Math.random() * 1500, q: 3 },
-        attack: 0.0005,
-        decay: 0.015,
-        level: 1,
+    const t = this.ctx.currentTime + 0.02;
+    for (let b = 0; b < beats; b++) this.play('heart', { when: t + b * 0.75, volume: volume * 0.5, filter: { type: 'lowpass', freq: 400 } });
+  }
+
+  // ---- Alucinações -------------------------------------------------------------------
+
+  /** Balão estourando (seco, no cômodo). */
+  pop(volume = 0.8, pan = 0) {
+    this.play('balloon-pop', { volume, pan, reverb: 0.2 });
+  }
+
+  /** Gota caindo na poça, com o eco do cômodo vazio. */
+  drip(volume = 0.5, pan = 0) {
+    if (volume <= 0.01) return;
+    this.play('drip-*', { volume, pan, vary: 0.08, reverb: 0.35 });
+  }
+
+  /** Caixinha de música (urso coletado): duas notas, a segunda uma terça abaixo. */
+  musicBox(volume = 0.35) {
+    if (!this.ready) return;
+    const t = this.ctx.currentTime + 0.01;
+    this.play('music-box', { when: t, volume, reverb: 0.3 });
+    this.play('music-box', { when: t + 0.28, volume: volume * 0.8, rate: 2 ** (-3 / 12), reverb: 0.3 });
+  }
+
+  /** Passos pesados correndo (passos falsos), passando de um lado ao outro. */
+  heavySteps(seconds = 2.6, panFrom = -0.8, panTo = 0.8, volume = 0.9) {
+    if (!this.ready) return;
+    const t0 = this.ctx.currentTime + 0.05;
+    for (let t = 0; t < seconds; t += 0.3 + Math.random() * 0.05) {
+      const k = t / seconds;
+      this.play('step-heavy-*', {
+        when: t0 + t,
+        volume: volume * (0.35 + 0.65 * Math.sin(Math.PI * k)),
+        pan: panFrom + (panTo - panFrom) * k,
+        rate: 0.8,
+        vary: 0.05,
+        filter: { type: 'lowpass', freq: 1200 },
+        reverb: 0.25,
       });
     }
   }
 
-  /** Corta todo o som por um instante (início do jumpscare, GDD 13.6). */
-  cutFor(seconds) {
-    if (!this.ready) return;
-    const t = this.ctx.currentTime;
-    this.master.gain.cancelScheduledValues(t);
-    this.master.gain.setValueAtTime(0, t);
-    this.master.gain.setValueAtTime(MASTER_LEVEL * this.volumes.master, t + seconds);
+  // ---- Monstros ----------------------------------------------------------------------
+
+  /** Um passo: heavy = Artur distorcido (grave, arrastado, pesado). */
+  step(volume = 0.6, pan = 0, heavy = false) {
+    if (volume <= 0.01) return;
+    if (heavy) {
+      this.play('step-heavy-*', { volume: volume * 0.85, pan, rate: 0.68, vary: 0.04, filter: { type: 'lowpass', freq: 900 }, reverb: 0.3 });
+    } else this.play('step-wood-*', { volume, pan, vary: 0.05 });
   }
 
-  /** Voz "sintética" com formantes (base da risada e do choro). Devolve nós para controlar. */
-  #voice(baseFreq, formants) {
-    const src = this.ctx.createOscillator();
-    src.type = 'sawtooth';
-    src.frequency.value = baseFreq;
-    const vib = this.ctx.createOscillator();
-    vib.frequency.value = 6;
-    const vibGain = this.ctx.createGain();
-    vibGain.gain.value = baseFreq * 0.04;
-    vib.connect(vibGain).connect(src.frequency);
-    const sum = this.ctx.createGain();
-    sum.gain.value = 0;
-    for (const [f, q, g] of formants) {
-      const bp = this.ctx.createBiquadFilter();
-      bp.type = 'bandpass';
-      bp.frequency.value = f;
-      bp.Q.value = q;
-      const fg = this.ctx.createGain();
-      fg.gain.value = g;
-      src.connect(bp).connect(fg).connect(sum);
-    }
-    src.start();
-    vib.start();
-    return { src, vib, sum };
-  }
-
-  #loopHandle(gain, panner, stopNodes, onStop) {
-    return {
-      setVolume: (v, pan = 0) => {
-        gain.gain.setTargetAtTime(v, this.ctx.currentTime, 0.05);
-        panner.pan.setTargetAtTime(Math.max(-1, Math.min(1, pan)), this.ctx.currentTime, 0.05);
-      },
-      stop: () => {
-        gain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.03);
-        const at = this.ctx.currentTime + 0.2;
-        stopNodes.forEach((n) => n.stop(at));
-        onStop?.();
-      },
-    };
-  }
-
-  #silentHandle() {
-    return { setVolume() {}, stop() {} };
+  /** Chaveiro tilintando (Invasor, a cada passo; evento da tranca). */
+  keyJingle(volume = 0.5, pan = 0) {
+    this.play('keys-*', { volume, pan, vary: 0.06, reverb: 0.15 });
   }
 
   /**
-   * Risadas de criança, distorcidas (Clara). Toca por `seconds` e para sozinha.
-   * Sílabas "hi-hi-hi" curtas, agudas, com distorção e eco.
+   * Sussurro do Artur distorcido: voz de homem sussurrando, mais lenta e grave, com eco
+   * de corredor e um pouco rasgada; por baixo, outro sussurro invertido.
+   */
+  whisperLoop() {
+    // As gravações de sussurro são bem baixas: ×6
+    return this.scaled(this.group([
+      this.play('whisper-man', { loop: true, volume: 0, rate: 0.72, distort: 0.25, reverb: 0.5, echo: { time: 0.28, feedback: 0.35, mix: 0.35 } }),
+      this.play('whisper-man-2', { loop: true, volume: 0, rate: 0.6, reverse: true, filter: { type: 'lowpass', freq: 1800 }, reverb: 0.6 }),
+    ]), 6);
+  }
+
+  /** Ossos estalando (Clara correndo de quatro). */
+  cracks(volume = 0.5, pan = 0) {
+    this.play('crack-*', { volume: volume * 3.6, pan, vary: 0.15, reverb: 0.15 });
+  }
+
+  /**
+   * Risada da Clara: menina rindo, mais lenta e grave do que o normal, com eco; às vezes
+   * a risada volta invertida. Toca por `seconds` e para sozinha.
    */
   laugh(seconds = 5, volume = 0.6, pan = 0) {
-    if (!this.ready) return this.#silentHandle();
-    const { gain, panner } = this.#out(volume, pan);
-    const v = this.#voice(520, [
-      [900, 6, 1],
-      [2600, 8, 0.6],
-    ]);
-    // Distorção leve ("diabólica")
-    const shaper = this.ctx.createWaveShaper();
-    const curve = new Float32Array(256);
-    for (let i = 0; i < 256; i++) {
-      const x = (i / 128) - 1;
-      curve[i] = Math.tanh(3 * x);
-    }
-    shaper.curve = curve;
-    const delay = this.ctx.createDelay();
-    delay.delayTime.value = 0.11;
-    const fb = this.ctx.createGain();
-    fb.gain.value = 0.3;
-    v.sum.connect(shaper).connect(gain);
-    shaper.connect(delay).connect(fb).connect(delay);
-    fb.connect(gain);
-    // Sílabas: rajadas de risada com pausas
+    if (!this.ready) return this.silentHandle();
     const t0 = this.ctx.currentTime + 0.05;
+    const parts = [];
     let t = 0;
-    while (t < seconds - 0.2) {
-      const burst = 3 + Math.floor(Math.random() * 4);
-      for (let k = 0; k < burst && t < seconds - 0.2; k++) {
-        const at = t0 + t;
-        const pitch = 480 + Math.random() * 200 + k * 25;
-        v.src.frequency.setValueAtTime(pitch, at);
-        v.src.frequency.linearRampToValueAtTime(pitch * 0.85, at + 0.1);
-        v.sum.gain.setValueAtTime(0, at);
-        v.sum.gain.linearRampToValueAtTime(1.6, at + 0.015);
-        v.sum.gain.linearRampToValueAtTime(0, at + 0.11);
-        t += 0.14 + Math.random() * 0.04;
-      }
-      t += 0.25 + Math.random() * 0.35;
+    while (t < seconds) {
+      const kids = Math.random() < 0.3;
+      const h = this.play(kids ? 'laugh-kids' : 'laugh-girl', {
+        when: t0 + t,
+        volume,
+        pan,
+        rate: kids ? 0.72 : rnd(0.78, 0.9),
+        reverse: Math.random() < 0.25,
+        reverb: 0.55,
+        echo: { time: 0.32, feedback: 0.35, mix: 0.4 },
+        duration: kids ? Math.min(2.5, seconds - t) : undefined,
+      });
+      parts.push(h);
+      t += Math.min(h.duration || 1.2, 2.5) + rnd(0.3, 1.1);
     }
-    const end = t0 + seconds;
-    v.src.stop(end + 0.3);
-    v.vib.stop(end + 0.3);
-    return this.#loopHandle(gain, panner, [], null);
-  }
-
-  /** Choro (Helena). Contínuo; o volume acompanha o quanto ela já surgiu. */
-  cryLoop() {
-    if (!this.ready) return this.#silentHandle();
-    const { gain, panner } = this.#out(0);
-    const v = this.#voice(330, [
-      [700, 5, 1],
-      [1150, 6, 0.7],
-    ]);
-    v.sum.connect(gain);
-    // Soluços: o volume e o tom sobem e caem em ondas
-    const t0 = this.ctx.currentTime + 0.05;
-    for (let i = 0; i < 40; i++) {
-      const at = t0 + i * 1.3;
-      v.src.frequency.setValueAtTime(380, at);
-      v.src.frequency.exponentialRampToValueAtTime(260, at + 1.1);
-      v.sum.gain.setValueAtTime(0.05, at);
-      v.sum.gain.linearRampToValueAtTime(1.2, at + 0.15);
-      v.sum.gain.linearRampToValueAtTime(0.3, at + 0.9);
-      v.sum.gain.linearRampToValueAtTime(0.05, at + 1.2);
-    }
-    // Respiração entre os soluços
-    const n = this.#noiseSource();
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 1400;
-    bp.Q.value = 0.8;
-    const ng = this.ctx.createGain();
-    ng.gain.value = 0.08;
-    n.connect(bp).connect(ng).connect(gain);
-    n.start();
-    return this.#loopHandle(gain, panner, [v.src, v.vib, n]);
-  }
-
-  /** Perseguição: coração forte + respiração ofegante de Artur, em loop. */
-  /** Perseguição: respiração ofegante (e o coração, se withHeart). */
-  chaseLoop(volume = 0.8, withHeart = true) {
-    if (!this.ready) return this.#silentHandle();
-    const { gain, panner } = this.#out(volume);
-    // Respiração ofegante: ruído filtrado entrando e saindo rápido
-    const n = this.#noiseSource();
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 1100;
-    bp.Q.value = 0.9;
-    const breath = this.ctx.createGain();
-    breath.gain.value = 0;
-    n.connect(bp).connect(breath).connect(gain);
-    n.start();
-    const t0 = this.ctx.currentTime + 0.05;
-    for (let i = 0; i < 160; i++) {
-      const at = t0 + i * 0.42;
-      const inhale = i % 2 === 0;
-      breath.gain.setValueAtTime(0, at);
-      breath.gain.linearRampToValueAtTime(inhale ? 0.25 : 0.35, at + 0.08);
-      breath.gain.linearRampToValueAtTime(0, at + (inhale ? 0.3 : 0.36));
-    }
-    // Coração forte e rápido (a casa usa o coração contínuo, Heart.js, e desliga este)
-    const beats = [];
-    if (withHeart) for (let i = 0; i < 120; i++) beats.push(t0 + i * 0.55);
-    const heart = this.ctx.createGain();
-    heart.gain.value = 1;
-    heart.connect(gain);
-    beats.forEach((at) => {
-      this.#thumpTo(at, heart, 50, 0.14, 0.9);
-      this.#thumpTo(at + 0.17, heart, 44, 0.16, 0.65);
-    });
-    return this.#loopHandle(gain, panner, [n], () => heart.disconnect());
-  }
-
-  #thumpTo(at, out, freq, dur, level) {
-    const env = this.ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(level, at + 0.01);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + dur);
-    env.connect(out);
-    const osc = this.ctx.createOscillator();
-    osc.frequency.setValueAtTime(freq * 1.6, at);
-    osc.frequency.exponentialRampToValueAtTime(freq, at + dur * 0.6);
-    osc.connect(env);
-    osc.start(at);
-    osc.stop(at + dur + 0.02);
+    return this.group(parts);
   }
 
   /**
-   * Grito do jumpscare (~1 s): ruído rasgado + vozes desafinadas subindo.
-   * phone: abafado como se viesse pelo telefone (3ª ligação final e o trecho escondido
-   * nos jumpscares, GDD 13.6).
+   * Choro da Helena: mulher chorando baixinho, um pouco mais lenta e grave, com eco; por
+   * baixo, o mesmo choro invertido e mais grave, quase inaudível.
    */
-  scream(volume = 0.9, phone = false) {
-    if (!this.ready) return;
-    const at = this.ctx.currentTime;
-    let { gain } = this.#out(volume * (phone ? 2.2 : 1));
-    if (phone) {
-      const bp = this.ctx.createBiquadFilter();
-      bp.type = 'bandpass';
-      bp.frequency.value = 1100;
-      bp.Q.value = 0.9;
-      bp.connect(gain);
-      gain = bp;
-    }
-    const env = this.ctx.createGain();
-    env.gain.setValueAtTime(0.0001, at);
-    env.gain.exponentialRampToValueAtTime(1, at + 0.03);
-    env.gain.setValueAtTime(1, at + 0.8);
-    env.gain.exponentialRampToValueAtTime(0.0001, at + 1.2);
-    env.connect(gain);
-    const shaper = this.ctx.createWaveShaper();
-    const curve = new Float32Array(256);
-    for (let i = 0; i < 256; i++) curve[i] = Math.tanh(5 * ((i / 128) - 1));
-    shaper.curve = curve;
-    shaper.connect(env);
-    for (const [f, detune] of [
-      [420, 0],
-      [437, 30],
-      [630, -20],
-      [890, 15],
-    ]) {
-      const o = this.ctx.createOscillator();
-      o.type = 'sawtooth';
-      o.detune.value = detune;
-      o.frequency.setValueAtTime(f, at);
-      o.frequency.exponentialRampToValueAtTime(f * 1.9, at + 0.9);
-      const og = this.ctx.createGain();
-      og.gain.value = 0.18;
-      o.connect(og).connect(shaper);
-      o.start(at);
-      o.stop(at + 1.25);
-    }
-    this.#burst(at, env, { filter: { type: 'bandpass', freq: 2200, q: 0.5 }, attack: 0.01, decay: 1.1, level: 0.6 });
+  cryLoop() {
+    return this.group([
+      this.play('cry', { loop: true, volume: 0, rate: 0.88, reverb: 0.45, echo: { time: 0.4, feedback: 0.3, mix: 0.3 } }),
+      this.play('cry', { loop: true, volume: 0, rate: 0.62, reverse: true, filter: { type: 'lowpass', freq: 1400 }, reverb: 0.6, offset: 8 }),
+    ]);
   }
 
-  // ---- Final (GDD 10) ---------------------------------------------------------
-
-  /** Porta rangendo devagar, abafada como se viesse pelo telefone. */
-  doorCreak(volume = 0.5, seconds = 1.6) {
-    if (!this.ready) return;
-    const at = this.ctx.currentTime + 0.02;
-    const { gain } = this.#out(0);
-    gain.gain.setValueAtTime(0.0001, at);
-    gain.gain.exponentialRampToValueAtTime(volume, at + 0.25);
-    gain.gain.setValueAtTime(volume, at + seconds - 0.4);
-    gain.gain.exponentialRampToValueAtTime(0.0001, at + seconds);
-    // Dobradiça: tom áspero que sobe e desce sem ritmo, filtrado como linha de telefone
-    const o = this.ctx.createOscillator();
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(190, at);
-    for (let t = 0.15; t < seconds; t += 0.12 + Math.random() * 0.1) {
-      o.frequency.linearRampToValueAtTime(150 + Math.random() * 160, at + t);
-    }
-    const bp = this.ctx.createBiquadFilter();
-    bp.type = 'bandpass';
-    bp.frequency.value = 1100;
-    bp.Q.value = 1.2;
-    // Atrito: o som "gagueja" (liga e desliga muito rápido)
-    const chop = this.ctx.createGain();
-    chop.gain.value = 0;
-    for (let t = 0; t < seconds; t += 0.018) chop.gain.setValueAtTime(Math.random() < 0.7 ? 0.5 : 0.05, at + t);
-    o.connect(chop).connect(bp).connect(gain);
-    o.start(at);
-    o.stop(at + seconds + 0.05);
+  /** Perseguição: respiração ofegante (e, se withHeart, o coração disparado). */
+  chaseLoop(volume = 0.8, withHeart = true) {
+    const parts = [this.play('breath', { loop: true, volume: volume * 0.7, rate: 1.12 })];
+    if (withHeart) parts.push(this.play('heart', { every: 0.5, volume: volume * 0.5, rate: 1.4, filter: { type: 'lowpass', freq: 400 } }));
+    return this.group(parts);
   }
 
-  /** Tom de linha ocupada (bip curto repetido, 425 Hz), por `seconds`. */
-  busyTone(seconds = 4, volume = 0.3) {
+  /**
+   * Grito de jumpscare. kind: 'woman' (Helena), 'girl' (Clara), 'roar1' (Invasor), 'roar2'
+   * (Artur distorcido). phone: abafado como se viesse pelo telefone (3ª ligação final e o
+   * trecho escondido nos jumpscares, GDD 13.6).
+   */
+  scream(volume = 0.9, phone = false, kind = 'woman') {
+    const name = { woman: 'scream-woman', girl: 'scream-girl', roar1: 'roar-1', roar2: 'roar-2' }[kind] ?? 'scream-woman';
+    const rate = { roar1: 0.8, roar2: 0.7 }[kind] ?? 1;
+    this.play(name, { volume, phone, rate, distort: phone ? 0.3 : 0.15, reverb: phone ? 0.1 : 0.35 });
+  }
+
+  /**
+   * Helena aparecendo na luz piscando: um grito de mulher invertido e lento que cresce até
+   * o instante em que ela surge, um sopro grave com eco e estalos de lâmpada.
+   */
+  helenaSting(volume = 0.8) {
     if (!this.ready) return;
-    const at = this.ctx.currentTime + 0.02;
-    const { gain } = this.#out(volume);
-    const o = this.ctx.createOscillator();
-    o.frequency.value = 425;
-    const env = this.ctx.createGain();
-    env.gain.value = 0;
-    for (let t = 0; t < seconds; t += 0.5) {
-      env.gain.setValueAtTime(0.35, at + t);
-      env.gain.setValueAtTime(0, at + t + 0.25);
-    }
-    o.connect(env).connect(gain);
-    o.start(at);
-    o.stop(at + seconds);
+    const t = this.ctx.currentTime;
+    this.play('scream-woman', { when: t, volume: volume * 0.8, reverse: true, rate: 0.55, filter: { type: 'lowpass', freq: 2200 }, reverb: 0.7 });
+    this.play('whisper-soft', { when: t + 0.2, volume: volume * 0.7, rate: 0.5, reverb: 0.8, echo: { time: 0.5, feedback: 0.45, mix: 0.5 } });
+    this.play('bulb', { when: t, volume: volume * 0.6, vary: 0.1 });
+    this.play('bulb', { when: t + 1.35, volume: volume * 0.5, vary: 0.1 });
   }
 }
 

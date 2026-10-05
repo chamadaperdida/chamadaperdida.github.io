@@ -409,7 +409,7 @@ export class Tasks {
       } else if (j.step === 'esquentar' && this.#carryingType('marmita')) {
         out.push(this.#target('jantar', this.#front('microondas'), {
           use: () => {
-            foley.applianceDoor();
+            foley.microwaveClose();
             this.carrying = null;
             j.step = 'cozinhando';
             j.timer = cfg.microwaveSeconds;
@@ -417,7 +417,7 @@ export class Tasks {
         }));
       } else if (j.step === 'pronto') {
         out.push(this.#pick('jantar', this.#front('microondas'), 'jantar', () => {
-          foley.applianceDoor();
+          foley.microwaveOpen();
           this.#carry('jantar');
           j.step = 'comer';
         }));
@@ -452,7 +452,7 @@ export class Tasks {
           complete: () => {
             this.carrying.count -= 1;
             l.washed += 1;
-            foley.plates(0.25);
+            foley.plateStack();
             // Prato limpo empilhado no canto da bancada da pia
             const pia = this.furniture.get('pia').sprite;
             this.scene.add
@@ -507,7 +507,7 @@ export class Tasks {
       } else if (r.step === 'maquina' && this.#carryingType('roupaSuja')) {
         out.push(this.#target('roupa', this.#front('maquina'), {
           use: () => {
-            foley.applianceDoor();
+            foley.washerDoor();
             foley.wicker(0.3);
             this.carrying = null;
             r.step = 'lavando';
@@ -516,7 +516,7 @@ export class Tasks {
         }));
       } else if (r.step === 'pronta') {
         out.push(this.#pick('roupa', this.#front('maquina'), 'roupaMolhada', () => {
-          foley.applianceDoor();
+          foley.washerDoor();
           foley.wetCloth();
           this.#carry('roupaMolhada');
           r.step = 'varal';
@@ -642,13 +642,13 @@ export class Tasks {
     const j = this.st.jantar;
     const r = this.st.roupa;
     if (feet) {
-      this.#applianceSound('microwave', lightsOn && j.step === 'cozinhando', () => foley.microwaveLoop(), 0.5, feet);
-      this.#applianceSound('washer', lightsOn && r.step === 'lavando', () => foley.washerLoop(), 0.7, feet);
+      this.#applianceSound('microwave', lightsOn && j.step === 'cozinhando', () => foley.microwaveLoop(), 0.15, feet);
+      this.#applianceSound('washer', lightsOn && r.step === 'lavando', () => foley.washerLoop(), 0.2, feet);
     }
     if (lightsOn) {
       if (j.step === 'cozinhando' && (j.timer -= dt) <= 0) {
         j.step = 'pronto';
-        this.hooks.sfx.beep(3, 0.2);
+        foley.microwaveBell();
       }
       if (r.step === 'lavando' && (r.timer -= dt) <= 0) {
         r.step = 'pronta';

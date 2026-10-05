@@ -102,7 +102,7 @@ export class Menu {
   #choose(i) {
     const item = this.items[i];
     if (item.slider) return;
-    sfx.lockClick(0.25);
+    sfx.uiClick(0.25);
     item.select?.();
   }
 

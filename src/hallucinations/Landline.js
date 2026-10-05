@@ -6,6 +6,7 @@ import { BALANCE } from '../config/balance.js';
 import { PPM } from '../world/tiles.js';
 import { Hallucination } from './Hallucination.js';
 import { positional } from '../audio/Sfx.js';
+import { foley } from '../audio/Foley.js';
 
 export class LandlineHallucination extends Hallucination {
   constructor(ctx, opts) {
@@ -42,6 +43,7 @@ export class LandlineHallucination extends Hallucination {
   answer() {
     this.answered = true;
     this.stopRinging();
+    foley.handsetUp();
     this.addFear(this.answerExtra);
     this.ctx.hud
       .talk([

@@ -48,7 +48,7 @@ import { NavGrid } from '../world/nav.js';
 import { MONSTER_KINDS, MonsterDirector } from '../systems/MonsterDirector.js';
 import { fearDecayPerSecond, hallucinationGap } from '../systems/formulas.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
-import { sfx } from '../audio/Sfx.js';
+import { sfx, positional } from '../audio/Sfx.js';
 import { foley } from '../audio/Foley.js';
 import { debug } from '../debug/debug.js';
 
@@ -218,7 +218,7 @@ export class HouseScene extends Phaser.Scene {
       if (!pointer.leftButtonDown() || this.hud.talking || this.sleep || this.finale) return;
       const was = this.flashlight.on;
       this.flashlight.toggle(!this.generator.on);
-      if (this.flashlight.on !== was) foley.flashlightClick();
+      if (this.flashlight.on !== was) foley.flashlightClick(this.flashlight.on);
     });
 
     this.generator.listen('drop', () => {
@@ -488,10 +488,10 @@ export class HouseScene extends Phaser.Scene {
         this.hasKey = false;
         door.unlock();
         door.setOpen(true);
-        sfx.lockClick();
+        foley.unlockWithKey();
         this.lockEvent.onUnlock(door);
       } else {
-        sfx.lockClick(0.5);
+        foley.lockedHandle();
         // A fala inteira na primeira vez em cada porta; depois, curta
         this.hud.talk(this.lockedDoorTold.has(door.id) ? LINES.stillLocked : LINES.lockedDoor);
         this.lockedDoorTold.add(door.id);
@@ -729,11 +729,20 @@ export class HouseScene extends Phaser.Scene {
 
   // ---- Sons (GDD 14) ------------------------------------------------------
 
-  /** Chuva + ruído o tempo todo (aberta lá fora, abafada dentro) e a respiração do cansaço. */
+  /** Chuva + ruído o tempo todo (aberta lá fora, abafada dentro), o motor do gerador e a respiração do cansaço. */
   updateAmbientSounds() {
     if (!this.ambience && sfx.ready) this.ambience = foley.houseAmbience();
     const feet = this.player.feetMeters;
     this.ambience?.setOutdoors(!!roomAt(feet.x, feet.y)?.external);
+    // Gerador ligado: o motor se ouve de perto (quintal)
+    if (this.generator.on && !this.finale) {
+      this.genLoop ??= foley.generatorLoop();
+      const { volume, pan } = positional(feet, GENERATOR_POINT, 14);
+      this.genLoop.setVolume(0.22 * volume * volume, pan);
+    } else if (this.genLoop) {
+      this.genLoop.stop(0.3);
+      this.genLoop = null;
+    }
     const tired = this.player.exhausted;
     if (tired && !this.breath) this.breath = foley.breathLoop();
     else if (!tired && this.breath) {
@@ -770,7 +779,7 @@ export class HouseScene extends Phaser.Scene {
       if (!task) return;
       const loops = { louca: () => foley.waterLoop(1800), regar: () => foley.waterLoop(800), uniforme: () => foley.steamLoop() };
       const loop = loops[task]?.() ?? null;
-      loop?.setVolume(task === 'uniforme' ? 0.3 : 0.35);
+      loop?.setVolume({ uniforme: 0.4, louca: 0.6, regar: 0.9 }[task] ?? 0.5);
       if (task === 'jantar') foley.chair(0.3);
       else if (task === 'janelas') foley.windowSlide(0.4, 0, BALANCE.tasks.closeWindowSeconds);
       else if (task === 'roupa') foley.wetCloth(0.35);
@@ -794,6 +803,8 @@ export class HouseScene extends Phaser.Scene {
 
   stopSounds() {
     this.ambience?.stop();
+    this.genLoop?.stop();
+    this.genLoop = null;
     this.breath?.stop();
     this.whispers?.stop();
     this.updateHoldSound(null);

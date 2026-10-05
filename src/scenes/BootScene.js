@@ -2,6 +2,7 @@
 
 import Phaser from 'phaser';
 import { createArturAnimations } from '../entities/Player.js';
+import { sfx } from '../audio/Sfx.js';
 
 export class BootScene extends Phaser.Scene {
   constructor() {
@@ -12,6 +13,8 @@ export class BootScene extends Phaser.Scene {
     const base = 'assets/sprites/';
     // ?v=… muda a cada publicação: o navegador sempre pega os sprites novos (sem cache antigo)
     const v = `?v=${__BUILD_ID__}`;
+    // Sons (gravações): baixados em paralelo, decodificados quando o áudio liberar
+    sfx.loadSamples(v);
     this.load.spritesheet('artur', `${base}artur.png${v}`, { frameWidth: 16, frameHeight: 32 });
     this.load.image('tiles', `${base}tiles.png${v}`);
     this.load.spritesheet('face', `${base}face.png${v}`, { frameWidth: 24, frameHeight: 24 });
