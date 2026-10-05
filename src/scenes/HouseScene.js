@@ -6,6 +6,7 @@ import Phaser from 'phaser';
 import { BALANCE, TOTAL_DAYS } from '../config/balance.js';
 import { Player } from '../entities/Player.js';
 import { Door } from '../entities/Door.js';
+import { WallClock } from '../entities/WallClock.js';
 import {
   BED_POINT,
   DOORS,
@@ -114,6 +115,7 @@ export class HouseScene extends Phaser.Scene {
 
     this.buildMap();
     this.buildFurniture();
+    this.hallClock = new WallClock(this, this.furnitureById.get('relogioCorredor').sprite);
     this.doors = DOORS.map((def) => new Door(this, def));
     this.bedroomDoor = this.doors.find((d) => d.id === BEDROOM_DOOR_ID);
     this.items = new Items(this, this.clock.night, this.furnitureById);
@@ -738,7 +740,7 @@ export class HouseScene extends Phaser.Scene {
     this.player.update(dt);
     const feet = this.player.feetMeters;
     this.finale.update(dt, feet);
-    this.lighting.update(dt, { powerOn: true, feet, chest: this.chest, flashlight: this.flashlight, zoneFactor: 1 });
+    this.lighting.update(dt, { powerOn: true, feet, chest: this.chest, flashlight: this.flashlight, zoneFactor: this.finale.lightFactor });
     this.hud.setFear(0);
     this.hud.setStamina(this.player.stamina, this.player.exhausted);
     this.hud.setBattery(this.flashlight.battery, this.flashlight.low);

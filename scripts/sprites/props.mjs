@@ -632,36 +632,24 @@ function wallFrame(c, x, y, tone) {
   c.px(x + 8, y + 2, '#b0a070');
 }
 
-// Algarismos 3×5 do relógio digital
-const DIGITS = {
-  0: ['###', '#.#', '#.#', '#.#', '###'],
-  1: ['.#.', '##.', '.#.', '.#.', '###'],
-  2: ['###', '..#', '###', '#..', '###'],
-  3: ['###', '..#', '.##', '..#', '###'],
-  4: ['#.#', '#.#', '###', '..#', '..#'],
-  7: ['###', '..#', '.#.', '.#.', '.#.'],
-};
-
-/** Relógio digital de parede do corredor, 21×9, mostrando `time` ('23:41') em vermelho. */
-function wallClock(time) {
-  return (c, x, y) => {
-    c.rect(x, y, 21, 9, '#3a322c');
-    c.rect(x + 1, y + 1, 19, 7, '#0c0808');
-    c.rect(x + 1, y + 8, 19, 1, '#241e1a');
-    let dx = x + 2;
-    for (const ch of time) {
-      if (ch === ':') {
-        c.px(dx, y + 3, '#d0261c');
-        c.px(dx, y + 5, '#d0261c');
-        dx += 2;
-        continue;
-      }
-      DIGITS[ch].forEach((row, j) => {
-        [...row].forEach((v, i) => v === '#' && c.px(dx + i, y + 2 + j, '#d0261c'));
-      });
-      dx += 4;
+/** Relógio de parede de ponteiros do corredor, 12×12: aro de madeira e mostrador claro.
+ *  Os ponteiros são desenhados pelo jogo (entities/WallClock.js). */
+function wallClock(c, x, y) {
+  for (let dy = 0; dy < 12; dy++) {
+    for (let dx = 0; dx < 12; dx++) {
+      const d = (dx - 5.5) ** 2 + (dy - 5.5) ** 2;
+      if (d <= 6 * 6) c.px(x + dx, y + dy, d > 4.7 * 4.7 ? (dy < 6 ? '#5a4030' : '#3e2c20') : '#d8cfb8');
     }
-  };
+  }
+  // Marcas das 12, 3, 6 e 9
+  c.px(x + 5, y + 1, '#2a2420');
+  c.px(x + 6, y + 1, '#2a2420');
+  c.px(x + 10, y + 5, '#2a2420');
+  c.px(x + 10, y + 6, '#2a2420');
+  c.px(x + 5, y + 10, '#2a2420');
+  c.px(x + 6, y + 10, '#2a2420');
+  c.px(x + 1, y + 5, '#2a2420');
+  c.px(x + 1, y + 6, '#2a2420');
 }
 
 function armchair(c, x, y) {
@@ -1139,7 +1127,7 @@ const PROPS = [
   ['runner', 96, 20, rug(96, 20, '#4a2a2a', '#2e1a1a', '#6a4a3a')],
   ['frame-a', 12, 9, (c, x, y) => wallFrame(c, x, y, '#5a6a7a')],
   ['frame-b', 12, 9, (c, x, y) => wallFrame(c, x, y, '#7a6a5a')],
-  ...['23:41', '23:44', '23:47'].map((t) => [`wall-clock-${t.replace(':', '')}`, 21, 9, wallClock(t)]),
+  ['wall-clock', 12, 12, wallClock, true],
   ['armchair', 22, 22, armchair, true],
   ['floor-lamp', 10, 30, floorLamp, true],
   ['chair', 12, 16, chair, true],

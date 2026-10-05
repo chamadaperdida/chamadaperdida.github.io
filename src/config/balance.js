@@ -64,12 +64,13 @@ export const BALANCE = {
     ],
 
     // Itens espalhados pela casa (quantidade fixa por noite, não acumula).
-    medicineCount: [4, 4, 4, 3, 3, 3, 3],
+    // +35% sobre os valores iniciais (4,4,4,3,3,3,3 e 3,3,3,2,2,2,2), arredondado.
+    medicineCount: [5, 5, 5, 4, 4, 4, 4],
 
     // Helena: segundos de luz contínua para ela surgir por completo (e matar). Fica mais
     // rápida a cada noite (decidido no protótipo; o GDD começou com 2,5 s fixos).
     helenaRevealSeconds: [2.5, 2.3, 2.1, 1.9, 1.7, 1.5, 1.3],
-    batteryCount: [3, 3, 3, 2, 2, 2, 2],
+    batteryCount: [4, 4, 4, 3, 3, 3, 3],
     // Lanterna: segundos de uso contínuo com a bateria cheia (cai a cada noite)
     flashlightBatterySeconds: [240, 210, 180, 150, 130, 110, 90],
   },

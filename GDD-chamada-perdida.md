@@ -475,9 +475,11 @@ Valores obtidos com simulação Monte Carlo (1.500 noites por dia e por perfil d
 | Gerador: teto do risco (por s) | 0,0060 | 0,0067 | 0,0073 | 0,0080 | 0,0087 | 0,0093 | 0,0100 |
 | Gerador na hora de dormir: chance base | 45% | 50% | 55% | 60% | 65% | 70% | 75% |
 | Eventos de monstro no escuro (por s) — Invasor, Artur distorcido e Clara; a Helena é presença constante. Dobrado no protótipo (simulação usava 1/40 … 1/12) | 1/20 | 1/14,5 | 1/11,25 | 1/9,25 | 1/7,8 | 1/6,8 | 1/6 |
-| Remédios na casa | 4 | 4 | 4 | 3 | 3 | 3 | 3 |
-| Pilhas na casa | 3 | 3 | 3 | 2 | 2 | 2 | 2 |
+| Remédios na casa | 5 | 5 | 5 | 4 | 4 | 4 | 4 |
+| Pilhas na casa | 4 | 4 | 4 | 3 | 3 | 3 | 3 |
 | Lanterna: bateria cheia (s de uso contínuo) | 240 | 210 | 180 | 150 | 130 | 110 | 90 |
+
+Remédios e pilhas aumentados em **35%** (arredondado) depois dos primeiros testes; eram 4/4/4/3/3/3/3 e 3/3/3/2/2/2/2. A simulação da seção 9.5 foi feita com os valores antigos.
 
 ### 9.2 Fórmulas
 
@@ -562,7 +564,8 @@ Mediana para zerar o medo (entre parênteses: chance de zerar em até 5 min). "N
 2. Artur acorda na madrugada com o **telefone fixo da sala** tocando. As três ligações acontecem às **23:41, 23:44 e 23:47**. O relógio do corredor, no caminho entre a cama e o telefone, mostra o mesmo horário. **Fica ambíguo** se as ligações são reais.
    - A tela clareia com Artur ao lado da cama e o telefone já tocando. Na casa não acontece mais nada: sem alucinações, monstros, medo, gerador, tarefas ou ursos. **A única interação é o telefone:** todas as portas ficam fechadas e trancadas, menos as duas do caminho da cama até a sala (a do quarto do Artur e a do corredor para a entrada), que ficam abertas; nenhuma porta responde ao F.
    - O telefone **toca até Artur atender** (F perto dele; treme e mostra as marcas de "tocando", como na alucinação). Cada ligação começa com o horário na caixa de diálogo (*"(23:41)"*). Depois dela, alguns segundos de silêncio, o relógio do corredor pula para o próximo horário e o telefone toca de novo.
-   - **Relógio do corredor:** relógio digital de parede, números vermelhos, no corredor dos quartos logo na saída do quarto do Artur. Nas outras noites fica **parado em 23:41** (como o da tela inicial).
+   - **Relógio do corredor:** relógio de parede **de ponteiros** (aro de madeira, mostrador claro), no corredor dos quartos logo na saída do quarto do Artur. Nas outras noites fica **parado em 23:41** (como o da tela inicial).
+   - **Clima (triste e sinistro):** cores lavadas e frias; vinheta que respira devagar e fecha a cada ligação; luz fraca que falha de vez em quando e cai mais a cada ligação; câmera balançando de leve e chegando mais perto conforme Artur se aproxima do telefone; um rastro apagado e azulado fica para trás quando ele anda; granulado no máximo. Nos gritos da 3ª ligação, a luz pisca sem parar, a tela treme e falha.
    - **1ª:** Helena — "Artur, a luz caiu. O gerador não liga... Me liga de volta."
    - **2ª:** Helena, com medo — "Tem alguém na porta dos fundos. Por favor, atende... Você prometeu que ia estar aqui."
    - **3ª:** Helena, sussurrando — "A gente tá escondida no quarto da Clara. A Clara tá comigo..." → passos no corredor → porta rangendo → **gritos** → a linha cai. (Cada efeito aparece na caixa de diálogo em cinza, com o seu som: passos abafados, porta rangendo, gritos e o tom de linha ocupada.)
@@ -573,7 +576,7 @@ Mediana para zerar o medo (entre parênteses: chance de zerar em até 5 min). "N
 
    - **Ponto de vista de quem assiste:** a imagem começa ocupando a tela inteira e a câmera vai se afastando devagar (~24 s), até aparecer a TV inteira (gabinete de madeira, antena, móvel baixo) numa sala escura, iluminada só pela luz azulada da tela. Ao desligar, a sala some no escuro e os créditos sobem.
    - Implementação: a TV liga (a imagem abre de uma linha, com clarão e chiado), a reportagem aparece na caixa de diálogo (nome: *Jornalista*) em cinco partes, a foto da casa surge na segunda; a boca da jornalista mexe enquanto o texto é digitado. Depois, a TV desliga (fecha numa linha e num ponto). Visual na seção 13.7.
-5. Créditos rolando com chuva ao fundo (texto em `src/scenes/EndingScene.js`, ajustável).
+5. Créditos rolando com chuva ao fundo (texto em `src/scenes/EndingScene.js`, ajustável). Botão **"Pular créditos"** no canto (clique, Espaço, Enter ou Esc) vai direto para a tela do CVV, que não se pula.
 6. Tela: *"Se você estiver passando por um momento difícil, ligue 188."* (CVV) — texto claro (não vermelho), fica alguns segundos.
 7. Volta para a tela inicial (Continuar desativado).
 

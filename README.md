@@ -26,6 +26,7 @@ npm run dev
 | Soltar o que está carregando | Q |
 | Avançar diálogo | Espaço |
 | Pausa (casa e delegacia) | Esc |
+| Pular os créditos | Espaço, Enter, Esc ou clique no botão |
 
 ## Estrutura
 

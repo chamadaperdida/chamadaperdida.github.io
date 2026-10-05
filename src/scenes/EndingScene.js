@@ -7,7 +7,8 @@
 //    leve. A reportagem aparece na caixa de diálogo; durante a fala, uma foto antiga e
 //    borrada da casa da Rua das Acácias surge no painel atrás dela. A TV desliga e a sala
 //    fica escura.
-// 2. Créditos rolando, com chuva ao fundo.
+// 2. Créditos rolando, com chuva ao fundo. Botão "Pular créditos" no canto (clique, Espaço,
+//    Enter ou Esc) vai direto para a tela do CVV.
 // 3. "Se você estiver passando por um momento difícil, ligue 188." (CVV)
 // 4. Volta para a tela inicial (o save já está marcado como zerado: Continuar desativado).
 //
@@ -257,6 +258,36 @@ export class EndingScene extends Phaser.Scene {
       y += size + 8;
     }
     this.creditsHeight = y;
+
+    // Pular créditos (vai para a tela do CVV, que não se pula)
+    this.skipButton = this.add
+      .text(width - 24, height - 20, 'Pular créditos  [Espaço]', {
+        fontFamily: FONT,
+        fontSize: '22px',
+        color: '#7d8088',
+        backgroundColor: '#000000aa',
+        padding: { x: 8, y: 2 },
+      })
+      .setOrigin(1, 1)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerover', () => this.skipButton.setColor('#e8e2cf'))
+      .on('pointerout', () => this.skipButton.setColor('#7d8088'))
+      .on('pointerdown', () => this.#skipCredits());
+    this.skipKeys = ['keydown-SPACE', 'keydown-ENTER', 'keydown-ESC'];
+    for (const k of this.skipKeys) this.input.keyboard.on(k, this.#skipCredits, this);
+  }
+
+  #skipCredits() {
+    if (this.phase !== 'credits') return;
+    this.#endCredits();
+    this.tweens.add({ targets: this.creditText, alpha: 0, duration: 500, onComplete: () => this.#cvv() });
+  }
+
+  /** Créditos acabaram (ou foram pulados): some o botão e as teclas. */
+  #endCredits() {
+    this.phase = 'credits-end';
+    for (const k of this.skipKeys) this.input.keyboard.off(k, this.#skipCredits, this);
+    this.skipButton.destroy();
   }
 
   #cvv() {
@@ -308,7 +339,10 @@ export class EndingScene extends Phaser.Scene {
     if (this.drops) this.#updateRain(dt);
     if (this.phase === 'credits') {
       this.creditText.y -= CREDITS_SPEED * dt;
-      if (this.creditText.y + this.creditsHeight < -20) this.#cvv();
+      if (this.creditText.y + this.creditsHeight < -20) {
+        this.#endCredits();
+        this.#cvv();
+      }
     }
   }
 
