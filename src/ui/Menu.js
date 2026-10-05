@@ -5,7 +5,10 @@
 //   new Menu(scene, { x, y, items: [{ label: 'Novo jogo', select: () => … }], onBack })
 //
 // Item: { label: string | () => string, select?, enabled?: () => boolean,
-//         slider?: { get: () => 0..1, set: (v) => void } }
+//         slider?: { get: () => 0..1, set: (v) => void },
+//         choice?: { get: () => string, step: (dir) => void },   ← "Rótulo   ‹ valor ›"
+//         header?: true,                                          ← título de seção (não escolhe)
+//         x?: number, gap?: number }                             ← outra posição; espaço extra antes
 
 import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx.js';
@@ -26,7 +29,15 @@ export class Menu {
     this.onBack = onBack;
     this.active = true;
     this.objects = [];
-    this.rows = items.map((item, i) => this.#buildRow(item, x, y + i * spacing, fontSize, depth));
+    // Títulos de seção ocupam menos altura que as linhas
+    let rowY = y;
+    this.rows = items.map((item) => {
+      if (item.header) rowY += spacing * 0.15;
+      rowY += spacing * (item.gap ?? 0); // espaço extra antes (ex.: o Voltar)
+      const row = this.#buildRow(item, x, rowY, fontSize, depth);
+      rowY += item.header ? spacing * 0.75 : spacing;
+      return row;
+    });
     this.focus = -1;
     this.#setFocus(this.#enabled(focus) ? focus : this.#nextEnabled(focus, 1));
     this.onKey = (event) => this.#key(event);
@@ -36,7 +47,7 @@ export class Menu {
 
   #enabled(i) {
     const item = this.items[i];
-    return !!item && (item.enabled ? item.enabled() : true);
+    return !!item && !item.header && (item.enabled ? item.enabled() : true);
   }
 
   #nextEnabled(from, dir) {
@@ -56,8 +67,36 @@ export class Menu {
     const style = { fontFamily: FONT, fontSize: `${fontSize}px`, color: MENU_COLORS.idle };
     const row = { item };
     const index = this.items.indexOf(item);
+    if (item.header) {
+      // Título de seção: pequeno, vermelho apagado, alinhado com a coluna dos rótulos
+      row.text = this.scene.add
+        .text(x - 30, y, '', { fontFamily: FONT, fontSize: `${Math.round(fontSize * 0.72)}px`, color: '#7a2a2c' })
+        .setOrigin(1, 0.5)
+        .setDepth(depth);
+      this.objects.push(row.text);
+      return row;
+    }
+    if (item.choice) {
+      // Escolha: "Rótulo   ‹  valor  ›", com o valor na mesma coluna das barras de volume
+      const barW = SLIDER_STEPS * (CELL + CELL_GAP) - CELL_GAP;
+      row.text = this.scene.add.text(x - 30, y, '', style).setOrigin(1, 0.5).setDepth(depth);
+      const left = this.scene.add.text(x, y, '<', style).setOrigin(0, 0.5).setDepth(depth);
+      row.value = this.scene.add.text(x + 30 + barW / 2, y, '', style).setOrigin(0.5, 0.5).setDepth(depth);
+      const right = this.scene.add.text(x + 30 + barW + 12, y, '>', style).setOrigin(0, 0.5).setDepth(depth);
+      row.arrows = [left, right];
+      for (const o of [row.text, left, right, row.value]) {
+        o.setInteractive({ useHandCursor: true });
+        o.on('pointerover', () => this.active && this.#setFocus(index));
+      }
+      left.on('pointerdown', () => this.active && this.#change(index, -1));
+      right.on('pointerdown', () => this.active && this.#change(index, 1));
+      row.value.on('pointerdown', () => this.active && this.#change(index, 1));
+      row.text.on('pointerdown', () => this.active && this.#change(index, 1));
+      this.objects.push(row.text, left, right, row.value);
+      return row;
+    }
     if (!item.slider) {
-      row.text = this.scene.add.text(x, y, '', style).setOrigin(this.align === 'left' ? 0 : 0.5, 0.5).setDepth(depth);
+      row.text = this.scene.add.text(item.x ?? x, y, '', style).setOrigin(this.align === 'left' ? 0 : 0.5, 0.5).setDepth(depth);
       row.text.setInteractive({ useHandCursor: true });
       row.text.on('pointerover', () => this.active && this.#enabled(index) && this.#setFocus(index));
       row.text.on('pointerdown', () => this.active && this.#enabled(index) && this.#choose(index));
@@ -100,9 +139,17 @@ export class Menu {
     this.refresh();
   }
 
+  #change(i, dir) {
+    this.#setFocus(i);
+    sfx.uiClick(0.25);
+    this.items[i].choice.step(dir);
+    this.refresh();
+  }
+
   #choose(i) {
     const item = this.items[i];
     if (item.slider) return;
+    if (item.choice) return this.#change(i, 1);
     sfx.uiClick(0.25);
     item.select?.();
   }
@@ -125,17 +172,33 @@ export class Menu {
     if (k === 'ArrowUp' || k === 'w' || k === 'W') this.#setFocus(this.#nextEnabled(this.focus, -1));
     else if (k === 'ArrowDown' || k === 's' || k === 'S') this.#setFocus(this.#nextEnabled(this.focus, 1));
     else if (k === 'Enter' || k === ' ') this.focus >= 0 && this.#choose(this.focus);
-    else if (k === 'ArrowLeft' || k === 'a' || k === 'A') this.items[this.focus]?.slider && this.#step(this.focus, -1);
-    else if (k === 'ArrowRight' || k === 'd' || k === 'D') this.items[this.focus]?.slider && this.#step(this.focus, 1);
+    else if (k === 'ArrowLeft' || k === 'a' || k === 'A') this.#side(-1);
+    else if (k === 'ArrowRight' || k === 'd' || k === 'D') this.#side(1);
     else if (k === 'Escape') this.onBack?.();
+  }
+
+  /** ←/→ mexem no volume ou trocam a escolha. */
+  #side(dir) {
+    const item = this.items[this.focus];
+    if (item?.slider) this.#step(this.focus, dir);
+    else if (item?.choice) this.#change(this.focus, dir);
   }
 
   /** Redesenha textos (rótulos dinâmicos, destaque, itens desativados). */
   refresh() {
     this.rows.forEach((row, i) => {
       const enabled = this.#enabled(i);
+      if (row.item.header) {
+        row.text.setText(this.#label(row.item));
+        return;
+      }
       const color = !enabled ? MENU_COLORS.disabled : i === this.focus ? MENU_COLORS.focus : MENU_COLORS.idle;
       row.text.setText(this.#label(row.item)).setColor(color);
+      if (row.item.choice) {
+        row.value.setText(row.item.choice.get()).setColor(color);
+        row.arrows.forEach((a) => a.setColor(color));
+        return;
+      }
       if (!row.item.slider) {
         if (enabled) row.text.setInteractive({ useHandCursor: true });
         else row.text.disableInteractive();
@@ -189,10 +252,10 @@ export class OptionsPanel {
     this.scene = scene;
     this.onClose = onClose;
     const { width, height } = scene.scale;
-    this.objects = panel(scene, 660, 484, depth);
+    this.objects = panel(scene, 700, 512, depth);
     this.objects.push(
       scene.add
-        .text(width / 2, height / 2 - 196, 'OPÇÕES', { fontFamily: FONT, fontSize: '44px', color: '#b3161d' })
+        .text(width / 2, height / 2 - 220, 'OPÇÕES', { fontFamily: FONT, fontSize: '44px', color: '#b3161d' })
         .setOrigin(0.5)
         .setDepth(depth),
     );
@@ -205,28 +268,28 @@ export class OptionsPanel {
         options.save({ ...options.load(), [key]: v }); // (não sobrescreve as outras opções)
       },
     });
-    const toggle = (text, get, set) => ({ label: () => `${text}: ${get()}`, select: () => (set(), this.menu.refresh()) });
+    const choice = (label, get, flip) => ({ label, choice: { get, step: () => flip() } });
+    const yesNo = (v) => (v ? 'sim' : 'não');
     this.menu = new Menu(scene, {
-      x: width / 2 + 10,
-      y: height / 2 - 140,
-      spacing: 42,
+      x: width / 2 - 40,
+      y: height / 2 - 168,
+      spacing: 36,
       fontSize: 30,
       depth: depth + 1,
       onBack: () => this.close(),
       items: [
+        { header: true, label: 'SOM' },
         { label: 'Volume geral', slider: volume('master') },
         { label: 'Ambiente', slider: volume('ambient') },
         { label: 'Efeitos', slider: volume('effects') },
-        {
-          label: () => `Tela cheia: ${scene.scale.isFullscreen ? 'sim' : 'não'}`,
-          select: () => (scene.scale.isFullscreen ? scene.scale.stopFullscreen() : scene.scale.startFullscreen()),
-        },
-        // Desempenho (PCs mais fracos)
-        toggle('Iluminação', () => (settings.lightLow ? 'leve' : 'alta'), () => settings.set({ lighting: settings.lightLow ? 'alta' : 'leve' })),
-        toggle('Efeitos de tela', () => (settings.screenFx ? 'sim' : 'não'), () => settings.set({ screenFx: !settings.screenFx })),
-        toggle('Limite de FPS', () => (settings.fps30 ? '30' : '60'), () => settings.set({ fps: settings.fps30 ? 60 : 30 })),
-        toggle('Tutorial', () => (settings.tutorial ? 'sim' : 'não'), () => settings.set({ tutorial: !settings.tutorial })),
-        { label: 'Voltar', select: () => this.close() },
+        { header: true, label: 'IMAGEM E DESEMPENHO' },
+        choice('Tela cheia', () => yesNo(scene.scale.isFullscreen), () => (scene.scale.isFullscreen ? scene.scale.stopFullscreen() : scene.scale.startFullscreen())),
+        choice('Iluminação', () => (settings.lightLow ? 'leve' : 'alta'), () => settings.set({ lighting: settings.lightLow ? 'alta' : 'leve' })),
+        choice('Efeitos de tela', () => yesNo(settings.screenFx), () => settings.set({ screenFx: !settings.screenFx })),
+        choice('Limite de FPS', () => (settings.fps30 ? '30' : '60'), () => settings.set({ fps: settings.fps30 ? 60 : 30 })),
+        { header: true, label: 'JOGO' },
+        choice('Tutorial', () => yesNo(settings.tutorial), () => settings.set({ tutorial: !settings.tutorial })),
+        { label: 'Voltar', x: width / 2, gap: 0.35, select: () => this.close() },
       ],
     });
     this.onScale = () => this.menu.refresh();

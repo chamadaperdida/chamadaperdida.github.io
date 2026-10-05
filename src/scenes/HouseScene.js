@@ -1217,7 +1217,10 @@ export class HouseScene extends Phaser.Scene {
     this.chaseSound = null;
     this.hud.resetDread();
     this.hud.dialogue?.clear();
-    this.scene.start('Death', { monster, day: this.clock.day });
+    // A casa congela (pausada) e o jumpscare abre por cima dela; a DeathScene para a casa
+    // no corte para o preto
+    this.scene.pause();
+    this.scene.launch('Death', { monster, day: this.clock.day });
   }
 
   setupDebugKeys() {

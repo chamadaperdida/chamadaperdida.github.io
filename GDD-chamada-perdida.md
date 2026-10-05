@@ -80,7 +80,7 @@ A história **nunca é contada de forma direta**. O jogador recebe peças soltas
 - **Apenas 3 botões:**
   - **Novo jogo** — se houver save, confirma: *"Isso apaga seu progresso. Continuar?"*
   - **Continuar** — mostra o dia salvo (*"Continuar — dia 3"*); desativado se não houver save ou se o jogo foi zerado.
-  - **Opções** — volume geral, volume do ambiente, volume dos efeitos, tela cheia, desempenho e tutorial. **Ficam salvas entre sessões** (a tela cheia volta no primeiro clique ou tecla, porque o navegador só permite entrar nela assim). Tudo vale na hora, também pela pausa.
+  - **Opções** — em três seções: **Som** (volume geral, do ambiente e dos efeitos, em barras), **Imagem e desempenho** (tela cheia, iluminação, efeitos de tela, limite de FPS) e **Jogo** (tutorial); as escolhas aparecem como "‹ valor ›" na mesma coluna das barras (←/→ ou clique trocam). **Ficam salvas entre sessões** (a tela cheia volta no primeiro clique ou tecla, porque o navegador só permite entrar nela assim). Tudo vale na hora, também pela pausa.
     - **Desempenho (PCs mais fracos):**
       - **Iluminação: alta / leve** — leve: o cone da lanterna e a luz vazando pelas portas usam metade dos raios e das faixas e são redesenhados 30 vezes por segundo (a conta de "o que a lanterna ilumina", que a jogabilidade usa, continua precisa). Medido: o quadro custa menos da metade.
       - **Efeitos de tela: sim / não** — não: sem granulado, vinheta de ambiente, glitch (remédio, jumpscare, gritos do final) e filtros de cor da madrugada. O escurecimento das bordas na perseguição fica (é aviso de perigo).
@@ -715,8 +715,8 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 
 ### 13.6 Estrutura dos jumpscares (~1,2 s)
 
-1. Todo o som corta por 0,2 s.
-2. O monstro **voa na tela**: surge pequeno, perto de um canto, e em 0,09 s chega tomando a tela inteira (com um sopro subindo); no impacto, clarão, tremor forte e o grito. Depois continua avançando devagar, a cabeça tremendo de forma irregular, com glitch. Animação de **8 quadros**: rápidos no voo e no impacto (um a cada 0,045 s, ~22 por segundo), mais espaçados no fim (0,06 → 0,1 s); o último fica tremendo (~30 vezes por segundo) até o corte. O voo, o zoom e o tremor da câmera andam a 60 FPS. Sprites de jumpscare são **maiores e mais detalhados** que os do jogo.
+1. A imagem do jogo **congela** e todo o som corta por 0,1 s (sem tela preta antes: o susto vem por cima da casa).
+2. O monstro **pula na tela** por cima da casa congelada: surge já grande, perto do centro, e em 0,05 s toma a tela inteira, passando do tamanho (um soco) e voltando; o grito e a pancada saem no mesmo instante em que ele aparece. No impacto, a casa some no preto, clarão branco de um instante e tremor forte. Depois continua avançando devagar, a cabeça tremendo de forma irregular, com glitch. Animação de **8 quadros em ~0,27 s** (rápidos no impacto); o último fica tremendo (~30 vezes por segundo) até o corte. O voo, o zoom e o tremor da câmera andam a 60 FPS. Sprites de jumpscare são **maiores e mais detalhados** que os do jogo.
 
 > **Feito na etapa 14** (`scripts/sprites/jumpscares.mjs`): 128×128 por quadro, 8 quadros interpolados entre 4 poses-chave (dentes, rachaduras e chuva não pulam de lugar; as rachaduras da Clara se acumulam; os pontos do distorcido arrebentam um por um), ampliados ~4,8× até tomar a tela, sombreados com pontilhado, luz da lanterna vindo de baixo, granulado e vinheta; nos últimos quadros a cabeça treme e tomba.
 > - **Invasor:** capuz encharcado com dobras e pingos, chuva atrás; no escuro do rosto, desde o primeiro quadro, dois pontinhos de luz e o sorriso de dentes cerrados (é um rosto avançando, não uma boca surgindo do nada), que vai rasgando a cada quadro — cantos subindo até as orelhas, gengiva exposta, duas fileiras de dentes tortos, fios de baba.

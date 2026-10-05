@@ -17,12 +17,12 @@ const ROWS = { invasor: 0, distorcido: 1, helena: 2, clara: 3 };
 const SCREAMS = { invasor: 'roar1', distorcido: 'roar2', helena: 'woman', clara: 'girl' };
 // Quadros de cada jumpscare (scripts/sprites/jumpscares.mjs: 128×128, 8 por monstro)
 const FRAMES = 8;
-const START = 200; // ms (antes: 0,2 s de silêncio)
-const HIT = START + 90; // ms — o voo até tomar a tela dura 0,09 s
-// Quadros rápidos no voo e no impacto (~22 por segundo), mais espaçados no fim; o último
-// fica tremendo até o corte
-const FRAME_AT = [START, START + 45, HIT, HIT + 45, HIT + 90, HIT + 150, HIT + 230, HIT + 330];
+const START = 100; // ms — antes: a imagem do jogo congelada e 0,1 s de silêncio
+const HIT = START + 50; // ms — o voo até tomar a tela dura 0,05 s (quase um pulo)
+// Os 8 quadros passam em ~0,27 s (rápidos no impacto); o último fica tremendo até o corte
+const FRAME_AT = [START, START + 25, HIT, HIT + 30, HIT + 60, HIT + 100, HIT + 150, HIT + 220];
 const HIT_SCALE = 4.8;
+const PUNCH_SCALE = 5.7; // no impacto passa do tamanho e volta (um soco na tela)
 
 export const DEATH_PHRASES = {
   clara: 'Ela só queria brincar de estátua.',
@@ -40,40 +40,52 @@ export class DeathScene extends Phaser.Scene {
     this.scene.setVisible(false, 'Hud');
     const { width, height } = this.scale;
     const cam = this.cameras.main;
-    cam.setBackgroundColor('#000000');
-    sfx.cutFor(0.2);
+    // Sem tela preta antes: a casa fica congelada embaixo (a HouseScene está pausada) e o
+    // monstro explode por cima dela. Ela só para de vez no corte para o preto.
+    sfx.cutFor(START / 1000);
 
     const row = ROWS[monster] ?? 0;
     const scare = this.add
       .image(width / 2, height / 2, 'jumpscares', row * FRAMES)
-      .setScale(0.6)
+      .setScale(1.6)
       .setVisible(false);
     // Artur distorcido: glitch alternando com o rosto normal do Artur
     const arturFace = this.add.image(width / 2, height / 2, 'face', 0).setScale(22).setVisible(false);
     // Clarão no impacto
-    const flash = this.add.rectangle(width / 2, height / 2, width, height, 0xd8d0c8).setAlpha(0);
+    // (maiores que a tela: o tremor da câmera não mostra a casa pelas bordas)
+    const flash = this.add.rectangle(width / 2, height / 2, width * 1.4, height * 1.4, 0xffffff).setAlpha(0);
+    // Fundo preto que cobre a casa congelada logo depois do impacto
+    const backdrop = this.add.rectangle(width / 2, height / 2, width * 1.4, height * 1.4, 0x000000).setAlpha(0).setDepth(-1);
 
-    // 2. Jumpscare: o monstro surge pequeno, num canto, e VOA na cara do jogador
+    // 2. Jumpscare: o monstro PULA na cara do jogador, por cima da casa congelada
     const hit = HIT;
     this.time.delayedCall(START, () => {
       const side = Math.random() < 0.5 ? -1 : 1;
-      scare.setPosition(width / 2 + side * width * 0.18, height / 2 + height * 0.12).setVisible(true);
-      sfx.whoosh((hit - START) / 1000, 0.7);
-      this.tweens.add({ targets: scare, scale: HIT_SCALE, x: width / 2, y: height / 2, duration: hit - START, ease: 'Cubic.easeIn' });
-    });
-    this.time.delayedCall(hit, () => {
+      scare.setPosition(width / 2 + side * width * 0.12, height / 2 + height * 0.08).setVisible(true);
+      // o grito e a pancada saem junto com ele (sem esperar o voo)
       sfx.scream(1, false, SCREAMS[monster]);
       // Trecho escondido dos gritos da 3ª ligação final, abafado pelo telefone (GDD 13.6)
       sfx.scream(0.08, true, 'woman');
       // Helena: o grito vem misturado com o tom de linha ocupada (GDD 13.5)
       if (monster === 'helena') sfx.busyTone(1.2, 0.25);
-      flash.setAlpha(0.55);
-      this.tweens.add({ targets: flash, alpha: 0, duration: 140 });
-      cam.shake(250, 0.05);
-      this.time.delayedCall(250, () => cam.shake(800, 0.018));
+      this.tweens.add({ targets: scare, scale: PUNCH_SCALE, x: width / 2, y: height / 2, duration: hit - START, ease: 'Cubic.easeIn' });
+    });
+    this.time.delayedCall(hit, () => {
+      backdrop.setAlpha(1);
+      // clarão branco de um instante, tremor forte
+      flash.setAlpha(0.85);
+      this.tweens.add({ targets: flash, alpha: 0, duration: 90 });
+      cam.shake(220, 0.08);
+      this.time.delayedCall(220, () => cam.shake(900, 0.025));
       glitchCamera(this, cam, 1.0, 0.9);
-      // continua avançando devagar, a cabeça tremendo de forma irregular
-      this.tweens.add({ targets: scare, scale: HIT_SCALE * 1.18, duration: 1000, ease: 'Quad.easeIn' });
+      // volta do soco e continua avançando, a cabeça tremendo de forma irregular
+      this.tweens.chain({
+        targets: scare,
+        tweens: [
+          { scale: HIT_SCALE, duration: 110, ease: 'Quad.easeOut' },
+          { scale: HIT_SCALE * 1.2, duration: 1000, ease: 'Quad.easeIn' },
+        ],
+      });
       this.jitter = this.time.addEvent({
         delay: 33, // tremor a ~30 por segundo
         loop: true,
@@ -90,8 +102,11 @@ export class DeathScene extends Phaser.Scene {
 
     // 3. Corta para preto com chiado e estática vermelha diminuindo
     this.time.delayedCall(1400, () => {
+      cam.setBackgroundColor('#000000');
+      this.scene.stop('House'); // a casa congelada embaixo para de vez
       this.jitter?.remove();
       flash.destroy();
+      backdrop.destroy();
       scare.destroy();
       arturFace.destroy();
       this.staticLevel = 1;
