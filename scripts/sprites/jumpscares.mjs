@@ -193,24 +193,24 @@ function invader(frame, seed) {
     f.px(x, y0 + 4 + ((x * 7) % 9), INV.wet);
   }
 
-  if (frame === 1) {
-    // Uma rachadura vermelha atravessa o escuro, já com a curva do sorriso
-    for (let x = 40; x <= 88; x++) {
-      const s = grinShape(x, 64, 25, 84, 0);
-      const y = Math.round(s[0]) + (x % 5 === 0 ? 1 : 0);
-      f.px(x, y, INV.gum[3]);
-      f.px(x, y - 1, INV.gum[1]);
-      f.px(x, y + 1, INV.gum[0]);
+  // Olhinhos de luz no fundo do escuro, desde o primeiro quadro (é um rosto que avança,
+  // não uma boca surgindo do nada); crescem e brilham mais
+  const glint = frame >= 2 ? ['#f0e8d8', '#a8a090'] : ['#a8a090', '#5a564e'];
+  for (const [ex, ey] of [[50, 66], [77, 64]]) {
+    f.px(ex, ey, glint[0]);
+    f.px(ex + 1, ey, glint[1]);
+    if (frame >= 2) {
+      f.px(ex, ey + 1, glint[1]);
+      f.px(ex - 1, ey, '#3a3630');
     }
-    // um brilho de dente aparecendo
-    f.px(60, 84, INV.tooth[4]);
-    f.px(67, 84, INV.tooth[3]);
   }
 
-  if (frame >= 2) {
-    const half = frame === 2 ? 27 : 36;
-    const open = frame === 2 ? 14 : 22;
-    const top = frame === 2 ? 86 : 88;
+  // O sorriso já está lá (dentes cerrados, no escuro) e vai rasgando a cada quadro
+  {
+    const half = [24, 29, 34, 38][frame];
+    const open = [7, 13, 19, 24][frame];
+    const top = [84, 86, 87, 88][frame];
+    const dim = frame === 0 ? 0.22 : 0;
     const cols = [];
     for (let x = 64 - half; x <= 64 + half; x++) {
       const s = grinShape(x, 64, half, top, open);
@@ -220,8 +220,8 @@ function invader(frame, seed) {
       // fundo da boca: preto avermelhado
       for (let y = a; y <= b; y++) f.px(x, y, tone(INV.mouth, (y - a) / Math.max(1, b - a), x, y));
       // gengiva exposta em cima e embaixo (rasgando o escuro)
-      for (let k = 1; k <= 4; k++) f.px(x, a - k, tone(INV.gum, 0.9 - k * 0.18, x, a - k));
-      for (let k = 1; k <= 4; k++) f.px(x, b + k, tone(INV.gum, 0.85 - k * 0.18, x, b + k));
+      for (let k = 1; k <= 4; k++) f.px(x, a - k, tone(INV.gum, 0.9 - k * 0.18 - dim, x, a - k));
+      for (let k = 1; k <= 4; k++) f.px(x, b + k, tone(INV.gum, 0.85 - k * 0.18 - dim, x, b + k));
     }
     // Dentes demais e desalinhados, duas fileiras (a de trás mais escura)
     for (const row of [1, 0]) {
@@ -235,7 +235,7 @@ function invader(frame, seed) {
         const hTop = Math.min(gap * 0.55, 3 + Math.floor(f.rand() * (gap * 0.45)));
         const hBot = Math.min(gap * 0.5, 3 + Math.floor(f.rand() * (gap * 0.4)));
         const lean = f.rand() < 0.3 ? (f.rand() < 0.5 ? -1 : 1) : 0;
-        const dark = row ? 0.35 : 0;
+        const dark = (row ? 0.35 : 0) + dim;
         for (let i = 0; i < w; i++) {
           for (let y = 0; y < hTop; y++) {
             const t = 0.95 - (y / hTop) * 0.25 - (i === w - 1 ? 0.3 : 0) - dark - (f.rand() < 0.15 ? 0.25 : 0);
@@ -250,17 +250,10 @@ function invader(frame, seed) {
       }
     }
     // Fios de baba entre os dentes
-    for (let i = 0; i < (frame === 2 ? 3 : 6); i++) {
+    for (let i = 0; i < [0, 2, 3, 6][frame]; i++) {
       const col = cols[Math.floor(cols.length * (0.25 + f.rand() * 0.5))];
       const [x, a, b] = col;
       for (let y = a + 4; y < b - 3; y++) if ((y + x) % 3) f.px(x, y, '#6a6458');
-    }
-    if (frame === 3) {
-      // dois pontinhos de luz no escuro, acima do sorriso
-      f.px(50, 66, '#d8d0c0');
-      f.px(51, 66, '#8a8478');
-      f.px(77, 64, '#d8d0c0');
-      f.px(78, 64, '#8a8478');
     }
   }
   f.vignette(0.8);
@@ -416,12 +409,12 @@ const HEL = {
 
 function helena(frame, seed) {
   const f = new Frame(seed);
-  const open = [0, 7, 30, 36][frame]; // abertura do cabelo no meio
+  const open = [16, 28, 33, 37][frame]; // abertura do cabelo (já aparece no 1º quadro)
   const cx = 64;
   const cy = 60;
-  const jaw = frame === 3 ? 1.45 : 1; // maxilar deslocado: a metade de baixo estica
+  const jaw = [1, 1, 1.2, 1.45][frame]; // maxilar deslocando: a metade de baixo estica
   // Rosto (desenhado antes; o cabelo cobre o resto)
-  if (frame >= 1) {
+  {
     for (let y = 0; y < 128; y++) {
       for (let x = 22; x < 106; x++) {
         const dx = (x - cx) / 34;
@@ -437,7 +430,7 @@ function helena(frame, seed) {
     f.fill(61, 79, 2, 1, HEL.skin[0]);
     f.fill(70, 79, 2, 1, HEL.skin[0]);
     // olhos sem íris, leitosos
-    const eyes = frame === 1 ? [60] : [50, 78];
+    const eyes = [50, 78];
     for (const ex of eyes) {
       f.blob(ex, 54, 7, 4, HEL.eye, { ambient: 0.45, diffuse: 0.6 });
       f.px(ex - 2, 52, '#ffffff');
@@ -484,8 +477,8 @@ function helena(frame, seed) {
       for (let y = 0; y < S; y++) {
         // a abertura começa estreita no alto da cabeça e abre no meio do rosto
         const edge = open * Math.min(1, y / 40) + Math.sin(y * 0.11 + x) * 1.5;
-        if (frame > 0 && dist < edge) continue;
-        const nearEdge = frame > 0 && dist < edge + 5;
+        if (dist < edge) continue;
+        const nearEdge = dist < edge + 5;
         const t = base + (i === 0 ? -0.15 : 0) - y / 200 + (nearEdge ? 0.12 : 0);
         f.px(x, y, tone(HEL.hair, t, x, y));
       }

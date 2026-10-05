@@ -131,6 +131,13 @@ class Foley {
     sfx.play('small-object', { volume, rate: 1.3 });
   }
 
+  /** Fusível no chão da casa: estalinho elétrico baixo (ajuda a achar, GDD 4.4). */
+  fuseSpark(volume = 0.3, pan = 0) {
+    if (!this.ok) return;
+    sfx.play('bulb', { volume, pan, rate: 1.6, vary: 0.15 });
+    sfx.play('bulb', { volume: volume * 0.6, pan, rate: 1.9, vary: 0.15, when: sfx.now + 0.07 });
+  }
+
   /** Lanterna: botão (ligar / desligar). */
   flashlightClick(on = true, volume = 0.8) {
     sfx.play(on ? 'switch-1' : 'switch-2', { volume });

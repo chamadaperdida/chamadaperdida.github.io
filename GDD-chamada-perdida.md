@@ -258,7 +258,7 @@ Arquivo de referência: `planta-casa-v2.svg` (gerada por `scripts/planta-v2.py`)
 - **Fusível:** **toda queda queima o fusível.** No momento da queda, um fusível novo aparece num lugar sorteado da casa:
   - entre os lugares de itens (4.10) **livres**, **fora do cômodo onde Artur está**, a pelo menos 10 m dele e nunca num cômodo trancado;
   - **sem marcador e sem som** — o jogador procura sem saber onde está;
-  - no escuro, o fusível só dá um **brilho fraco** quando o feixe da lanterna passa por ele. Mesmo sem bateria, dá para pegá-lo se Artur passar do lado (fica bem mais difícil, mas a noite nunca trava);
+  - no escuro, o fusível dá um **brilho** quando o feixe da lanterna passa por ele e, de perto (até ~7 m), solta de tempos em tempos (a cada 5–8 s) um **estalinho elétrico baixo** vindo do lado dele — uma ajuda pequena para achar. Mesmo sem bateria, dá para pegá-lo se Artur passar do lado (fica bem mais difícil, mas a noite nunca trava);
   - pegar: *"Achei um fusível."* Chegar ao gerador sem fusível: *"Queimou o fusível... tem que ter outro em algum lugar."*
   - Vale para todas as quedas, inclusive medo 100% e queda durante o sono.
 - **Sabotagem:** só acontece quando Artur está **longe** do gerador.
@@ -441,7 +441,7 @@ Inevitáveis, sempre aumentam o medo, **nunca param**. A frequência depende dos
 - Com medo em 100%: os eventos podem coincidir.
 - Durante qualquer perseguição:
   - medo sobe um pouco;
-  - **som:** o coração contínuo (seção 5) dispara + respiração ofegante de Artur;
+  - **som:** o coração contínuo (seção 5) dispara + respiração ofegante de Artur + **trilha macabra baixinha** de fundo (sintetizada: zumbido grave dissonante, cordas graves em ostinato rápido, agudo arrepiante batendo e um baque a cada compasso; entra em ~1 s, sai devagar quando a perseguição acaba e corta na hora se Artur morre);
   - **visual:** bordas da tela escurecem e pulsam no ritmo do coração + leve tremor de câmera.
 
 ---
@@ -520,7 +520,7 @@ Outros: queda do gerador **+4**; cada perseguição **+6**; remédio **−30**; 
 | Artur distorcido | 1,08× Artur correndo |
 | Clara | 1,6× Artur correndo, de quatro (era 1,12×; aumentado no protótipo) |
 | Atraso ao fechar porta numa perseguição | 1,2 s |
-| Clara: delay entre o início da risada e a proibição de mexer | 1,8 s (era 1,2 s; pouco tempo para perceber a risada) |
+| Clara: delay entre o início da risada e a proibição de mexer | 1,8 s (era 1,2 s; pouco tempo para perceber a risada). A proibição acaba **exatamente quando o som da risada acaba** (medido no relógio do áudio) |
 | Clara: duração da risada | 4 a 6 s |
 | Helena: luz contínua para aparecer por completo | Diminui a cada noite: 2,5 / 2,3 / 2,1 / 1,9 / 1,7 / 1,5 / 1,3 s (some 2× mais rápido) |
 | Artur distorcido: luz para virar cinzas | 0,6 s (sem luz, desconta 1,5× mais rápido) |
@@ -706,12 +706,12 @@ Todas as falas do jogo (Artur em casa, ligações da delegacia, bilhetes lidos e
 ### 13.6 Estrutura dos jumpscares (~1,2 s)
 
 1. Todo o som corta por 0,2 s.
-2. Monstro toma a tela com animação de 4 quadros (aos 0, 0,2, 0,4 e 0,62 s), tremor, zoom e glitch. Sprites de jumpscare são **maiores e mais detalhados** que os do jogo.
+2. O monstro **voa na tela**: surge pequeno, perto de um canto, e em 0,14 s chega tomando a tela inteira (com um sopro subindo); no impacto, clarão, tremor forte e o grito. Depois continua avançando devagar, a cabeça tremendo de forma irregular, com glitch. Animação de 4 quadros (aos 0, 0,14, 0,27 e 0,42 s depois de surgir). Sprites de jumpscare são **maiores e mais detalhados** que os do jogo.
 
-> **Feito na etapa 14** (`scripts/sprites/jumpscares.mjs`): 128×128 por quadro (ampliados ~4,6× até tomar a tela), sombreados com pontilhado, luz da lanterna vindo de baixo, granulado e vinheta; nos últimos quadros a cabeça treme e tomba.
-> - **Invasor:** capuz encharcado com dobras e pingos, chuva atrás; o escuro do rosto ganha uma rachadura vermelha que vira o sorriso — cantos subindo até as orelhas, gengiva exposta, duas fileiras de dentes tortos, fios de baba; no último quadro, dois pontinhos de luz no escuro.
+> **Feito na etapa 14** (`scripts/sprites/jumpscares.mjs`): 128×128 por quadro (ampliados ~4,8× até tomar a tela), sombreados com pontilhado, luz da lanterna vindo de baixo, granulado e vinheta; nos últimos quadros a cabeça treme e tomba.
+> - **Invasor:** capuz encharcado com dobras e pingos, chuva atrás; no escuro do rosto, desde o primeiro quadro, dois pontinhos de luz e o sorriso de dentes cerrados (é um rosto avançando, não uma boca surgindo do nada), que vai rasgando a cada quadro — cantos subindo até as orelhas, gengiva exposta, duas fileiras de dentes tortos, fios de baba.
 > - **Artur distorcido:** o rosto magro do Artur em carvão (cabelo curto queimado, olheiras, barba por fazer, maçãs fundas, rachaduras), olhos brancos com veias; os pontos da costura arrebentam (pontas soltas, furos sangrando), a boca abre uma fresta e depois rasga num grito, com restos de linha pendurados.
-> - **Helena:** parede de cabelo molhado em mechas, com brilho e gotas; abre uma fresta com um olho leitoso, depois o rosto cinza inteiro com as lágrimas pretas e secas até o queixo; no fim, o maxilar desloca e a boca escancara com a pele esticada.
+> - **Helena:** já surge com o rosto entre o cabelo molhado (mechas, brilho, gotas), que se abre de vez: o rosto cinza inteiro, olhos leitosos com as lágrimas pretas e secas até o queixo; no fim, o maxilar desloca e a boca escancara com a pele esticada.
 > - **Clara:** de costas (cabelo comprido, vestido com mangas bufantes, gola de renda, manchas, chapéu listrado com pompom); a cabeça gira (de lado, depois de frente, com o pescoço torcido), rosto de boneca de porcelana com olhos pretos escorrendo, bochechas pintadas, sorriso torto; no fim, a boca abre larga demais e a porcelana quebra em volta, com cacos faltando.
 3. Grito do monstro + trecho escondido dos gritos da 3ª ligação final.
 4. Corta para a sequência de morte (seção 2.5).
@@ -761,7 +761,7 @@ Passos do Artur (andar/correr), passos pesados do distorcido, respiração ofega
 **Monstros e vozes (macabros):**
 - **Invasor:** chaveiro de verdade tilintando a cada passo; jumpscare com um berro em camadas que entra de uma vez (cheio em ~20 ms): pancada grave, golpe curto rasgado, berro comprido sem lentidão e um grito grave por baixo, tudo saturado.
 - **Artur distorcido:** passos pesados no taco, bem mais graves e arrastados, com eco; sussurro de homem mais lento, grave e rasgado, com outro sussurro invertido por baixo; jumpscare tão rápido quanto o do Invasor, mas mais grave e sujo (a boca costurada arrebentando): pancada, berro de homem rasgado, grito demoníaco bem grave e saturado por baixo e um sussurro invertido.
-- **Clara:** risadas de verdade de criança (seis gravações diferentes, sorteadas sem repetir a mesma em seguida), um pouco mais lentas e graves, com eco leve; começam altas na hora (são o aviso) e emendam uma na outra sem silêncio até o fim da risada — às vezes uma volta invertida; estalos de ossos de verdade quando ela corre de quatro; jumpscare (etapa 14) em que a risada **distorce até virar grito**: pancada, risada alta que despenca de tom na hora e o grito de menina entrando rasgado, com um grito agudo de mulher dando o corte.
+- **Clara:** risadas de verdade de criança (oito trechos, cortados sem as pausas de respiração e sorteados sem repetir o mesmo em seguida), um pouco mais lentas e graves, com eco leve; começam altas na hora (são o aviso) e emendam uma na outra sem silêncio até o fim da risada (a última é escolhida para fechar o tempo) — às vezes uma volta invertida; estalos de ossos de verdade quando ela corre de quatro; jumpscare (etapa 14) em que a risada **distorce até virar grito**: pancada, risada alta que despenca de tom na hora e o grito de menina entrando rasgado, com um grito agudo de mulher dando o corte.
 - **Helena:** choro de mulher baixinho, mais lento e grave, com eco, e o mesmo choro invertido e bem grave por baixo; jumpscare (etapa 14) que entra de uma vez já no pico: pancada, grito demoníaco de mulher, o mesmo grito bem grave e saturado por baixo, grito de menina grave e um sopro invertido + tom de linha ocupada.
 - **Luz piscando com Helena:** grito de mulher invertido e lento crescendo até ela aparecer, sopro de sussurro grave com eco longo e estalos de lâmpada.
 - **Sono:** quatro sussurros (dois de homem, um suave, um invertido), lentos, com eco longo, de lados diferentes, aumentando; no fim, silêncio na hora (o eco também corta).

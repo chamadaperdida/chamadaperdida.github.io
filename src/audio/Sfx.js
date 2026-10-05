@@ -30,8 +30,8 @@ const shuffle = (arr) => {
   return a;
 };
 // Risadas da Clara e o volume de cada uma (iguala as gravações)
-const LAUGHS = ['laugh-1', 'laugh-2', 'laugh-3', 'laugh-4', 'laugh-5', 'laugh-girl'];
-const LAUGH_LEVEL = { 'laugh-2': 0.8, 'laugh-3': 1.1, 'laugh-4': 0.7, 'laugh-girl': 1.15 };
+const LAUGHS = ['laugh-1', 'laugh-2', 'laugh-3', 'laugh-4', 'laugh-5', 'laugh-6', 'laugh-7', 'laugh-girl-2'];
+const LAUGH_LEVEL = { 'laugh-2': 0.9, 'laugh-3': 1.15, 'laugh-4': 0.63, 'laugh-5': 0.9, 'laugh-6': 0.63, 'laugh-7': 1.3, 'laugh-girl-2': 1.2 };
 
 class Sfx {
   constructor() {
@@ -53,11 +53,29 @@ class Sfx {
       if (!AC) return null;
       this.ctx = new AC();
       this.master = this.ctx.createGain();
-      this.master.connect(this.ctx.destination);
+      // Limitador no fim de tudo: os picos (gritos dos jumpscares) não estouram
+      const limiter = this.ctx.createDynamicsCompressor();
+      limiter.threshold.value = -1.5;
+      limiter.knee.value = 0;
+      limiter.ratio.value = 20;
+      limiter.attack.value = 0.002;
+      limiter.release.value = 0.15;
+      this.master.connect(limiter).connect(this.ctx.destination);
       this.effects = this.ctx.createGain();
       this.effects.connect(this.master);
       this.ambient = this.ctx.createGain();
       this.ambient.connect(this.master);
+      // Gritos dos jumpscares: comprimidos e com ganho, para soarem mais altos e cheios
+      const squash = this.ctx.createDynamicsCompressor();
+      squash.threshold.value = -22;
+      squash.knee.value = 6;
+      squash.ratio.value = 8;
+      squash.attack.value = 0.003;
+      squash.release.value = 0.25;
+      this.scare = this.ctx.createGain();
+      this.scare.gain.value = 2.4;
+      squash.connect(this.scare).connect(this.effects);
+      this.scareIn = squash;
       this.#applyVolumes();
       // 2 s de ruído branco (chiado, estática, ruído de fundo)
       const len = this.ctx.sampleRate * 2;
@@ -283,7 +301,7 @@ class Sfx {
     const panner = ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, pan));
     chain(panner);
-    const dest = bus === 'ambient' ? this.ambient : this.effects;
+    const dest = bus === 'ambient' ? this.ambient : bus === 'scare' ? this.scareIn : this.effects;
     panner.connect(dest);
     const tails = []; // eco e reverberação (cortados num stop "seco")
     if (reverb > 0) {
@@ -360,7 +378,7 @@ class Sfx {
     gain.gain.value = volume;
     const panner = this.ctx.createStereoPanner();
     panner.pan.value = Math.max(-1, Math.min(1, pan));
-    gain.connect(panner).connect(bus === 'ambient' ? this.ambient : this.effects);
+    gain.connect(panner).connect(bus === 'ambient' ? this.ambient : bus === 'scare' ? this.scareIn : this.effects);
     return { gain, panner };
   }
 
@@ -617,9 +635,11 @@ class Sfx {
 
   /**
    * Risada da Clara: risadas de verdade de criança, um pouco mais lentas e graves, com eco.
-   * Começa alta na hora (é o aviso para parar) e emenda uma risada na outra, sem silêncio
-   * no meio, até `seconds` — quando ela acaba, acabou mesmo. Nunca repete a mesma risada
-   * em seguida.
+   * Começa alta na hora (é o aviso para parar) e emenda uma risada na outra, sem nenhum
+   * silêncio no meio (os trechos foram cortados sem as pausas de respiração), por cerca de
+   * `seconds`. Nunca repete a mesma risada em seguida. O handle traz `endsAt`: o instante
+   * (relógio do áudio) em que a última risada termina — a Clara usa isso para liberar o
+   * movimento exatamente quando o som acaba.
    */
   laugh(seconds = 5, volume = 0.6, pan = 0) {
     if (!this.ready) return this.silentHandle();
@@ -628,26 +648,32 @@ class Sfx {
     const bag = [];
     let last = null;
     let t = 0;
-    while (t < seconds - 0.3) {
+    while (t < seconds - 0.6) {
       if (!bag.length) bag.push(...shuffle(LAUGHS.filter((n) => n !== last)));
-      const name = bag.pop();
-      last = name;
-      const rate = rnd(0.8, 0.88);
+      const rate = rnd(0.82, 0.9);
+      const len = (n) => (this.buffers.get(n)?.duration ?? 1.5) / rate;
       const left = seconds - t;
+      // a última risada é a que melhor fecha o tempo pedido (não passa muito dele)
+      let name = bag.pop();
+      if (left < 3) {
+        name = LAUGHS.filter((n) => n !== last).reduce((best, n) => (Math.abs(len(n) - left) < Math.abs(len(best) - left) ? n : best));
+      }
+      last = name;
       const h = this.play(name, {
         when: t0 + t,
         volume: volume * (LAUGH_LEVEL[name] ?? 1),
         pan,
         rate,
-        reverse: t > 1.5 && Math.random() < 0.15,
-        reverb: 0.35,
-        echo: { time: 0.28, feedback: 0.25, mix: 0.22 },
-        duration: left * rate, // (em tempo da gravação)
+        reverse: t > 1.5 && Math.random() < 0.12,
+        reverb: 0.3,
+        echo: { time: 0.22, feedback: 0.2, mix: 0.18 },
       });
       parts.push(h);
-      t += Math.min(h.duration || 1.5, left) + rnd(0.05, 0.2);
+      t += (h.duration || 1.2) - 0.06; // a próxima entra colada (um pouco por cima)
     }
-    return this.group(parts);
+    const group = this.group(parts);
+    group.endsAt = t0 + t + 0.06;
+    return group;
   }
 
   /**
@@ -669,6 +695,108 @@ class Sfx {
   }
 
   /**
+   * Trilha macabra das perseguições, baixinha (sintetizada): um zumbido grave dissonante
+   * (lá e si bemol), cordas graves em ostinato rápido e nervoso, um agudo arrepiante
+   * batendo (duas notas a meio tom) e um baque grave a cada compasso. Entra em ~1 s e sai
+   * devagar no stop(). Handle: stop().
+   */
+  chaseMusic(volume = 0.2) {
+    if (!this.ready) return this.silentHandle();
+    const ctx = this.ctx;
+    const t0 = ctx.currentTime;
+    const { gain } = this.out(0, 0, 'ambient');
+    gain.gain.setTargetAtTime(volume, t0, 0.35);
+    const nodes = [];
+    const osc = (type, freq, dest, detune = 0) => {
+      const o = ctx.createOscillator();
+      o.type = type;
+      o.frequency.value = freq;
+      o.detune.value = detune;
+      o.connect(dest);
+      o.start(t0);
+      nodes.push(o);
+      return o;
+    };
+    // Zumbido grave: lá + si bemol, abafado, o filtro respirando devagar
+    const droneLp = ctx.createBiquadFilter();
+    droneLp.type = 'lowpass';
+    droneLp.frequency.value = 260;
+    droneLp.Q.value = 3;
+    const drone = ctx.createGain();
+    drone.gain.value = 0.35;
+    droneLp.connect(drone).connect(gain);
+    osc('sawtooth', 55, droneLp, -6);
+    osc('sawtooth', 58.27, droneLp, 5);
+    const breathe = ctx.createGain();
+    breathe.gain.value = 110;
+    breathe.connect(droneLp.frequency);
+    osc('sine', 0.13, breathe);
+    // Agudo arrepiante: duas notas a meio tom batendo, com tremolo
+    const high = ctx.createGain();
+    high.gain.value = 0.025;
+    high.connect(gain);
+    osc('sine', 1760, high);
+    osc('sine', 1864.7, high);
+    const trem = ctx.createGain();
+    trem.gain.value = 0.02;
+    trem.connect(high.gain);
+    osc('sine', 5.5, trem);
+    // Ostinato (colcheias a 140 bpm) e baque a cada compasso, agendados um pouco adiante
+    const step = 60 / 140 / 2;
+    const NOTES = [110, 110, 110, 116.54, 110, 110, 155.56, 146.83, 110, 110, 110, 116.54, 110, 103.83, 98, 103.83];
+    const strLp = ctx.createBiquadFilter();
+    strLp.type = 'lowpass';
+    strLp.frequency.value = 900;
+    strLp.connect(gain);
+    let next = t0 + 0.05;
+    let i = 0;
+    const schedule = () => {
+      while (next < ctx.currentTime + 0.25) {
+        const at = next;
+        const o = ctx.createOscillator();
+        o.type = 'sawtooth';
+        o.frequency.value = NOTES[i % NOTES.length];
+        const env = ctx.createGain();
+        env.gain.setValueAtTime(0.0001, at);
+        env.gain.exponentialRampToValueAtTime(i % 4 === 0 ? 0.32 : 0.2, at + 0.006);
+        env.gain.exponentialRampToValueAtTime(0.0001, at + step * 0.85);
+        o.connect(env).connect(strLp);
+        o.start(at);
+        o.stop(at + step);
+        if (i % 8 === 0) {
+          // baque grave
+          const b = ctx.createOscillator();
+          b.frequency.setValueAtTime(70, at);
+          b.frequency.exponentialRampToValueAtTime(36, at + 0.4);
+          const be = ctx.createGain();
+          be.gain.setValueAtTime(0.0001, at);
+          be.gain.exponentialRampToValueAtTime(0.7, at + 0.01);
+          be.gain.exponentialRampToValueAtTime(0.0001, at + 0.5);
+          b.connect(be).connect(gain);
+          b.start(at);
+          b.stop(at + 0.55);
+        }
+        next += step;
+        i++;
+      }
+    };
+    schedule();
+    const timer = setInterval(schedule, 60);
+    return {
+      duration: Infinity,
+      setVolume: (v) => gain.gain.setTargetAtTime(v, ctx.currentTime, 0.2),
+      setRate() {},
+      stop: (fade = 1.5) => {
+        clearInterval(timer);
+        const t = ctx.currentTime;
+        gain.gain.cancelScheduledValues(t);
+        gain.gain.setTargetAtTime(0, t, fade / 3);
+        nodes.forEach((n) => n.stop(t + fade + 0.1));
+      },
+    };
+  }
+
+  /**
    * Grito de jumpscare. kind: 'woman' (Helena), 'girl' (Clara), 'roar1' (Invasor), 'roar2'
    * (Artur distorcido). phone: abafado como se viesse pelo telefone (3ª ligação final e o
    * trecho escondido nos jumpscares, GDD 13.6).
@@ -683,11 +811,31 @@ class Sfx {
     this.play(name, { volume, phone, rate, distort: phone ? 0.3 : 0.15, reverb: phone ? 0.1 : 0.35 });
   }
 
+  /** Jumpscare: o monstro voando na tela — um sopro de ruído subindo rápido. */
+  whoosh(seconds = 0.14, volume = 0.6) {
+    if (!this.ready) return;
+    const at = this.ctx.currentTime;
+    const { gain } = this.out(volume, 0, 'scare');
+    const n = this.noiseSource();
+    const f = this.ctx.createBiquadFilter();
+    f.type = 'bandpass';
+    f.Q.value = 1.2;
+    f.frequency.setValueAtTime(300, at);
+    f.frequency.exponentialRampToValueAtTime(4000, at + seconds);
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(1, at + seconds * 0.9);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + seconds + 0.05);
+    n.connect(f).connect(env).connect(gain);
+    n.start(at);
+    n.stop(at + seconds + 0.1);
+  }
+
   /**
    * Pancada do susto, embaixo do grito: um baque grave que despenca + um estalo de ruído.
    */
   #impact(at, volume) {
-    const { gain } = this.out(volume);
+    const { gain } = this.out(volume, 0, 'scare');
     const o = this.ctx.createOscillator();
     o.type = 'sine';
     o.frequency.setValueAtTime(140, at);
@@ -712,10 +860,10 @@ class Sfx {
     volume *= 0.55; // as camadas somadas estouravam
     const t = this.ctx.currentTime;
     this.#impact(t, volume * 0.9);
-    this.play('roar-4', { when: t, volume, offset: 0.03, rate: 1.05, distort: 0.45, reverb: 0.2 });
-    this.play('roar-3', { when: t, volume, offset: 0.08, duration: 1.7, rate: 1.08, distort: 0.35, reverb: 0.25 });
-    this.play('roar-5', { when: t + 0.22, volume: volume * 0.7, offset: 0.05, rate: 1.1, distort: 0.4, reverb: 0.25 });
-    this.play('scream-woman', { when: t, volume: volume * 0.4, offset: 0.4, duration: 1.6, rate: 0.75, distort: 0.5, filter: { type: 'lowpass', freq: 2600 }, reverb: 0.25 });
+    this.play('roar-4', { bus: 'scare', when: t, volume, offset: 0.03, rate: 1.05, distort: 0.45, reverb: 0.2 });
+    this.play('roar-3', { bus: 'scare', when: t, volume, offset: 0.08, duration: 1.7, rate: 1.08, distort: 0.35, reverb: 0.25 });
+    this.play('roar-5', { bus: 'scare', when: t + 0.22, volume: volume * 0.7, offset: 0.05, rate: 1.1, distort: 0.4, reverb: 0.25 });
+    this.play('scream-woman', { bus: 'scare', when: t, volume: volume * 0.4, offset: 0.4, duration: 1.6, rate: 0.75, distort: 0.5, filter: { type: 'lowpass', freq: 2600 }, reverb: 0.25 });
   }
 
   /**
@@ -728,10 +876,10 @@ class Sfx {
     volume *= 0.6; // as camadas somadas estouravam
     const t = this.ctx.currentTime;
     this.#impact(t, volume);
-    this.play('roar-4', { when: t, volume: volume * 0.9, offset: 0.03, rate: 0.85, distort: 0.6, reverb: 0.3 });
-    this.play('roar-1', { when: t + 0.05, volume, offset: 0.4, duration: 1.6, rate: 1.0, distort: 0.55, reverb: 0.35 });
-    this.play('scream-woman', { when: t, volume: volume * 0.75, offset: 0.35, duration: 1.8, rate: 0.6, distort: 0.7, filter: { type: 'lowpass', freq: 2200 }, reverb: 0.35 });
-    this.play('whisper-man', { when: t, volume: volume * 0.5, duration: 1.2, rate: 0.7, reverse: true, distort: 0.4, reverb: 0.5 });
+    this.play('roar-4', { bus: 'scare', when: t, volume: volume * 0.9, offset: 0.03, rate: 0.85, distort: 0.6, reverb: 0.3 });
+    this.play('roar-1', { bus: 'scare', when: t + 0.05, volume, offset: 0.4, duration: 1.6, rate: 1.0, distort: 0.55, reverb: 0.35 });
+    this.play('scream-woman', { bus: 'scare', when: t, volume: volume * 0.75, offset: 0.35, duration: 1.8, rate: 0.6, distort: 0.7, filter: { type: 'lowpass', freq: 2200 }, reverb: 0.35 });
+    this.play('whisper-man', { bus: 'scare', when: t, volume: volume * 0.5, duration: 1.2, rate: 0.7, reverse: true, distort: 0.4, reverb: 0.5 });
   }
 
   /**
@@ -744,10 +892,10 @@ class Sfx {
     volume *= 0.52;
     const t = this.ctx.currentTime;
     this.#impact(t, volume * 0.9);
-    const laugh = this.play('laugh-4', { when: t, volume: volume * 1.1, rate: 1, offset: 0.05, duration: 0.9, distort: 0.35, reverb: 0.3 });
+    const laugh = this.play('laugh-4', { bus: 'scare', when: t, volume: volume * 1.1, rate: 1, offset: 0.05, duration: 0.9, distort: 0.35, reverb: 0.3 });
     laugh.setRate(0.42); // a risada afunda (distorcendo)
-    this.play('scream-girl', { when: t + 0.22, volume, offset: 0.08, duration: 1.5, rate: 1.05, distort: 0.35, reverb: 0.3 });
-    this.play('scream-woman', { when: t + 0.25, volume: volume * 0.45, offset: 0.6, duration: 1.3, rate: 1.3, distort: 0.3, filter: { type: 'highpass', freq: 900 }, reverb: 0.25 });
+    this.play('scream-girl', { bus: 'scare', when: t + 0.22, volume, offset: 0.08, duration: 1.5, rate: 1.05, distort: 0.35, reverb: 0.3 });
+    this.play('scream-woman', { bus: 'scare', when: t + 0.25, volume: volume * 0.45, offset: 0.6, duration: 1.3, rate: 1.3, distort: 0.3, filter: { type: 'highpass', freq: 900 }, reverb: 0.25 });
   }
 
   /**
@@ -759,10 +907,10 @@ class Sfx {
     volume *= 0.7;
     const t = this.ctx.currentTime;
     this.#impact(t, volume * 0.8);
-    this.play('scream-woman', { when: t, volume: volume * 1.1, offset: 0.55, duration: 1.6, rate: 1.0, distort: 0.3, reverb: 0.35 });
-    this.play('scream-woman', { when: t, volume: volume * 0.6, offset: 0.7, duration: 1.6, rate: 0.62, distort: 0.55, filter: { type: 'lowpass', freq: 1800 }, reverb: 0.4 });
-    this.play('scream-girl', { when: t + 0.05, volume: volume * 0.4, offset: 0.1, duration: 1.3, rate: 0.8, distort: 0.3, reverb: 0.3 });
-    this.play('whisper-soft', { when: t, volume: volume * 0.5, duration: 0.8, rate: 0.6, reverse: true, reverb: 0.6 });
+    this.play('scream-woman', { bus: 'scare', when: t, volume: volume * 1.1, offset: 0.55, duration: 1.6, rate: 1.0, distort: 0.3, reverb: 0.35 });
+    this.play('scream-woman', { bus: 'scare', when: t, volume: volume * 0.6, offset: 0.7, duration: 1.6, rate: 0.62, distort: 0.55, filter: { type: 'lowpass', freq: 1800 }, reverb: 0.4 });
+    this.play('scream-girl', { bus: 'scare', when: t + 0.05, volume: volume * 0.4, offset: 0.1, duration: 1.3, rate: 0.8, distort: 0.3, reverb: 0.3 });
+    this.play('whisper-soft', { bus: 'scare', when: t, volume: volume * 0.5, duration: 0.8, rate: 0.6, reverse: true, reverb: 0.6 });
   }
 
   /**

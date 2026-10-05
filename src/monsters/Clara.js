@@ -23,6 +23,12 @@ export class ClaraEvent {
     this.laughSeconds = Phaser.Math.FloatBetween(t.claraLaughMin, t.claraLaughMax);
     // A risada vem de um lado (esquerda ou direita)
     this.laughSound = ctx.sfx.laugh(this.laughSeconds, 0.65, Math.random() < 0.5 ? -0.6 : 0.6);
+    // O perigo dura exatamente o som: medido no relógio do áudio (as risadas emendadas
+    // nunca dão exatamente laughSeconds, e o relógio do jogo pode se adiantar do áudio)
+    if (this.laughSound.endsAt) {
+      this.audioStart = ctx.sfx.now;
+      this.laughSeconds = this.laughSound.endsAt - this.audioStart;
+    }
     this.crackIn = 0;
   }
 
@@ -33,7 +39,7 @@ export class ClaraEvent {
 
   update(dt, { playerMoving }) {
     if (this.done) return;
-    this.elapsed += dt;
+    this.elapsed = this.audioStart !== undefined ? this.ctx.sfx.now - this.audioStart : this.elapsed + dt;
 
     if (!this.chasing) {
       if (this.frozenWindow && playerMoving) this.startChase();

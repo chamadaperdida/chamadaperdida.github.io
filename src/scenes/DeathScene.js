@@ -17,7 +17,9 @@ const ROWS = { invasor: 0, distorcido: 1, helena: 2, clara: 3 };
 const SCREAMS = { invasor: 'roar1', distorcido: 'roar2', helena: 'woman', clara: 'girl' };
 // Quadros de cada jumpscare (scripts/sprites/jumpscares.mjs: 128×128, 4 por monstro)
 const FRAMES = 4;
-const FRAME_AT = [200, 400, 600, 820]; // ms
+const START = 200; // ms (antes: 0,2 s de silêncio)
+const FRAME_AT = [START, 340, 470, 620]; // ms — no 2º quadro ele já tomou a tela
+const HIT_SCALE = 4.8;
 
 export const DEATH_PHRASES = {
   clara: 'Ela só queria brincar de estátua.',
@@ -41,34 +43,52 @@ export class DeathScene extends Phaser.Scene {
     const row = ROWS[monster] ?? 0;
     const scare = this.add
       .image(width / 2, height / 2, 'jumpscares', row * FRAMES)
-      .setScale(4.6)
+      .setScale(0.6)
       .setVisible(false);
     // Artur distorcido: glitch alternando com o rosto normal do Artur
     const arturFace = this.add.image(width / 2, height / 2, 'face', 0).setScale(22).setVisible(false);
+    // Clarão no impacto
+    const flash = this.add.rectangle(width / 2, height / 2, width, height, 0xd8d0c8).setAlpha(0);
 
-    // 2. Jumpscare
-    this.time.delayedCall(200, () => {
-      scare.setVisible(true);
-      sfx.scream(0.95, false, SCREAMS[monster]);
+    // 2. Jumpscare: o monstro surge pequeno, num canto, e VOA na cara do jogador
+    const hit = FRAME_AT[1]; // chega na tela cheia junto com o 2º quadro
+    this.time.delayedCall(START, () => {
+      const side = Math.random() < 0.5 ? -1 : 1;
+      scare.setPosition(width / 2 + side * width * 0.18, height / 2 + height * 0.12).setVisible(true);
+      sfx.whoosh((hit - START) / 1000, 0.7);
+      this.tweens.add({ targets: scare, scale: HIT_SCALE, x: width / 2, y: height / 2, duration: hit - START, ease: 'Cubic.easeIn' });
+    });
+    this.time.delayedCall(hit, () => {
+      sfx.scream(1, false, SCREAMS[monster]);
       // Trecho escondido dos gritos da 3ª ligação final, abafado pelo telefone (GDD 13.6)
       sfx.scream(0.08, true, 'woman');
       // Helena: o grito vem misturado com o tom de linha ocupada (GDD 13.5)
-      if (monster === 'helena') sfx.busyTone(1.2, 0.2);
-      cam.shake(1100, 0.02);
-      glitchCamera(this, cam, 1.1, 0.8);
+      if (monster === 'helena') sfx.busyTone(1.2, 0.25);
+      flash.setAlpha(0.55);
+      this.tweens.add({ targets: flash, alpha: 0, duration: 140 });
+      cam.shake(250, 0.05);
+      this.time.delayedCall(250, () => cam.shake(800, 0.018));
+      glitchCamera(this, cam, 1.0, 0.9);
+      // continua avançando devagar, a cabeça tremendo de forma irregular
+      this.tweens.add({ targets: scare, scale: HIT_SCALE * 1.18, duration: 1000, ease: 'Quad.easeIn' });
+      this.jitter = this.time.addEvent({
+        delay: 45,
+        loop: true,
+        callback: () => scare.setPosition(width / 2 + (Math.random() - 0.5) * 18, height / 2 + (Math.random() - 0.5) * 14),
+      });
     });
     for (let n = 1; n < FRAMES; n++) this.time.delayedCall(FRAME_AT[n], () => scare.setFrame(row * FRAMES + n));
     if (monster === 'distorcido') {
-      for (let t = 750; t < 1300; t += 110) {
+      for (let t = 650; t < 1300; t += 110) {
         this.time.delayedCall(t, () => arturFace.setVisible(true));
         this.time.delayedCall(t + 45, () => arturFace.setVisible(false));
       }
     }
-    // Zoom e tremor da cabeça
-    this.tweens.add({ targets: scare, scale: 5.4, duration: 1200, ease: 'Quad.easeIn' });
 
     // 3. Corta para preto com chiado e estática vermelha diminuindo
     this.time.delayedCall(1400, () => {
+      this.jitter?.remove();
+      flash.destroy();
       scare.destroy();
       arturFace.destroy();
       this.staticLevel = 1;

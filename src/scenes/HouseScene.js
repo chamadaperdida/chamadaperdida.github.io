@@ -469,12 +469,22 @@ export class HouseScene extends Phaser.Scene {
     this.fuse = { item, glint };
   }
 
-  /** Brilho fraco do fusível só quando o feixe da lanterna passa por ele. */
-  updateFuseGlint(time) {
+  /**
+   * Brilho do fusível quando o feixe da lanterna passa por ele; e, de perto (até 7 m), de
+   * tempos em tempos um estalinho elétrico baixo vindo do lado dele — uma ajuda pequena.
+   */
+  updateFuseGlint(time, dt = 0) {
     if (!this.fuse) return;
     const { item, glint } = this.fuse;
-    const lit = !this.generator.on && this.litByFlashlight(item.sprite.x / PPM, (item.sprite.y - 2) / PPM);
-    glint.setAlpha(lit ? 0.32 + 0.12 * Math.sin(time / 90) : 0);
+    const pos = { x: item.sprite.x / PPM, y: (item.sprite.y - 2) / PPM };
+    const lit = !this.generator.on && this.litByFlashlight(pos.x, pos.y);
+    glint.setAlpha(lit ? 0.42 + 0.14 * Math.sin(time / 90) : 0);
+    this.fuse.sparkIn = (this.fuse.sparkIn ?? 3) - dt;
+    if (this.fuse.sparkIn <= 0) {
+      this.fuse.sparkIn = 5 + Math.random() * 3;
+      const { volume, pan } = positional(this.player.feetMeters, pos, 7);
+      if (volume > 0) foley.fuseSpark(0.35 * volume, pan);
+    }
   }
 
   useDoor(door) {
@@ -918,7 +928,7 @@ export class HouseScene extends Phaser.Scene {
     this.lockEvent.update(dt, this.generator.on);
     this.generator.lockedDoor = !!this.lockEvent.door;
     this.hud.setHint(this.sleep || this.dead ? '' : this.tasks.hint);
-    this.updateFuseGlint(time);
+    this.updateFuseGlint(time, dt);
     this.bears.update(dt, this.chest, this.lighting);
 
     // Monstros (só no escuro) e efeitos de perseguição
@@ -1136,10 +1146,11 @@ export class HouseScene extends Phaser.Scene {
     return this.lighting.castRay(c.x, c.y, angle, d) >= d - 0.35;
   }
 
-  /** Perseguição (GDD 7): coração forte + respiração, bordas pulsando e leve tremor. */
+  /** Perseguição (GDD 7): coração forte + respiração + trilha, bordas pulsando e leve tremor. */
   updateChaseEffects(dt) {
     const chasing = this.monsters.chasing;
-    if (chasing && !this.chaseSound) this.chaseSound = sfx.chaseLoop(0.8, false);
+    // respiração + trilha macabra baixinha de fundo
+    if (chasing && !this.chaseSound) this.chaseSound = sfx.group([sfx.chaseLoop(0.8, false), sfx.chaseMusic()]);
     if (!chasing && this.chaseSound) {
       this.chaseSound.stop();
       this.chaseSound = null;
@@ -1155,7 +1166,7 @@ export class HouseScene extends Phaser.Scene {
   die(monster) {
     if (this.dead || this.godMode) return;
     this.dead = true;
-    this.chaseSound?.stop();
+    this.chaseSound?.stop(0.05); // corta a trilha na hora (o jumpscare começa em silêncio)
     this.chaseSound = null;
     this.hud.resetDread();
     this.hud.dialogue?.clear();

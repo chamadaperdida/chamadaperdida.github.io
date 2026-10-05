@@ -294,7 +294,7 @@ export const ITEM_SPOTS = [
   { on: 'mesinhaHospedes', dx: 8, dy: 7 },
   { on: 'caixaFesta1', dx: 5, dy: 5 },
   { on: 'caixaFesta3', dx: 10, dy: 5 },
-  { on: 'pia', dx: 8, dy: 13 },
+  { on: 'pia', dx: 40, dy: 14 }, // (à direita da pia: o canto esquerdo é dos pratos limpos)
   { on: 'mesaCozinha', dx: 12, dy: 12 },
   { on: 'mesaCozinha', dx: 40, dy: 15 },
   { on: 'tabua', dx: 8, dy: 5 },
