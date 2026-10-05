@@ -5,6 +5,7 @@ import { drawTiles } from './sprites/tiles.mjs';
 import { drawProps } from './sprites/props.mjs';
 import { drawFaces } from './sprites/face.mjs';
 import { drawJumpscares } from './sprites/jumpscares.mjs';
+import { drawDelegacia } from './sprites/delegacia.mjs';
 
 const OUT = 'public/assets/sprites';
 mkdirSync(OUT, { recursive: true });
@@ -16,5 +17,8 @@ drawJumpscares().save(`${OUT}/jumpscares.png`);
 const props = drawProps();
 props.canvas.save(`${OUT}/props.png`);
 writeFileSync(`${OUT}/props.json`, JSON.stringify(props.json, null, 2));
+const delegacia = drawDelegacia();
+delegacia.canvas.save(`${OUT}/delegacia.png`);
+writeFileSync(`${OUT}/delegacia.json`, JSON.stringify(delegacia.json, null, 2));
 
 console.log('Sprites gerados em', OUT);

@@ -38,7 +38,7 @@ import { ShadowHallucination } from '../hallucinations/Shadow.js';
 import { FakeStepsHallucination } from '../hallucinations/FakeSteps.js';
 import { TvHallucination } from '../hallucinations/Tv.js';
 import { LandlineHallucination } from '../hallucinations/Landline.js';
-import { daysLeftText } from './TransitionScene.js';
+import { toDelegacia } from './DelegaciaScene.js';
 import { NavGrid } from '../world/nav.js';
 import { MONSTER_KINDS, MonsterDirector } from '../systems/MonsterDirector.js';
 import { fearDecayPerSecond, hallucinationGap } from '../systems/formulas.js';
@@ -658,13 +658,16 @@ export class HouseScene extends Phaser.Scene {
     this.hud.clearFade(0.25);
   }
 
-  /** Noite terminou: próximo dia (a delegacia e o save entram nas etapas 8 e 9). */
+  /** Noite terminou: delegacia do dia seguinte (GDD 2.3; o save entra na etapa 11). */
   endNight() {
     this.sleep = null;
     const day = this.clock.day;
-    const screens = day < 7 ? [daysLeftText(day + 1), 'Casa'] : ['O final entra na etapa 10'];
-    const nextDay = day < 7 ? day + 1 : 1;
-    this.scene.start('Transition', { screens, next: { scene: 'House', data: { day: nextDay } } });
+    if (day >= 7) {
+      // O final (GDD 10) entra na etapa 12
+      this.scene.start('Transition', { screens: ['O final entra na etapa 12'], next: { scene: 'House', data: { day: 1 } } });
+      return;
+    }
+    this.scene.start('Transition', toDelegacia(day + 1));
   }
 
   // ---- Quadro a quadro ----------------------------------------------------

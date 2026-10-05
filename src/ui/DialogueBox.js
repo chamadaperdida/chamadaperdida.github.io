@@ -5,11 +5,23 @@
 //         se já terminou, passa para a próxima fala ou fecha a caixa.
 //
 // Uso:  await dialogue.show([{ speaker: 'Artur', text: '...aí não.' }])
+//
+// Extras por fala:
+//   { fx: '(chiado)' }     efeito sonoro/ação: sem nome, em cinza
+//   { ..., glitch: true }   voz distorcida das ligações-alucinação (GDD 3.5), sem áudio:
+//                           o texto treme, letras falham por um instante (viram outros
+//                           símbolos ou somem) e a digitação sai irregular
 
 const FONT = 'VT323, monospace';
 const CHARS_PER_SECOND = 38;
 // Pausas extras (em segundos) depois de pontuação, para o texto "respirar".
 const PAUSES = { '.': 0.28, ',': 0.12, '?': 0.3, '!': 0.3, '…': 0.35 };
+
+// Voz distorcida: símbolos que aparecem no lugar das letras por um instante
+const GLITCH_CHARS = '#%&*?/|<>~=+_^';
+const GLITCH_SWAP = 0.05; // fração das letras visíveis trocadas em cada "falha"
+const GLITCH_EVERY = [0.06, 0.22]; // s entre falhas
+const GLITCH_SHAKE = 1.5; // px
 
 const BOX_W = 780;
 const BOX_H = 118;
@@ -80,6 +92,7 @@ export class DialogueBox {
 
   /** Fecha na hora, sem avisar quem esperava (ex.: noite reiniciada). */
   clear() {
+    this.glitch = false;
     this.queue = [];
     this.typing = false;
     this.resolve = null;
@@ -97,14 +110,20 @@ export class DialogueBox {
       return;
     }
     this.container.setVisible(false);
+    this.glitch = false;
     const resolve = this.resolve;
     this.resolve = null;
     resolve?.();
   }
 
-  #startLine({ speaker, text }) {
-    this.#setSpeaker(speaker);
-    this.fullText = text;
+  #startLine({ speaker, text, fx, glitch }) {
+    this.#setSpeaker(fx ? null : speaker);
+    this.bodyText.setColor(fx ? '#7d8088' : '#dcdcdc');
+    this.glitch = !!glitch;
+    this.glitchIn = 0;
+    this.bodyText.x = this.bodyX ?? (this.bodyX = this.bodyText.x);
+    this.bodyText.y = this.bodyY ?? (this.bodyY = this.bodyText.y);
+    this.fullText = fx ?? text;
     this.shown = 0;
     this.wait = 0;
     this.typing = true;
@@ -130,6 +149,7 @@ export class DialogueBox {
 
   /** Chamado todo quadro pela cena dona da caixa. */
   update(dt) {
+    if (this.isOpen && this.glitch) this.#updateGlitch(dt);
     if (!this.typing) return;
     this.wait -= dt;
     while (this.wait <= 0 && this.shown < this.fullText.length) {
@@ -138,10 +158,39 @@ export class DialogueBox {
       const nextCh = this.fullText[this.shown];
       // Reticências: pausa só no último ponto
       const pause = ch === '.' && nextCh === '.' ? 0.12 : (PAUSES[ch] ?? 0);
-      this.wait += 1 / CHARS_PER_SECOND + (nextCh === undefined ? 0 : pause);
+      // Voz distorcida: ritmo irregular (às vezes trava, às vezes corre)
+      const jitter = this.glitch ? (Math.random() < 0.08 ? 0.25 + Math.random() * 0.3 : Math.random() * 0.03) : 0;
+      this.wait += 1 / CHARS_PER_SECOND + jitter + (nextCh === undefined ? 0 : pause);
     }
-    this.bodyText.setText(this.fullText.slice(0, this.shown));
+    if (!this.glitch) this.bodyText.setText(this.fullText.slice(0, this.shown));
     if (this.shown >= this.fullText.length) this.#finishTyping();
+  }
+
+  /** Voz distorcida (sem áudio): o texto treme e letras falham por um instante. */
+  #updateGlitch(dt) {
+    const visible = this.fullText.slice(0, this.shown);
+    this.glitchIn -= dt;
+    if (this.glitchIn > 0 && this.glitchText !== undefined) {
+      this.bodyText.setText(this.glitchText.slice(0, this.shown));
+      return;
+    }
+    this.glitchIn = GLITCH_EVERY[0] + Math.random() * (GLITCH_EVERY[1] - GLITCH_EVERY[0]);
+    const chars = [...this.fullText];
+    const glitchNow = Math.random() < 0.55;
+    if (glitchNow) {
+      const n = Math.max(1, Math.round(visible.length * GLITCH_SWAP));
+      for (let i = 0; i < n; i++) {
+        const k = Math.floor(Math.random() * visible.length);
+        if (chars[k] === ' ') continue;
+        // Some (palavras sumindo) ou vira outro símbolo
+        chars[k] = Math.random() < 0.4 ? ' ' : GLITCH_CHARS[Math.floor(Math.random() * GLITCH_CHARS.length)];
+      }
+    }
+    this.glitchText = chars.join('');
+    this.bodyText.setText(this.glitchText.slice(0, this.shown));
+    // Tremor leve
+    this.bodyText.x = this.bodyX + (Math.random() < 0.5 ? Math.round((Math.random() * 2 - 1) * GLITCH_SHAKE) : 0);
+    this.bodyText.y = this.bodyY + (Math.random() < 0.3 ? Math.round((Math.random() * 2 - 1) * GLITCH_SHAKE) : 0);
   }
 }
 

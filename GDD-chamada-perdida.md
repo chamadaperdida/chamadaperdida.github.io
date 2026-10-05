@@ -132,16 +132,19 @@ Tela preta, **todo texto em vermelho**.
 - Câmera frontal, 2D. **Artur não anda.**
 - O jogador interage com objetos clicando neles.
 - O telefone toca; o jogador clica para atender. A ligação aparece na **caixa de diálogo** (seção 11.1), com o nome de quem fala.
-- Quando todas as ligações do dia terminam, a **porta** fica interativa. Antes disso, clicar nela não faz nada (sugestão: Artur diz *"Ainda não terminou o turno."*).
+- Quando todas as ligações do dia terminam, a **porta** fica interativa (o vidro fosco brilha fraco). Antes disso, clicar nela: Artur diz *"Ainda não terminou o turno."*
+- O telefone toca 3 s depois de entrar e, entre uma ligação e outra, depois de 5 a 9 s. Toca até ser atendido (o aparelho treme).
+- Passando o mouse num objeto, o nome dele aparece pequeno no canto inferior direito; o cursor vira mãozinha.
+- Durante uma ligação, os outros objetos não respondem. Clique também avança o diálogo.
 
 ### 3.2 Objetos
 
 | Objeto | Função |
 |---|---|
 | Telefone | Ligações do dia |
-| Calendário | Mostra o dia; dia 7 circulado com "Aniversário da Clara" |
-| Planta | Decoração |
-| Relógio de parede | Mostra a hora; **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
+| Calendário | Clicando, abre grande: dias que já passaram riscados, hoje em destaque, o dia 27 (dia 7 do jogo; dia 1 = 21) circulado com "Aniversário da Clara" |
+| Planta | Decoração (só mostra o nome) |
+| Relógio de parede | Mostra a hora do turno (começa às 22:58, anda 1 min a cada 4 s e +6 min a cada ligação); **trava em 23:41, 23:44 ou 23:47 durante ligações-alucinação** |
 | Bilhete do Marcos | Aparece na mesa nos dias 1–6 |
 | Porta | Leva para casa ao fim das ligações |
 
@@ -182,6 +185,8 @@ Só nas alucinações (nunca nas reais):
 - **Cabo do telefone aparece fora da tomada** enquanto a ligação acontece.
 - Quem liga chama Artur pelo nome sem ele ter se apresentado.
 - Tela com vinheta escura e granulado leve.
+- **Voz distorcida na caixa de diálogo (sem áudio):** só nas falas de quem liga (Artur fala normal). O texto treme de leve, letras falham por um instante (viram símbolos ou somem) e a digitação sai irregular, travando e correndo. Efeitos sonoros e ações aparecem em cinza, sem nome.
+- Por enquanto só há um chiado baixo de fundo; os ruídos (gerador, porta rangendo, "parabéns", balão) entram na etapa 13 (áudio).
 
 ---
 
@@ -760,7 +765,7 @@ Extras nas alucinações: tom oscilando, eco distante, palavras sumindo, trechos
 | Tentando dormir com medo | "Não consigo dormir agora, estou com medo." |
 | Gerador sem fusível | "Queimou o fusível... tem que ter outro em algum lugar." |
 | Achou o fusível | "Achei um fusível." |
-| Porta da delegacia antes da hora (sugestão) | "Ainda não terminou o turno." |
+| Porta da delegacia antes da hora | "Ainda não terminou o turno." |
 | Quarto da Clara | "Não posso entrar, está trancado." |
 | Porta do quarto trancada | "A porta está trancada... onde eu coloquei a chave?" |
 | Porta trancada (de novo) | "Trancada. Preciso achar a chave." |
@@ -960,7 +965,7 @@ Formato: falas na caixa de diálogo (seção 11.1), com o nome de quem fala. *(I
 
 ## Apêndice B — Pendências
 
-- Como as pistas das ligações-alucinação (voz distorcida, cortes) aparecem na caixa de diálogo sem áudio de voz (ex.: letras tremendo, trechos apagando).
+- ~~Como as pistas das ligações-alucinação aparecem na caixa de diálogo sem áudio de voz~~ — proposta implementada na etapa 10 (seção 3.5: texto tremendo, letras falhando, digitação irregular); ajustar se não convencer.
 - Quais momentos específicos terão áudio de voz (seção 14.3).
 - Ajuste fino de todos os valores da seção 9 jogando o protótipo.
 - **Logo acima da trava, as noites 1–4 ficam fáceis** (simulação 9.5), por causa dos remédios. Opções: menos remédios, trava mais alta nessas noites, ou aceitar (as primeiras noites são as mais fáceis).

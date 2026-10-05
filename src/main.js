@@ -5,6 +5,7 @@ import { HouseScene } from './scenes/HouseScene.js';
 import { HudScene } from './scenes/HudScene.js';
 import { TransitionScene } from './scenes/TransitionScene.js';
 import { DeathScene } from './scenes/DeathScene.js';
+import { DelegaciaScene } from './scenes/DelegaciaScene.js';
 import { debug } from './debug/debug.js';
 import './style.css';
 
@@ -28,7 +29,7 @@ document.fonts.load('20px VT323').finally(() => {
       default: 'arcade',
       arcade: { gravity: { x: 0, y: 0 }, debug: false },
     },
-    scene: [BootScene, HouseScene, HudScene, TransitionScene, DeathScene],
+    scene: [BootScene, HouseScene, HudScene, TransitionScene, DeathScene, DelegaciaScene],
   });
   // Só no `npm run dev`: facilita inspecionar o jogo pelo console do navegador.
   if (import.meta.env.DEV) window.game = game;
