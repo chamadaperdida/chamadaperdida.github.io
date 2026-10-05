@@ -434,7 +434,7 @@ export class Tasks {
             // Prato limpo empilhado no canto da bancada da pia
             const pia = this.furniture.get('pia').sprite;
             this.scene.add
-              .image(pia.x + 7, pia.y + 7 - (l.washed - 1) * 2, 'props', 'plate')
+              .image(pia.x + 7, pia.y + 7 - (l.washed - 1) * 2, 'props', 'plate-clean')
               .setOrigin(0.5, 1)
               .setDepth(pia.depth + 1 + l.washed);
             if (this.carrying.count <= 0) this.carrying = null;

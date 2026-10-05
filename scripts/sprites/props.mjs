@@ -801,6 +801,15 @@ function plate(c, x, y) {
   c.px(x + 5, y + 2, '#6a4a2a');
 }
 
+function plateClean(c, x, y) {
+  // Prato limpo, 8×4: branco, com brilho e sem manchas
+  c.rect(x + 1, y, 6, 1, '#f4f2ea');
+  c.rect(x, y + 1, 8, 2, '#e4e2d8');
+  c.rect(x + 1, y + 3, 6, 1, '#aeb0aa');
+  c.px(x + 2, y + 1, '#ffffff');
+  c.px(x + 3, y + 1, '#ffffff');
+}
+
 function trashBag(c, x, y) {
   // Saco de lixo, 8×9
   c.rect(x + 3, y, 2, 2, '#2a2a2e'); // nó
@@ -1121,6 +1130,7 @@ const PROPS = [
   ['washer-on', 24, 24, washerOn, true],
   ['laundry-basket', 14, 10, laundryBasket, true],
   ['plate', 8, 4, plate, true],
+  ['plate-clean', 8, 4, plateClean, true],
   ['trash-bag', 8, 9, trashBag, true],
   ['wet-clothes', 12, 6, wetClothes, true],
   ['watering-can', 12, 8, wateringCan, true],

@@ -292,8 +292,9 @@ export class DelegaciaScene extends Phaser.Scene {
       this.time.delayedCall(700, () => this.dialogue.show(say('Acabou o turno. Hora de ir pra casa.')));
       // A porta "acorda": um brilho fraco no vidro fosco
       this.doorGlow = this.add
-        .rectangle((AT.door.x + 6) * S, (AT.door.y + 8) * S, 32 * S, 70 * S, 0xd8e0e8, 0)
+        .rectangle((AT.door.x + 6) * S, (AT.door.y + 8) * S, 32 * S, 70 * S, 0xd8e0e8, 1)
         .setOrigin(0)
+        .setAlpha(0)
         .setBlendMode(Phaser.BlendModes.ADD);
       this.tweens.add({ targets: this.doorGlow, alpha: 0.08, duration: 1200, yoyo: true, repeat: -1 });
       return;

@@ -39,7 +39,7 @@ npm run dev
 | `src/ui/` | Caixa de diálogo e menus (botões, opções, confirmação). |
 | `src/data/calls.js` | Ligações da delegacia de cada dia e bilhetes do Marcos (GDD 3 e Apêndice A). |
 | `src/debug/` | Modo debug. |
-| `scripts/sprites/` | Pixel art desenhada por código. `npm run sprites` gera os PNG em `public/assets/sprites`. |
+| `scripts/sprites/` | Pixel art desenhada por código. `npm run sprites` gera os PNG em `public/assets/sprites`. A tela inicial (`title.mjs`) tem luz calculada por pixel; `node scripts/preview-title.mjs saida.png` gera uma prévia dela. |
 | `scripts/sim-ursos.py` | Simulação de balanceamento dos ursos (GDD 9.5). |
 | `.github/workflows/deploy.yml` | Publicação automática no GitHub Pages a cada push na `main`. |
 

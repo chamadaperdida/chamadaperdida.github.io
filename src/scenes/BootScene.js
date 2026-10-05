@@ -18,6 +18,7 @@ export class BootScene extends Phaser.Scene {
     this.load.spritesheet('jumpscares', `${base}jumpscares.png${v}`, { frameWidth: 64, frameHeight: 64 });
     this.load.atlas('props', `${base}props.png${v}`, `${base}props.json${v}`);
     this.load.atlas('delegacia', `${base}delegacia.png${v}`, `${base}delegacia.json${v}`);
+    this.load.atlas('title', `${base}title.png${v}`, `${base}title.json${v}`);
   }
 
   create() {

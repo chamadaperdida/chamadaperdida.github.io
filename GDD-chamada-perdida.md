@@ -70,7 +70,12 @@ A história **nunca é contada de forma direta**. O jogador recebe peças soltas
 
 ### 2.1 Tela inicial
 
-- Fundo: título *Chamada Perdida* em pixel art com glitch ocasional, sobre um telefone numa mesa escura.
+- Fundo: título *Chamada Perdida* em pixel art com glitch ocasional, sobre um telefone numa mesa escura. É a imagem principal do jogo, com mais resolução que o resto (480×270):
+  - sala escura iluminada só pela luz fria da rua entrando pela persiana (uma lâmina torta), em faixas na parede, na mesa e nos objetos, com poeira flutuando nos raios;
+  - na mesa: o telefone antigo de disco (em destaque), uma secretária eletrônica com **"1" no visor e a luz de mensagem piscando em vermelho** (a chamada perdida), porta-retrato de uma menina com o vidro rachado, frasco de remédio derramado e um urso com um olho faltando e uma costura vermelha;
+  - relógio de parede parado em **23:41**; atrás, a porta entreaberta do corredor, escuro, com luz por baixo da porta do fim;
+  - chuva no vidro e **relâmpagos** de tempos em tempos (com trovão); em alguns deles, **a silhueta de uma menina aparece parada no corredor** só durante o clarão.
+- Título e menu ficam à esquerda, sobre a parede escura.
 - Som: chuva; de tempos em tempos, um telefone tocando três vezes ao longe.
 - **Apenas 3 botões:**
   - **Novo jogo** — se houver save, confirma: *"Isso apaga seu progresso. Continuar?"*
@@ -105,7 +110,7 @@ Tela preta, **todo texto em vermelho**.
 | Continuar após dormir e fechar o jogo | "Faltam X dias" → "Delegacia" → delegacia |
 | Dormiu no dia 7 | Final (seção 10) |
 
-**Aviso de fone** (só no Novo jogo, antes da primeira transição): ícone de fone em pixel art + *"Para uma melhor experiência, jogue com fones de ouvido."* Some sozinho após alguns segundos.
+**Aviso de fone** (só no Novo jogo, antes da primeira transição): ícone de fone em pixel art + *"Para uma melhor experiência, jogue com fones de ouvido."*, os dois **em vermelho** Some sozinho após alguns segundos.
 
 ### 2.4 Pausa (Esc)
 
@@ -353,7 +358,7 @@ Nas noites 5–7, **ao ler a lista** (começo da noite), o evento da tranca (4.9
 | Tarefa | Como funciona |
 |---|---|
 | **Jantar** | Pegar a marmita no freezer da lavanderia → micro-ondas da cozinha (30 s, precisa de luz) → comer na mesa da sala de jantar (sentado 5 s). Não sobra prato na mesa (para não confundir com a louça) |
-| **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um (cada prato limpo fica empilhado no canto da bancada) |
+| **Lavar a louça** | Recolher 4 pratos espalhados (sala, escritório, quarto do Artur, sala de jantar), carregando a pilha → levar à pia → lavar um por um (cada prato limpo — branco, sem manchas — fica empilhado no canto da bancada) |
 | **Tirar o lixo** | Juntar os sacos das 3 lixeiras (cozinha, banheiro social, escritório) → levar até o latão na garagem |
 | **Lavar a roupa** | Pegar o cesto no quarto do Artur → máquina na lavanderia (ciclo de 90 s, precisa de luz) → levar a roupa molhada ao varal coberto do quintal (a roupa fica estendida no varal) |
 | **Regar as plantas** | Encher o regador no tanque → regar 5 vasos (jardim, varanda, sala). O regador só dá para 3 vasos; é preciso voltar e encher. **Os 5 vasos da tarefa estão murchos** (folhas amarelas caídas, terra clara rachada); todos os outros vasos da casa estão vivos. Vaso regado fica vivo, com a terra escura e molhada |

@@ -18,8 +18,9 @@ const CELL = 14; // px de cada degrau da barra de volume
 const CELL_GAP = 4;
 
 export class Menu {
-  constructor(scene, { x, y, items, spacing = 50, fontSize = 38, depth = 0, focus = 0, onBack = null }) {
+  constructor(scene, { x, y, items, spacing = 50, fontSize = 38, depth = 0, focus = 0, onBack = null, align = 'center' }) {
     this.scene = scene;
+    this.align = align;
     this.items = items;
     this.onBack = onBack;
     this.active = true;
@@ -55,7 +56,7 @@ export class Menu {
     const row = { item };
     const index = this.items.indexOf(item);
     if (!item.slider) {
-      row.text = this.scene.add.text(x, y, '', style).setOrigin(0.5).setDepth(depth);
+      row.text = this.scene.add.text(x, y, '', style).setOrigin(this.align === 'left' ? 0 : 0.5, 0.5).setDepth(depth);
       row.text.setInteractive({ useHandCursor: true });
       row.text.on('pointerover', () => this.active && this.#enabled(index) && this.#setFocus(index));
       row.text.on('pointerdown', () => this.active && this.#enabled(index) && this.#choose(index));

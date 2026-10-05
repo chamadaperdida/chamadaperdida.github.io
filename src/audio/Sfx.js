@@ -117,6 +117,16 @@ class Sfx {
     return this.#loopHandle(gain, panner, nodes);
   }
 
+  /** Trovão: estalo seco e depois um ronco grave que vai sumindo. */
+  thunder(volume = 0.5) {
+    if (!this.ready) return;
+    const { gain } = this.#out(volume * 4, (Math.random() - 0.5) * 0.8, this.ambient);
+    const at = this.ctx.currentTime + 0.02;
+    this.#burst(at, gain, { filter: { type: 'lowpass', freq: 1400, q: 0.5 }, attack: 0.005, decay: 0.35, level: 0.35 });
+    this.#burst(at + 0.05, gain, { filter: { type: 'lowpass', freq: 160, q: 0.8 }, attack: 0.25, decay: 3.4, level: 1 });
+    this.#burst(at + 0.6, gain, { filter: { type: 'lowpass', freq: 90, q: 1 }, attack: 0.4, decay: 2.6, level: 0.8 });
+  }
+
   /** Um telefone antigo tocando três vezes, ao longe (abafado, com eco). */
   distantRing(volume = 0.25, pan = 0) {
     if (!this.ready) return;
