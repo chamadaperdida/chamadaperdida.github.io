@@ -80,7 +80,17 @@ A história **nunca é contada de forma direta**. O jogador recebe peças soltas
 - **Apenas 3 botões:**
   - **Novo jogo** — se houver save, confirma: *"Isso apaga seu progresso. Continuar?"*
   - **Continuar** — mostra o dia salvo (*"Continuar — dia 3"*); desativado se não houver save ou se o jogo foi zerado.
-  - **Opções** — volume geral, volume do ambiente, volume dos efeitos, tela cheia. **Ficam salvas entre sessões** (a tela cheia volta no primeiro clique ou tecla, porque o navegador só permite entrar nela assim).
+  - **Opções** — volume geral, volume do ambiente, volume dos efeitos, tela cheia, desempenho e tutorial. **Ficam salvas entre sessões** (a tela cheia volta no primeiro clique ou tecla, porque o navegador só permite entrar nela assim). Tudo vale na hora, também pela pausa.
+    - **Desempenho (PCs mais fracos):**
+      - **Iluminação: alta / leve** — leve: o cone da lanterna e a luz vazando pelas portas usam metade dos raios e das faixas e são redesenhados 30 vezes por segundo (a conta de "o que a lanterna ilumina", que a jogabilidade usa, continua precisa). Medido: o quadro custa menos da metade.
+      - **Efeitos de tela: sim / não** — não: sem granulado, vinheta de ambiente, glitch (remédio, jumpscare, gritos do final) e filtros de cor da madrugada. O escurecimento das bordas na perseguição fica (é aviso de perigo).
+      - **Limite de FPS: 60 / 30.**
+    - **Tutorial: sim / não** (começa desligado) — **setas douradas** no próximo passo: em cima dele, balançando, quando está na tela; na borda da tela, apontando para ele, quando não está.
+      - Ao chegar em casa: seta na geladeira (a lista).
+      - Depois de ler a lista: uma seta em cada coisa que dá para fazer agora — cada prato, cada saco de lixo, cada janela, o freezer, o cesto, o armário, o tanque, o celular perdido, o que ficou no chão...
+      - Com algo na mão: as outras somem e fica só a do próximo passo daquilo (prato → pia; marmita → micro-ondas; regador com água → os vasos; vazio → o tanque).
+      - Tudo feito: seta na cama.
+      - No escuro: só o gerador, e só depois de pegar o fusível (achar o fusível continua sendo com o jogador). Na madrugada do final: o telefone.
 - Menus funcionam com mouse (passar por cima destaca, clicar escolhe) e teclado (↑/↓, Enter, ←/→ nos volumes, Esc volta).
 - O som só começa depois do primeiro clique ou tecla (regra do navegador).
 

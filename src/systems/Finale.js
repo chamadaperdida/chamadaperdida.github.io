@@ -24,6 +24,7 @@ import { BED_POINT } from '../world/houseMap.js';
 import { positional } from '../audio/Sfx.js';
 import { glitchCamera } from '../fx/GlitchPipeline.js';
 import { foley } from '../audio/Foley.js';
+import { settings } from './Settings.js';
 
 const WAKE_SECONDS = 1.2; // tela preta com o telefone já tocando
 const FADE_IN_SECONDS = 2.5;
@@ -89,7 +90,7 @@ export class Finale {
     this.cam = cam;
     this.baseZoom = cam.zoom;
     this.scene.hud.setCalm(0); // granulado e vinheta do HUD no máximo
-    if (!cam.postFX) return; // (sem WebGL)
+    if (!cam.postFX || !settings.screenFx) return; // (sem WebGL, ou efeitos de tela desligados)
     this.color = cam.postFX.addColorMatrix();
     this.color.saturate(-0.6);
     // Tom frio: menos vermelho, mais azul

@@ -11,6 +11,7 @@ import Phaser from 'phaser';
 import { BALANCE } from '../config/balance.js';
 import { DOORS, LIGHT_ZONE, ROOMS, doorCells, roomAt, roomsAcross } from '../world/houseMap.js';
 import { CELL_METERS, PPM } from '../world/tiles.js';
+import { settings } from './Settings.js';
 
 const COLORS = {
   ambientOn: 0x0b0b10, // outros cômodos com a luz acesa: quase pretos
@@ -30,6 +31,9 @@ function mix(a, b, t) {
 const RAY_STEP = 0.1; // metros
 const WALL_LIT_DEPTH = 0.3; // metros (a parede tem 0,5 m)
 const FADE_SPEED = 5; // quão rápido um cômodo acende/apaga ao entrar/sair (por s)
+// Iluminação leve (opções de desempenho): raios mais espaçados, menos faixas, passo de raio
+// maior só no desenho (a jogabilidade continua com o passo fino) e redesenho a 30 vezes/s
+const LOW = { rayDeg: 3, rayStep: 0.16, bands: 0.5, interval: 1 / 30 };
 
 export class Lighting {
   constructor(scene, { kind, bounds, doors }) {
@@ -69,12 +73,12 @@ export class Lighting {
     return false;
   }
 
-  castRay(ox, oy, angle, maxDist) {
-    const dx = Math.cos(angle) * RAY_STEP;
-    const dy = Math.sin(angle) * RAY_STEP;
+  castRay(ox, oy, angle, maxDist, step = RAY_STEP) {
+    const dx = Math.cos(angle) * step;
+    const dy = Math.sin(angle) * step;
     let x = ox;
     let y = oy;
-    for (let d = 0; d < maxDist; d += RAY_STEP) {
+    for (let d = 0; d < maxDist; d += step) {
       x += dx;
       y += dy;
       // Entra um pouco na parede, para a face onde a luz bate ficar iluminada
@@ -88,11 +92,20 @@ export class Lighting {
    * origem/alcance em metros, ângulos em radianos.
    */
   drawCone(origin, angle, halfAngle, range, color, bands, alpha) {
-    const rays = Math.max(12, Math.ceil((halfAngle * 2 * 180) / Math.PI / 1.5));
+    const low = settings.lightLow;
+    if (low) {
+      // menos faixas, cada uma mais forte (o total de luz fica parecido)
+      const fewer = Math.max(2, Math.round(bands * LOW.bands));
+      alpha = 1 - (1 - alpha) ** (bands / fewer);
+      bands = fewer;
+    }
+    const perRay = low ? LOW.rayDeg : 1.5;
+    const rays = Math.max(low ? 8 : 12, Math.ceil((halfAngle * 2 * 180) / Math.PI / perRay));
+    const step = low ? LOW.rayStep : RAY_STEP;
     const dists = [];
     for (let r = 0; r <= rays; r++) {
       const a = angle - halfAngle + (2 * halfAngle * r) / rays;
-      dists.push([a, this.castRay(origin.x, origin.y, a, range)]);
+      dists.push([a, this.castRay(origin.x, origin.y, a, range, step)]);
     }
     const ox = origin.x * PPM;
     const oy = origin.y * PPM;
@@ -122,6 +135,12 @@ export class Lighting {
    * @param zoneFactor brilho da zona atual (alucinação de luz piscando), 1 = normal
    */
   update(dt, { powerOn, feet, chest, flashlight, zoneFactor = 1 }) {
+    if (settings.lightLow) {
+      this.wait = (this.wait ?? 0) + dt;
+      if (this.wait < LOW.interval) return;
+      dt = this.wait;
+      this.wait = 0;
+    }
     this.zoneFactor = zoneFactor;
     this.powerOn = powerOn;
     const room = roomAt(feet.x, feet.y);

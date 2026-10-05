@@ -3,6 +3,7 @@
 // intensity 0 = imagem normal, 1 = glitch forte.
 
 import Phaser from 'phaser';
+import { settings } from '../systems/Settings.js';
 
 const FRAG = `
 #define SHADER_NAME GLITCH_FS
@@ -59,6 +60,7 @@ export class GlitchPipeline extends Phaser.Renderer.WebGL.Pipelines.PostFXPipeli
  */
 export function glitchCamera(scene, camera, seconds, peak = 1) {
   if (!(scene.renderer instanceof Phaser.Renderer.WebGL.WebGLRenderer)) return;
+  if (!settings.screenFx) return; // efeitos de tela desligados (opções de desempenho)
   const pipelines = scene.renderer.pipelines;
   if (!pipelines.postPipelineClasses.has('Glitch')) pipelines.addPostPipeline('Glitch', GlitchPipeline);
   camera.setPostPipeline('Glitch');

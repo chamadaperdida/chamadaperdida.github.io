@@ -10,6 +10,7 @@
 import Phaser from 'phaser';
 import { sfx } from '../audio/Sfx.js';
 import { options } from '../systems/Save.js';
+import { settings } from '../systems/Settings.js';
 
 const FONT = 'VT323, monospace';
 export const MENU_COLORS = { idle: '#8a8478', focus: '#ece4d0', disabled: '#3c3a34' };
@@ -179,18 +180,19 @@ function panel(scene, w, h, depth) {
 }
 
 /**
- * Opções (GDD 2.1): volume geral, do ambiente e dos efeitos, tela cheia. Tudo é aplicado na
- * hora e fica salvo entre sessões.
+ * Opções (GDD 2.1): volume geral, do ambiente e dos efeitos, tela cheia, desempenho
+ * (iluminação, efeitos de tela, limite de FPS) e tutorial. Tudo é aplicado na hora e fica
+ * salvo entre sessões.
  */
 export class OptionsPanel {
   constructor(scene, { depth = 2000, onClose }) {
     this.scene = scene;
     this.onClose = onClose;
     const { width, height } = scene.scale;
-    this.objects = panel(scene, 620, 400, depth);
+    this.objects = panel(scene, 660, 484, depth);
     this.objects.push(
       scene.add
-        .text(width / 2, height / 2 - 150, 'OPÇÕES', { fontFamily: FONT, fontSize: '44px', color: '#b3161d' })
+        .text(width / 2, height / 2 - 196, 'OPÇÕES', { fontFamily: FONT, fontSize: '44px', color: '#b3161d' })
         .setOrigin(0.5)
         .setDepth(depth),
     );
@@ -200,14 +202,15 @@ export class OptionsPanel {
       set: (v) => {
         this.values[key] = v;
         sfx.setVolumes({ [key]: v });
-        options.save(this.values);
+        options.save({ ...options.load(), [key]: v }); // (não sobrescreve as outras opções)
       },
     });
+    const toggle = (text, get, set) => ({ label: () => `${text}: ${get()}`, select: () => (set(), this.menu.refresh()) });
     this.menu = new Menu(scene, {
       x: width / 2 + 10,
-      y: height / 2 - 80,
-      spacing: 52,
-      fontSize: 34,
+      y: height / 2 - 140,
+      spacing: 42,
+      fontSize: 30,
       depth: depth + 1,
       onBack: () => this.close(),
       items: [
@@ -218,6 +221,11 @@ export class OptionsPanel {
           label: () => `Tela cheia: ${scene.scale.isFullscreen ? 'sim' : 'não'}`,
           select: () => (scene.scale.isFullscreen ? scene.scale.stopFullscreen() : scene.scale.startFullscreen()),
         },
+        // Desempenho (PCs mais fracos)
+        toggle('Iluminação', () => (settings.lightLow ? 'leve' : 'alta'), () => settings.set({ lighting: settings.lightLow ? 'alta' : 'leve' })),
+        toggle('Efeitos de tela', () => (settings.screenFx ? 'sim' : 'não'), () => settings.set({ screenFx: !settings.screenFx })),
+        toggle('Limite de FPS', () => (settings.fps30 ? '30' : '60'), () => settings.set({ fps: settings.fps30 ? 60 : 30 })),
+        toggle('Tutorial', () => (settings.tutorial ? 'sim' : 'não'), () => settings.set({ tutorial: !settings.tutorial })),
         { label: 'Voltar', select: () => this.close() },
       ],
     });

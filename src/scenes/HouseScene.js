@@ -28,6 +28,8 @@ import { Lighting } from '../systems/Lighting.js';
 import { Items } from '../systems/Items.js';
 import { Tasks } from '../systems/Tasks.js';
 import { Bears } from '../systems/Bears.js';
+import { Tutorial } from '../systems/Tutorial.js';
+import { settings } from '../systems/Settings.js';
 import { Heart } from '../systems/Heart.js';
 import { LockEvent } from '../systems/LockEvent.js';
 import { Finale } from '../systems/Finale.js';
@@ -160,6 +162,7 @@ export class HouseScene extends Phaser.Scene {
     this.lockedDoorTold = new Set(); // portas em que Artur já disse a fala da porta trancada
 
     this.bears = new Bears(this, this.clock, this.nav, this.furnitureRects, this.bedSprite);
+    this.tutorial = new Tutorial(this); // setas do próximo passo (opção Tutorial)
     this.monsters = new MonsterDirector(this.createMonsterCtx(), this.clock, this.fear);
     this.godMode = false; // debug: monstros não matam
     this.chaseSound = null;
@@ -394,6 +397,49 @@ export class HouseScene extends Phaser.Scene {
       );
     }
     return best;
+  }
+
+  // ---- Tutorial (opção nas configurações) ------------------------------------
+
+  /**
+   * Onde está o próximo passo (pontos do mundo, px) para as setas douradas:
+   * - antes de ler a lista: a geladeira;
+   * - depois: cada coisa da lista que dá para fazer agora (cada prato, saco, janela, o
+   *   freezer, o cesto, o celular perdido...), e o que ficou no chão;
+   * - com algo na mão: só o próximo passo daquilo (o prato → a pia; o regador vazio → o
+   *   tanque);
+   * - tudo feito: a cama. No escuro, só o gerador, e só se já tiver o fusível (achar o
+   *   fusível continua sendo com o jogador). Na madrugada do final: o telefone.
+   */
+  tutorialPoints() {
+    if (!settings.tutorial || this.dead || this.sleep) return [];
+    if (this.finale) {
+      const phone = this.finale.target;
+      return phone ? [phone.anchor] : [];
+    }
+    if (!this.generator.on) {
+      const g = this.generatorSprite;
+      return this.hasFuse ? [{ x: g.x + g.width / 2, y: g.y - 2 }] : [];
+    }
+    const tasks = this.tasks;
+    if (!tasks.listRead) return [tasks.listTarget.anchor];
+    const targets = tasks.targets(true);
+    const carrying = tasks.carrying;
+    if (carrying) {
+      let next = targets.filter((t) => t.task === tasks.carryingTask && !t.pick);
+      if (!next.length) next = targets.filter((t) => t.pick === carrying.type);
+      return next.map((t) => t.anchor);
+    }
+    const points = targets.map((t) => t.anchor);
+    if (tasks.has('celular') && !tasks.done.has('celular') && !tasks.hasPhone) {
+      const phone = this.items.list.find((i) => i.type === 'phone');
+      if (phone) points.push({ x: phone.sprite.x, y: phone.sprite.y - 8 });
+    }
+    if (tasks.allDone) {
+      const bed = this.bedSprite;
+      points.push({ x: bed.x + bed.width / 2, y: bed.y + bed.height - 18 });
+    }
+    return points;
   }
 
   /** Na madrugada do final a única interação é atender o telefone. */
@@ -886,6 +932,7 @@ export class HouseScene extends Phaser.Scene {
   update(time, deltaMs) {
     if (!this.hud.ready) return; // o HUD ainda está subindo
     const dt = deltaMs / 1000;
+    this.tutorial.update(dt, this.tutorialPoints());
     if (this.finale) {
       this.updateFinale(dt);
       return;

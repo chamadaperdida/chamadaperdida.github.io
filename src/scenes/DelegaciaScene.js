@@ -17,6 +17,7 @@ import { debug } from '../debug/debug.js';
 import { daysLeftText } from './TransitionScene.js';
 import { openPause } from './PauseScene.js';
 import { save } from '../systems/Save.js';
+import { settings } from '../systems/Settings.js';
 
 const FONT = 'VT323, monospace';
 const S = 3; // a arte é 320×180, ampliada 3×
@@ -370,6 +371,8 @@ export class DelegaciaScene extends Phaser.Scene {
   }
 
   #updateGrain(dt) {
+    this.grain.setVisible(settings.screenFx); // (opções de desempenho)
+    if (!settings.screenFx) return;
     this.grainIn -= dt;
     if (this.grainIn > 0) return;
     this.grainIn = 0.25;

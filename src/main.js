@@ -10,6 +10,7 @@ import { TitleScene } from './scenes/TitleScene.js';
 import { PauseScene } from './scenes/PauseScene.js';
 import { EndingScene } from './scenes/EndingScene.js';
 import { options } from './systems/Save.js';
+import { settings, applyFps } from './systems/Settings.js';
 import { debug } from './debug/debug.js';
 import './style.css';
 
@@ -39,6 +40,9 @@ document.fonts.load('20px VT323').finally(() => {
   // ou tecla, então, se estava ligada, ela volta no primeiro toque do jogador.
   const remember = () => options.save({ ...options.load(), fullscreen: game.scale.isFullscreen });
   game.events.once(Phaser.Core.Events.READY, () => {
+    // Limite de FPS (opções de desempenho): na hora e quando mudar
+    applyFps(game);
+    settings.onChange(() => applyFps(game));
     game.scale.on(Phaser.Scale.Events.ENTER_FULLSCREEN, remember);
     game.scale.on(Phaser.Scale.Events.LEAVE_FULLSCREEN, remember);
   });

@@ -1078,6 +1078,19 @@ function views(name, frames, sizes, outline = false) {
   );
 }
 
+/** Seta dourada do tutorial (aponta para baixo; o jogo gira quando está na borda), 11×11 */
+function tutorialArrow(c, x, y) {
+  const gold = ['#7a5a12', '#b8891c', '#e8b830', '#fde27a'];
+  // haste
+  c.rect(x + 4, y, 3, 5, gold[2]);
+  c.rect(x + 4, y, 1, 5, gold[3]);
+  c.rect(x + 6, y, 1, 5, gold[1]);
+  // ponta
+  for (let k = 0; k < 6; k++) c.rect(x + k, y + 5 + k, 11 - 2 * k, 1, k === 0 ? gold[1] : gold[2]);
+  for (let k = 1; k < 5; k++) c.px(x + k, y + 5 + k, gold[3]);
+  c.px(x + 5, y + 10, gold[0]);
+}
+
 // [nome, largura, altura, desenho, contorno?]
 const PROPS = [
   ['door-h-closed', 48, 16, (c, x, y) => doorPanelH(c, x, y, false)],
@@ -1167,6 +1180,7 @@ const PROPS = [
   ['window-closed', 32, 10, (c, x, y) => windowFrame(c, x, y, false)],
   ['bear', 10, 11, bear, true],
   ['glow', 24, 24, softGlow(24, '#ffb860')],
+  ['tutorial-arrow', 11, 11, tutorialArrow, true],
   ['spark', 2, 2, (c, x, y) => c.rect(x, y, 2, 2, '#ffd08a')],
   ['helena-silhouette', 16, 32, helenaSilhouette, true],
   ['balloon', 9, 22, balloon, true],

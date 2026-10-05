@@ -11,7 +11,17 @@
 const SAVE_KEY = 'chamada-perdida:save';
 const OPTIONS_KEY = 'chamada-perdida:opcoes';
 
-export const DEFAULT_OPTIONS = { master: 1, ambient: 1, effects: 1, fullscreen: false };
+export const DEFAULT_OPTIONS = {
+  master: 1,
+  ambient: 1,
+  effects: 1,
+  fullscreen: false,
+  // desempenho e tutorial (systems/Settings.js)
+  lighting: 'alta',
+  screenFx: true,
+  fps: 60,
+  tutorial: false,
+};
 
 function read(key) {
   try {

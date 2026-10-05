@@ -341,6 +341,7 @@ export class Tasks {
   /** Pegar algo: se as mãos estiverem ocupadas, Artur avisa. */
   #pick(id, where, carryType, take) {
     return this.#target(id, where, {
+      pick: carryType, // (o tutorial usa: com algo na mão, só o próximo passo)
       use: () => {
         // Mesma coisa (mais um prato, mais um saco, encher o regador) pode
         if (this.carrying && this.carrying.type !== carryType) {
@@ -379,6 +380,7 @@ export class Tasks {
       out.push({
         kind: 'task',
         task: 'pegar',
+        pick: d.carry.type,
         range: cfg.reach,
         point: { x: d.x, y: d.y },
         anchor: { x: d.sprite.x, y: d.sprite.y - 10 },

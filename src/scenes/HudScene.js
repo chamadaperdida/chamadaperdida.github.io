@@ -5,6 +5,7 @@
 import Phaser from 'phaser';
 import { DialogueBox } from '../ui/DialogueBox.js';
 import { BALANCE } from '../config/balance.js';
+import { settings } from '../systems/Settings.js';
 
 const FONT = 'VT323, monospace';
 
@@ -238,6 +239,11 @@ export class HudScene extends Phaser.Scene {
   }
 
   updateGrain(dt) {
+    // Efeitos de tela desligados (opções de desempenho): sem granulado nem vinheta
+    const on = settings.screenFx;
+    this.ambientVignette.setVisible(on);
+    this.grain.setVisible(on);
+    if (!on) return;
     const k = 1 - (1 - BALANCE.bears.calmScreenFactor) * this.calm;
     this.ambientVignette.setAlpha(0.55 * k);
     this.grain.setAlpha(0.025 * k);
