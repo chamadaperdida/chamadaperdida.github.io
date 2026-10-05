@@ -675,22 +675,61 @@ class Sfx {
    */
   scream(volume = 0.9, phone = false, kind = 'woman') {
     if (kind === 'roar1' && !phone) return this.#invaderScream(volume);
+    if (kind === 'roar2' && !phone) return this.#distortedScream(volume);
     const name = { woman: 'scream-woman', girl: 'scream-girl', roar1: 'roar-1', roar2: 'roar-2' }[kind] ?? 'scream-woman';
     const rate = { roar1: 0.8, roar2: 0.7 }[kind] ?? 1;
     this.play(name, { volume, phone, rate, distort: phone ? 0.3 : 0.15, reverb: phone ? 0.1 : 0.35 });
   }
 
   /**
-   * Grito do Invasor: um berro rasgado e comprido, com dois golpes curtos por cima no
-   * começo e um grito grave por baixo, tudo saturado — alto e agressivo.
+   * Pancada do susto, embaixo do grito: um baque grave que despenca + um estalo de ruído.
+   */
+  #impact(at, volume) {
+    const { gain } = this.out(volume);
+    const o = this.ctx.createOscillator();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(140, at);
+    o.frequency.exponentialRampToValueAtTime(38, at + 0.45);
+    const env = this.ctx.createGain();
+    env.gain.setValueAtTime(0.0001, at);
+    env.gain.exponentialRampToValueAtTime(1, at + 0.008);
+    env.gain.exponentialRampToValueAtTime(0.0001, at + 0.6);
+    o.connect(env).connect(gain);
+    o.start(at);
+    o.stop(at + 0.65);
+    this.burst(at, gain, { filter: { type: 'lowpass', freq: 3000 }, attack: 0.002, decay: 0.18, level: 0.8 });
+  }
+
+  /**
+   * Grito do Invasor: entra de uma vez — pancada, um golpe curto rasgado e o berro
+   * comprido, sem lentidão; um grito grave por baixo dá o peso. ~1,5 s, cheio do começo
+   * ao fim (o jumpscare dura ~1,2 s).
    */
   #invaderScream(volume) {
     if (!this.ready) return;
+    volume *= 0.55; // as camadas somadas estouravam
     const t = this.ctx.currentTime;
-    this.play('roar-3', { when: t, volume, rate: 0.85, distort: 0.35, reverb: 0.3 });
-    this.play('roar-4', { when: t, volume: volume * 0.9, rate: 0.75, distort: 0.45, reverb: 0.25 });
-    this.play('roar-5', { when: t + 0.55, volume: volume * 0.7, rate: 0.8, distort: 0.4, reverb: 0.3 });
-    this.play('scream-woman', { when: t + 0.05, volume: volume * 0.45, rate: 0.55, distort: 0.5, filter: { type: 'lowpass', freq: 2600 }, reverb: 0.3 });
+    this.#impact(t, volume * 0.9);
+    this.play('roar-4', { when: t, volume, offset: 0.03, rate: 1.05, distort: 0.45, reverb: 0.2 });
+    this.play('roar-3', { when: t, volume, offset: 0.08, duration: 1.7, rate: 1.08, distort: 0.35, reverb: 0.25 });
+    this.play('roar-5', { when: t + 0.22, volume: volume * 0.7, offset: 0.05, rate: 1.1, distort: 0.4, reverb: 0.25 });
+    this.play('scream-woman', { when: t, volume: volume * 0.4, offset: 0.4, duration: 1.6, rate: 0.75, distort: 0.5, filter: { type: 'lowpass', freq: 2600 }, reverb: 0.25 });
+  }
+
+  /**
+   * Grito do Artur distorcido (a boca costurada arrebentando): pancada, um berro de homem
+   * rasgado entrando na hora e, por baixo, um grito demoníaco bem grave e saturado.
+   * Mais grave e sujo que o do Invasor, mas tão rápido quanto.
+   */
+  #distortedScream(volume) {
+    if (!this.ready) return;
+    volume *= 0.6; // as camadas somadas estouravam
+    const t = this.ctx.currentTime;
+    this.#impact(t, volume);
+    this.play('roar-4', { when: t, volume: volume * 0.9, offset: 0.03, rate: 0.85, distort: 0.6, reverb: 0.3 });
+    this.play('roar-1', { when: t + 0.05, volume, offset: 0.4, duration: 1.6, rate: 1.0, distort: 0.55, reverb: 0.35 });
+    this.play('scream-woman', { when: t, volume: volume * 0.75, offset: 0.35, duration: 1.8, rate: 0.6, distort: 0.7, filter: { type: 'lowpass', freq: 2200 }, reverb: 0.35 });
+    this.play('whisper-man', { when: t, volume: volume * 0.5, duration: 1.2, rate: 0.7, reverse: true, distort: 0.4, reverb: 0.5 });
   }
 
   /**
