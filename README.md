@@ -2,6 +2,8 @@
 
 Terror psicológico 2D em pixel art, feito com **Phaser 3 + Vite** e publicado no GitHub Pages.
 
+**Jogar:** https://chamadaperdida.github.io
+
 O documento de design ([GDD-chamada-perdida.md](GDD-chamada-perdida.md)) é a fonte de verdade do projeto.
 Planta da casa: [planta-casa-v2.svg](planta-casa-v2.svg).
 

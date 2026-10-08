@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  // Caminhos relativos: o build funciona em https://<usuário>.github.io/<repositório>/
+  // Caminhos relativos: o build funciona em qualquer endereço (hoje https://chamadaperdida.github.io/)
   base: './',
   define: {
     // Muda a cada build: vai no fim do endereço dos sprites para o navegador não usar

@@ -20,7 +20,7 @@
 | Motor do jogo | **Phaser 3** (biblioteca JavaScript gratuita para jogos 2D no navegador: sprites, câmera, colisões, sons, animações) |
 | Ferramenta de build | **Vite** (gratuita; roda o projeto localmente e gera a versão final) |
 | Repositório | GitHub |
-| Publicação | **GitHub Pages** (gratuito, link público para jogar no navegador) |
+| Publicação | **GitHub Pages** (gratuito): **https://chamadaperdida.github.io** (organização gratuita `chamadaperdida`; o link antigo `soulbladeroficial-gif.github.io/chamada-perdida` redireciona para ele) |
 | Sem Lovable | O projeto é só Phaser + Vite, sem React |
 | Arte | Pixel art feita pelo Claude Code (sprites gerados por código/scripts, exportados como spritesheets PNG) |
 | Sons e efeitos | Gravações reais de domínio público (CC0): BigSoundBank (Joseph Sardin) e Wikimedia Commons, cortadas e comprimidas por `npm run audio` (ffmpeg) e tratadas no jogo com Web Audio (eco, reverberação, filtros, velocidade, som invertido). Sintetizados só o chiado/estática, o bipe da máquina, a água e a bucha da louça (preferidos às gravações), a digitação da caixa de diálogo, o clique dos menus e o "parabéns pra você" da delegacia |
